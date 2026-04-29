@@ -6,6 +6,7 @@ import { cuotaDashboard, dashboardCards, notifications, quickActions } from '../
 
 function DashboardInstitutionalHeader() {
   const [logoMissing, setLogoMissing] = useState(false)
+  const logoCrabbUrl = `${import.meta.env.BASE_URL}logo-crabb.jpg`
 
   return (
     <header className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md md:p-6">
@@ -13,7 +14,7 @@ function DashboardInstitutionalHeader() {
         <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 sm:h-16 sm:w-16">
           {!logoMissing ? (
             <img
-              src="/logo-crabb.jpg"
+              src={logoCrabbUrl}
               alt=""
               width={64}
               height={64}

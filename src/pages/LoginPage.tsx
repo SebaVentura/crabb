@@ -4,6 +4,7 @@ import { authMock } from '../app/auth'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const logoCrabbUrl = `${import.meta.env.BASE_URL}logo-crabb.jpg`
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -16,7 +17,7 @@ export function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <img
-            src="/logo-crabb.jpg"
+            src={logoCrabbUrl}
             alt="CRABB"
             className="mx-auto mb-5 h-16 w-auto max-w-[200px] object-contain"
           />
