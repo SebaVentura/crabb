@@ -31,4 +31,6 @@ export type ResultadoTecnico = {
   diagnostico: string
   causas: string[]
   solucion: string
+  fuente?: string
+  notasTecnicas?: string
 }

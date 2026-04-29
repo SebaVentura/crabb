@@ -208,7 +208,7 @@ export function DataTecnicaPage() {
               </p>
 
               <p className="mt-2 border-l-4 border-blue-500 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 md:mt-3 md:text-sm">
-                Fuente: base técnica CRABB
+                Fuente: {item.fuente ?? 'base técnica CRABB'}
               </p>
 
               <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm md:mt-4 md:p-4">
@@ -242,8 +242,14 @@ export function DataTecnicaPage() {
                     <p className="font-semibold text-slate-900">Solución sugerida</p>
                     <p className="mt-1 text-slate-700">{item.solucion}</p>
                   </div>
+                  {item.notasTecnicas ? (
+                    <div>
+                      <p className="font-semibold text-slate-900">Notas técnicas</p>
+                      <p className="mt-1 text-slate-700">{item.notasTecnicas}</p>
+                    </div>
+                  ) : null}
                   <p className="border-l-4 border-blue-500 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 md:text-sm">
-                    Fuente: base técnica CRABB
+                    Fuente: {item.fuente ?? 'base técnica CRABB'}
                   </p>
                 </div>
               ) : null}
