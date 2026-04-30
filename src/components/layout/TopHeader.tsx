@@ -14,7 +14,12 @@ export function TopHeader({ title }: TopHeaderProps) {
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white px-4 py-3 shadow-sm md:px-6">
       <div className="flex items-start justify-between gap-3 md:items-center">
         <div className="min-w-0 flex-1">
-          <p className="text-xs uppercase tracking-wide text-slate-500">CRABB App</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            <span translate="no" className="notranslate">
+              CRABB
+            </span>{' '}
+            App
+          </p>
           <h1 className="text-lg font-semibold text-slate-900 md:text-xl">{title}</h1>
         </div>
         <button

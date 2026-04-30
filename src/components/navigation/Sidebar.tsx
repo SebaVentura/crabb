@@ -11,7 +11,11 @@ export function Sidebar() {
         <img src={logoCrabbUrl} alt="CRABB" className="h-10 w-10 rounded-md object-contain" />
         <div>
           <p className="text-xs text-slate-500">Cámara de Reparación</p>
-          <p className="text-sm font-semibold text-slate-900">CRABB</p>
+          <p className="text-sm font-semibold text-slate-900">
+            <span translate="no" className="notranslate">
+              CRABB
+            </span>
+          </p>
         </div>
       </div>
 

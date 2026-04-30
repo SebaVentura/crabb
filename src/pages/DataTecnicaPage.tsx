@@ -64,7 +64,10 @@ export function DataTecnicaPage() {
       <header className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md md:p-6">
         <h1 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Data Técnica</h1>
         <p className="mt-1 text-sm text-slate-600 md:text-base">
-          Buscador técnico basado en fuentes propias CRABB
+          Buscador técnico basado en fuentes propias{' '}
+          <span translate="no" className="notranslate">
+            CRABB
+          </span>
         </p>
         <p className="mt-2 text-xs text-slate-500">Consulta simulada · sin conexión a servidor</p>
       </header>
@@ -172,7 +175,10 @@ export function DataTecnicaPage() {
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-6 text-center md:p-10">
           <p className="text-sm font-medium text-slate-800 md:text-base">Sin búsqueda activa</p>
           <p className="mt-2 text-sm text-slate-600">
-            Ingresá términos en el buscador o combiná filtros para consultar la base técnica CRABB.
+            Ingresá términos en el buscador o combiná filtros para consultar la base técnica{' '}
+            <span translate="no" className="notranslate">
+              CRABB
+            </span>
           </p>
         </div>
       ) : resultados.length === 0 ? (
@@ -208,7 +214,15 @@ export function DataTecnicaPage() {
               </p>
 
               <p className="mt-2 border-l-4 border-blue-500 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 md:mt-3 md:text-sm">
-                Fuente: {item.fuente ?? 'base técnica CRABB'}
+                Fuente:{' '}
+                {item.fuente ?? (
+                  <>
+                    base técnica{' '}
+                    <span translate="no" className="notranslate">
+                      CRABB
+                    </span>
+                  </>
+                )}
               </p>
 
               <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm md:mt-4 md:p-4">
@@ -249,7 +263,15 @@ export function DataTecnicaPage() {
                     </div>
                   ) : null}
                   <p className="border-l-4 border-blue-500 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 md:text-sm">
-                    Fuente: {item.fuente ?? 'base técnica CRABB'}
+                    Fuente:{' '}
+                    {item.fuente ?? (
+                      <>
+                        base técnica{' '}
+                        <span translate="no" className="notranslate">
+                          CRABB
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
               ) : null}
@@ -265,7 +287,10 @@ export function DataTecnicaPage() {
           onClick={() => setDocAbierto((o) => !o)}
           aria-expanded={docAbierto}
         >
-          Documentación CRABB
+          Documentación{' '}
+          <span translate="no" className="notranslate">
+            CRABB
+          </span>
           <span className="text-slate-400" aria-hidden>
             {docAbierto ? '−' : '+'}
           </span>

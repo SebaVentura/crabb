@@ -27,13 +27,20 @@ function DashboardInstitutionalHeader() {
               className="flex h-full w-full items-center justify-center rounded-xl border-2 border-slate-900 bg-slate-900 text-center text-[10px] font-black leading-tight tracking-tighter text-white sm:text-xs"
               aria-hidden
             >
-              CRABB
+              <span translate="no" className="notranslate">
+                CRABB
+              </span>
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">CRABB</h1>
-          <p className="mt-1 text-sm text-slate-600 sm:text-base">Panel institucional de socios</p>
+          <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">
+            <span translate="no" className="notranslate">
+              CRABB
+            </span>
+          </h1>
+          <p className="text-sm text-slate-600">Delegación Bahía Blanca</p>
+          <p className="mt-1 text-sm text-slate-500">Panel institucional de socios</p>
         </div>
       </div>
     </header>
