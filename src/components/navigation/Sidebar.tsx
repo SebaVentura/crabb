@@ -8,12 +8,12 @@ export function Sidebar() {
   return (
     <aside className="hidden w-72 border-r border-slate-200 bg-white p-4 md:block">
       <div className="mb-6 flex items-center gap-3">
-        <img src={logoCrabbUrl} alt="CRABB" className="h-10 w-10 rounded-md object-contain" />
+        <img src={logoCrabbUrl} alt="CRABB Seccional Bahía Blanca" className="h-10 w-10 rounded-md object-contain" />
         <div>
           <p className="text-xs text-slate-500">Cámara de Reparación</p>
           <p className="text-sm font-semibold text-slate-900">
             <span translate="no" className="notranslate">
-              CRABB
+              CRABB Seccional Bahía Blanca
             </span>
           </p>
         </div>

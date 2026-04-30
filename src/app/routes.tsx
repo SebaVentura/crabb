@@ -4,19 +4,28 @@ import { CapacitacionesPage } from '../pages/CapacitacionesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
+import { LandingPage } from '../pages/LandingPage'
+import { LoginPage } from '../pages/LoginPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
 
 export const router = createHashRouter([
   {
+    path: '/',
+    element: <LandingPage />,
+  },
+  {
     path: '/login',
-    element: <Navigate to="/dashboard" replace />,
+    element: <LoginPage />,
+  },
+  {
+    path: '/dashboard',
+    element: <AppShell />,
+    children: [{ index: true, element: <DashboardPage /> }],
   },
   {
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: 'dashboard', element: <DashboardPage /> },
       { path: 'institucional', element: <InstitucionalPage /> },
       { path: 'capacitaciones', element: <CapacitacionesPage /> },
       { path: 'data-tecnica', element: <DataTecnicaPage /> },
@@ -25,6 +34,6 @@ export const router = createHashRouter([
   },
   {
     path: '*',
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/" replace />,
   },
 ])

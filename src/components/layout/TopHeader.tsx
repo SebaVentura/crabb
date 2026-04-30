@@ -7,7 +7,7 @@ type TopHeaderProps = {
 export function TopHeader({ title }: TopHeaderProps) {
   const handleLogout = () => {
     authMock.logout()
-    window.location.href = '/login'
+    window.location.href = '/'
   }
 
   return (
@@ -16,7 +16,7 @@ export function TopHeader({ title }: TopHeaderProps) {
         <div className="min-w-0 flex-1">
           <p className="text-xs uppercase tracking-wide text-slate-500">
             <span translate="no" className="notranslate">
-              CRABB
+              CRABB Seccional Bahía Blanca
             </span>{' '}
             App
           </p>
