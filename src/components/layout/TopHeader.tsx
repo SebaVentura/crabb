@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { authMock } from '../../app/auth'
 
 type TopHeaderProps = {
@@ -5,9 +6,11 @@ type TopHeaderProps = {
 }
 
 export function TopHeader({ title }: TopHeaderProps) {
+  const navigate = useNavigate()
+
   const handleLogout = () => {
     authMock.logout()
-    window.location.href = '/'
+    navigate('/', { replace: true })
   }
 
   return (
