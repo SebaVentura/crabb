@@ -6,6 +6,7 @@ import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
+import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
 
 export const router = createHashRouter([
@@ -30,6 +31,7 @@ export const router = createHashRouter([
       { path: 'capacitaciones', element: <CapacitacionesPage /> },
       { path: 'data-tecnica', element: <DataTecnicaPage /> },
       { path: 'perfil', element: <PerfilSocioPage /> },
+      { path: 'colegas', element: <BuscarColegasPage /> },
     ],
   },
   {

@@ -19,6 +19,7 @@ export const quickActions = [
   { label: 'Gestión de Socios', path: '/perfil' },
   { label: 'Data Técnica', path: '/data-tecnica' },
   { label: 'Capacitaciones', path: '/capacitaciones' },
+  { label: 'Buscar colegas', path: '/colegas' },
 ]
 
 export const notifications: NotificationItem[] = [

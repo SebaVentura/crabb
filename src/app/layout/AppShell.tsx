@@ -9,6 +9,7 @@ const titles: Record<string, string> = {
   '/capacitaciones': 'Capacitaciones',
   '/data-tecnica': 'Data Técnica',
   '/perfil': 'Gestión de Socios',
+  '/colegas': 'Buscar colegas',
 }
 
 export function AppShell() {
