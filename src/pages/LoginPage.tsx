@@ -1,15 +1,38 @@
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authMock } from '../app/auth'
+import { ApiError } from '../lib/apiClient'
+import { useAuth } from '../hooks/useAuth'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const logoCrabbUrl = `${import.meta.env.BASE_URL}logo-crabb.jpg`
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    authMock.login()
-    navigate('/dashboard')
+    setErrorMessage(null)
+    setSubmitting(true)
+
+    try {
+      await login({ email, password })
+      navigate('/dashboard', { replace: true })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 422 && error.validationErrors) {
+        const firstField = Object.keys(error.validationErrors)[0]
+        const firstError = firstField ? error.validationErrors[firstField]?.[0] : undefined
+        setErrorMessage(firstError ?? 'Revisá los campos del formulario.')
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('No se pudo iniciar sesión.')
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -27,27 +50,37 @@ export function LoginPage() {
               CRABB Seccional Bahía Blanca
             </span>
           </h1>
-          <p className="mt-2 text-sm text-slate-500">Acceso institucional (preview)</p>
+          <p className="mt-2 text-sm text-slate-500">Acceso institucional</p>
         </div>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          {errorMessage ? (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>
+          ) : null}
           <input
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             type="email"
             required
             placeholder="Email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
           />
           <input
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             type="password"
             required
             placeholder="Contraseña"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
           />
           <button
             type="submit"
+            disabled={submitting}
             className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Ingresar
+            {submitting ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
       </div>

@@ -8,6 +8,7 @@ import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
+import { ProtectedRoute, PublicOnlyRoute } from './routeGuards'
 
 export const router = createHashRouter([
   {
@@ -16,16 +17,28 @@ export const router = createHashRouter([
   },
   {
     path: '/login',
-    element: <LoginPage />,
+    element: (
+      <PublicOnlyRoute>
+        <LoginPage />
+      </PublicOnlyRoute>
+    ),
   },
   {
     path: '/dashboard',
-    element: <AppShell />,
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [{ index: true, element: <DashboardPage /> }],
   },
   {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [
       { path: 'institucional', element: <InstitucionalPage /> },
       { path: 'capacitaciones', element: <CapacitacionesPage /> },

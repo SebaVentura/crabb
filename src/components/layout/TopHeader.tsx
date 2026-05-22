@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { authMock } from '../../app/auth'
+import { useAuth } from '../../hooks/useAuth'
 
 type TopHeaderProps = {
   title: string
@@ -7,10 +7,14 @@ type TopHeaderProps = {
 
 export function TopHeader({ title }: TopHeaderProps) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  const handleLogout = () => {
-    authMock.logout()
-    navigate('/', { replace: true })
+  const handleLogout = async () => {
+    if (import.meta.env.DEV) {
+      console.log('[AUTH][LOGOUT] Iniciando cierre de sesión desde TopHeader.')
+    }
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   return (

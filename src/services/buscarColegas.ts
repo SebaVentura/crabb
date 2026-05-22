@@ -1,6 +1,8 @@
 import { directorioColegasPorId } from '../mocks/colegasDirectorio.mock'
 import { sesionSocioMock } from '../mocks/perfil.mock'
 import { sociosMockInicial } from '../mocks/socios.mock'
+import { env } from '../config/env'
+import { apiRequest } from '../lib/apiClient'
 import type { FiltrosBusquedaColegas, SocioParaRecomendar } from '../types/colegas'
 import type { Socio } from '../types/socios'
 
@@ -59,11 +61,31 @@ function filtrarLocal(filtros: FiltrosBusquedaColegas): SocioParaRecomendar[] {
     })
 }
 
+export function colegasBackendConfigurado() {
+  return Boolean(env.colegasSearchEndpoint)
+}
+
+function buildSearchParams(filtros: FiltrosBusquedaColegas): URLSearchParams {
+  const params = new URLSearchParams()
+  if (filtros.rubro) params.set('rubro', filtros.rubro)
+  if (filtros.nombre.trim()) params.set('nombre', filtros.nombre.trim())
+  if (filtros.localidad.trim()) params.set('localidad', filtros.localidad.trim())
+  if (filtros.telefono.trim()) params.set('telefono', filtros.telefono.trim())
+  params.set('incluir_mi_rubro', filtros.incluirMiRubro ? '1' : '0')
+  return params
+}
+
 /**
  * Búsqueda de colegas para recomendar.
  * TODO: reemplazar cuerpo por fetch('/api/colegas?...') cuando exista backend.
  */
 export async function buscarColegas(filtros: FiltrosBusquedaColegas): Promise<SocioParaRecomendar[]> {
+  if (env.colegasSearchEndpoint) {
+    const qs = buildSearchParams(filtros).toString()
+    const endpoint = qs ? `${env.colegasSearchEndpoint}?${qs}` : env.colegasSearchEndpoint
+    return apiRequest<SocioParaRecomendar[]>(endpoint)
+  }
+
   await Promise.resolve()
   return filtrarLocal(filtros)
 }

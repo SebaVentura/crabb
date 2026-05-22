@@ -3,20 +3,28 @@ import { Link } from 'react-router-dom'
 import { FiltrosBusquedaColegas } from '../components/colegas/FiltrosBusquedaColegas'
 import { TablaColegas } from '../components/colegas/TablaColegas'
 import { Card } from '../components/ui/Card'
-import { buscarColegas, filtrosBusquedaColegasIniciales } from '../services/buscarColegas'
+import { buscarColegas, colegasBackendConfigurado, filtrosBusquedaColegasIniciales } from '../services/buscarColegas'
 import type { FiltrosBusquedaColegas as FiltrosType, SocioParaRecomendar } from '../types/colegas'
 
 export function BuscarColegasPage() {
   const [filtros, setFiltros] = useState<FiltrosType>(filtrosBusquedaColegasIniciales)
   const [resultados, setResultados] = useState<SocioParaRecomendar[]>([])
   const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelado = false
     setCargando(true)
+    setError(null)
     buscarColegas(filtros)
       .then((lista) => {
         if (!cancelado) setResultados(lista)
+      })
+      .catch((e: unknown) => {
+        if (!cancelado) {
+          setResultados([])
+          setError(e instanceof Error ? e.message : 'No se pudo cargar el directorio de colegas.')
+        }
       })
       .finally(() => {
         if (!cancelado) setCargando(false)
@@ -37,7 +45,9 @@ export function BuscarColegasPage() {
             <p className="mt-1 text-sm text-slate-600 md:text-base">
               Directorio entre socios. Solo se muestran datos públicos de contacto para recomendaciones.
             </p>
-            <p className="mt-2 text-xs text-slate-500">Consulta simulada · sin conexión a servidor</p>
+            <p className="mt-2 text-xs text-slate-500">
+              {colegasBackendConfigurado() ? 'Consulta conectada a API' : 'Consulta simulada · endpoint pendiente backend'}
+            </p>
           </div>
           <Link
             to="/dashboard"
@@ -51,6 +61,8 @@ export function BuscarColegasPage() {
       <Card className="border-slate-200 shadow-md" title="Filtros de búsqueda">
         <FiltrosBusquedaColegas filtros={filtros} onChange={setFiltros} />
       </Card>
+
+      {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
       <section aria-live="polite">
         <TablaColegas resultados={resultados} cargando={cargando} />
