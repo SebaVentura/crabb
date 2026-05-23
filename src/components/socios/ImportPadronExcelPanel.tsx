@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ApiError } from '../../lib/apiClient'
 import type { ImportSociosSummary } from '../../services/sociosService'
 
 type Props = {
@@ -51,8 +52,18 @@ export function ImportPadronExcelPanel({ onImport }: Props) {
       setSummary(result)
       setSuccessMessage('Importación completada. Se actualizó el padrón de socios.')
     } catch (importError) {
-      const message = importError instanceof Error ? importError.message : 'No se pudo importar el padrón.'
-      setError(message)
+      if (importError instanceof ApiError) {
+        if (importError.status === 401) {
+          setError('Tu sesión expiró. Iniciá sesión nuevamente.')
+        } else if (importError.status === 422) {
+          setError(importError.message || 'El archivo no cumple el formato esperado.')
+        } else {
+          setError(importError.message || 'No se pudo importar el padrón.')
+        }
+      } else {
+        const message = importError instanceof Error ? importError.message : 'No se pudo importar el padrón.'
+        setError(message)
+      }
     } finally {
       setIsImporting(false)
     }

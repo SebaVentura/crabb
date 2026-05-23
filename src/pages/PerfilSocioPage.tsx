@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ImportPadronExcelPanel } from '../components/socios/ImportPadronExcelPanel'
+import { SocioFormModal } from '../components/socios/SocioFormModal'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { useAuth } from '../hooks/useAuth'
 import { ApiError } from '../lib/apiClient'
-import { sociosService } from '../services/sociosService'
+import { sociosService, type SocioPayload } from '../services/sociosService'
 import type { CategoriaSocio, EstadoCuotaSocio, EstadoSocio, Socio } from '../types/socios'
 
 function formatFecha(iso: string) {
@@ -22,6 +23,7 @@ function badgeCuota(estadoCuota: EstadoCuotaSocio) {
   if (estadoCuota === 'al-dia') return <Badge tone="green">Al dia</Badge>
   if (estadoCuota === 'moroso') return <Badge tone="red">Moroso</Badge>
   if (estadoCuota === 'vencido') return <Badge tone="yellow">Vencido</Badge>
+  if (estadoCuota === 'no_definido') return <Badge tone="gray">No definido</Badge>
   return <Badge tone="yellow">Pendiente</Badge>
 }
 
@@ -30,14 +32,22 @@ function badgeCategoria(categoria: CategoriaSocio | undefined) {
   return <Badge tone="gray">Socio</Badge>
 }
 
+function displaySocioName(socio: Socio) {
+  return socio.nombreApellido || socio.denominacionTaller || socio.nombreRazonSocial || '-'
+}
+
 export function PerfilSocioPage() {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const role = (user?.role ?? '').trim().toLowerCase()
+  const isAdmin = role === 'admin'
 
   const [socios, setSocios] = useState<Socio[]>([])
   const [totalSocios, setTotalSocios] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showImportPanel, setShowImportPanel] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   const [search, setSearch] = useState('')
   const [filtroCategoria, setFiltroCategoria] = useState<'' | CategoriaSocio>('')
@@ -80,6 +90,13 @@ export function PerfilSocioPage() {
     void loadSocios()
   }, [loadSocios])
 
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[SOCIOS][AUTH] user role', { role: user?.role ?? null })
+      console.log('[SOCIOS][IMPORT] isAdmin', { isAdmin })
+    }
+  }, [user?.role, isAdmin])
+
   const indicadores = useMemo(() => {
     const activos = socios.filter((s) => s.estado === 'activo').length
     const categoriaSocio = socios.filter((s) => (s.categoria ?? 'socio') === 'socio').length
@@ -97,7 +114,17 @@ export function PerfilSocioPage() {
     async (file: File) => {
       const summary = await sociosService.importSociosExcel(file)
       await loadSocios()
+      setSuccessMessage('Padrón importado correctamente. Listado actualizado.')
       return summary
+    },
+    [loadSocios],
+  )
+
+  const handleCreateSocio = useCallback(
+    async (payload: SocioPayload) => {
+      await sociosService.createSocio(payload)
+      await loadSocios()
+      setSuccessMessage('Socio creado correctamente. Listado actualizado.')
     },
     [loadSocios],
   )
@@ -127,7 +154,38 @@ export function PerfilSocioPage() {
         ))}
       </div>
 
-      {isAdmin ? <ImportPadronExcelPanel onImport={handleImport} /> : null}
+      {isAdmin ? (
+        <Card className="border-slate-200 shadow-md" title="Acciones">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
+              onClick={() => setShowImportPanel((prev) => !prev)}
+            >
+              Importar padrón Excel
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition duration-150 hover:bg-blue-700"
+              onClick={() => setIsFormOpen(true)}
+            >
+              Nuevo socio
+            </button>
+          </div>
+
+          {showImportPanel ? <div className="mt-4"><ImportPadronExcelPanel onImport={handleImport} /></div> : null}
+        </Card>
+      ) : null}
+
+      {import.meta.env.DEV && user && !role ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Usuario autenticado sin role. La acción de importar se oculta por seguridad.
+        </div>
+      ) : null}
+
+      {successMessage ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{successMessage}</div>
+      ) : null}
 
       <Card className="border-slate-200 shadow-md" title="Filtros y busqueda">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -189,6 +247,7 @@ export function PerfilSocioPage() {
             >
               <option value="">Todos</option>
               <option value="pendiente">Pendiente</option>
+              <option value="no_definido">No definido</option>
               <option value="al-dia">Al dia</option>
               <option value="moroso">Moroso</option>
               <option value="vencido">Vencido</option>
@@ -209,7 +268,8 @@ export function PerfilSocioPage() {
 
       {!isLoading && !loadError && socios.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">
-          Todavía no hay socios cargados. Importá un padrón Excel para comenzar.
+          <p>Todavía no hay socios cargados.</p>
+          <p className="mt-1">Importá un padrón Excel o cargá un socio manualmente para comenzar.</p>
         </div>
       ) : null}
 
@@ -220,9 +280,10 @@ export function PerfilSocioPage() {
               <Card key={socio.id} className="border-slate-200 shadow-md">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-semibold text-slate-900">{socio.nombreRazonSocial}</p>
-                    <p className="text-xs text-slate-600">{socio.cuitODni || '-'}</p>
-                    <p className="mt-1 text-xs text-slate-600">{socio.telefono || '-'}</p>
+                    <p className="font-semibold text-slate-900">{displaySocioName(socio)}</p>
+                    <p className="text-xs text-slate-600">Nro: {socio.nroSocio || '-'}</p>
+                    <p className="text-xs text-slate-600">{socio.dniCuit || socio.cuitODni || '-'}</p>
+                    <p className="mt-1 text-xs text-slate-600">{socio.celular || socio.telefono || '-'}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     {badgeEstado(socio.estado)}
@@ -253,10 +314,10 @@ export function PerfilSocioPage() {
                 <tbody>
                   {socios.map((socio) => (
                     <tr key={socio.id} className="border-b border-slate-100 last:border-0 even:bg-slate-50">
-                      <td className="max-w-[230px] py-3 pr-3 font-medium text-slate-900">{socio.nombreRazonSocial}</td>
+                      <td className="max-w-[230px] py-3 pr-3 font-medium text-slate-900">{displaySocioName(socio)}</td>
                       <td className="py-3 pr-3">{badgeCategoria(socio.categoria)}</td>
-                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.cuitODni || '-'}</td>
-                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.telefono || '-'}</td>
+                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.dniCuit || socio.cuitODni || '-'}</td>
+                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.celular || socio.telefono || '-'}</td>
                       <td className="py-3 pr-3">{badgeEstado(socio.estado)}</td>
                       <td className="py-3 pr-3">{badgeCuota(socio.estadoCuota)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(socio.fechaUltimoPago)}</td>
@@ -269,6 +330,8 @@ export function PerfilSocioPage() {
           </Card>
         </>
       ) : null}
+
+      <SocioFormModal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSubmit={handleCreateSocio} />
     </div>
   )
 }

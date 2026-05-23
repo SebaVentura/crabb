@@ -1,17 +1,25 @@
 export type EstadoSocio = 'activo' | 'inactivo'
 
-export type EstadoCuotaSocio = 'al-dia' | 'moroso' | 'vencido' | 'pendiente'
+export type EstadoCuotaSocio = 'al-dia' | 'moroso' | 'vencido' | 'pendiente' | 'no_definido'
 
 export type CategoriaSocio = 'socio' | 'aportante'
 
 export type Socio = {
   id: string
+  nroSocio?: string
+  nombreApellido?: string
+  denominacionTaller?: string
   nombreRazonSocial: string
+  dniCuit?: string
   cuitODni: string
+  celular?: string
   telefono: string
+  emails?: string[]
+  ultimoPago?: string | null
   email: string
   direccion: string
   localidad: string
+  rubro?: string
   categoria?: CategoriaSocio
   estado: EstadoSocio
   estadoCuota: EstadoCuotaSocio

@@ -11,19 +11,29 @@ export type SocioFilters = {
 }
 
 export type SocioPayload = Partial<{
+  nro_socio: string
+  nombre_apellido: string
+  denominacion_taller: string
+  direccion: string
+  celular: string
+  emails: string[]
+  ultimo_pago: string | null
+  dni_cuit: string
+  rubro: string
+  observaciones: string
+  categoria: 'socio' | 'aportante'
+  estado: 'activo' | 'inactivo'
+  estado_cuota: 'no_definido' | 'al-dia' | 'moroso' | 'vencido' | 'pendiente'
+  localidad: string
+
+  // Compatibilidad temporal con contratos previos.
   nombre_razon_social: string
   cuit_o_dni: string
   telefono: string
   email: string
-  direccion: string
-  localidad: string
-  categoria: string
-  estado: string
-  estado_cuota: string
   fecha_alta: string
   fecha_ultimo_pago: string
   monto_cuota: number
-  observaciones: string
 }>
 
 export type ImportSociosSummary = {
@@ -75,7 +85,8 @@ function normalizeEstadoCuota(estado: string): Socio['estadoCuota'] {
   if (estado === 'moroso') return 'moroso'
   if (estado === 'vencido') return 'vencido'
   if (estado === 'pendiente') return 'pendiente'
-  return 'pendiente'
+  if (estado === 'no_definido') return 'no_definido'
+  return 'no_definido'
 }
 
 function normalizeCategoria(categoria: string): Socio['categoria'] {
@@ -87,28 +98,55 @@ function normalizeCategoria(categoria: string): Socio['categoria'] {
 function normalizeSocio(row: unknown): Socio {
   const source = asObject(row)
 
+  const emailsRaw = firstDefined(source.emails, source.correos)
+  const emails = Array.isArray(emailsRaw)
+    ? emailsRaw.map((item) => asString(item)).filter(Boolean)
+    : []
+
+  const nombreApellido = asString(
+    firstDefined(
+      source.nombreApellido,
+      source.nombre_apellido,
+      source.nombreRazonSocial,
+      source.nombre_razon_social,
+      source.nombre,
+      source.razon_social,
+    ),
+  )
+
+  const denominacionTaller = asString(
+    firstDefined(source.denominacionTaller, source.denominacion_taller),
+  )
+
+  const dniCuit = asString(firstDefined(source.dniCuit, source.dni_cuit, source.cuitODni, source.cuit_o_dni, source.cuit, source.dni))
+  const celular = asString(firstDefined(source.celular, source.telefono))
+  const ultimoPago = asString(firstDefined(source.ultimoPago, source.ultimo_pago, source.fechaUltimoPago, source.fecha_ultimo_pago))
+  const nombreRazonSocial = denominacionTaller || nombreApellido
+  const emailPrincipal = asString(firstDefined(source.email, emails[0]))
+
   return {
     id: asString(firstDefined(source.id, source.socio_id), crypto.randomUUID()),
-    nombreRazonSocial: asString(
-      firstDefined(
-        source.nombreRazonSocial,
-        source.nombre_razon_social,
-        source.nombre,
-        source.razon_social,
-      ),
-    ),
-    cuitODni: asString(firstDefined(source.cuitODni, source.cuit_o_dni, source.cuit, source.dni)),
-    telefono: asString(source.telefono),
-    email: asString(source.email),
+    nroSocio: asString(firstDefined(source.nroSocio, source.nro_socio)),
+    nombreApellido,
+    denominacionTaller,
+    nombreRazonSocial,
+    dniCuit,
+    cuitODni: dniCuit,
+    celular,
+    telefono: celular,
+    emails,
+    ultimoPago: ultimoPago || null,
+    email: emailPrincipal,
     direccion: asString(source.direccion),
     localidad: asString(source.localidad),
+    rubro: asString(source.rubro),
     categoria: normalizeCategoria(asString(source.categoria, 'socio')),
     estado: normalizeEstado(asString(source.estado, 'activo')),
     estadoCuota: normalizeEstadoCuota(
-      asString(firstDefined(source.estadoCuota, source.estado_cuota), 'pendiente'),
+      asString(firstDefined(source.estadoCuota, source.estado_cuota), 'no_definido'),
     ),
     fechaAlta: asString(firstDefined(source.fechaAlta, source.fecha_alta)),
-    fechaUltimoPago: asString(firstDefined(source.fechaUltimoPago, source.fecha_ultimo_pago)),
+    fechaUltimoPago: ultimoPago,
     montoCuota: asNumber(firstDefined(source.montoCuota, source.monto_cuota), 0),
     observaciones: asString(source.observaciones),
   }
