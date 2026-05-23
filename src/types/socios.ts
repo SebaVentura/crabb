@@ -1,6 +1,8 @@
 export type EstadoSocio = 'activo' | 'inactivo'
 
-export type EstadoCuotaSocio = 'al-dia' | 'moroso' | 'vencido'
+export type EstadoCuotaSocio = 'al-dia' | 'moroso' | 'vencido' | 'pendiente'
+
+export type CategoriaSocio = 'socio' | 'aportante'
 
 export type Socio = {
   id: string
@@ -10,6 +12,7 @@ export type Socio = {
   email: string
   direccion: string
   localidad: string
+  categoria?: CategoriaSocio
   estado: EstadoSocio
   estadoCuota: EstadoCuotaSocio
   fechaAlta: string
