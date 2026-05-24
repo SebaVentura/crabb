@@ -1,8 +1,9 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ApiError, setApiAuthTokenResolver, setApiUnauthorizedHandler } from '../lib/apiClient'
-import { authService, type AuthUser, type LoginPayload } from '../services/authService'
+import { authService, normalizeUser, type AuthUser, type LoginPayload } from '../services/authService'
 
 const SESSION_TOKEN_KEY = 'crabb_auth_token'
+const SESSION_USER_KEY = 'crabb_auth_user'
 
 type AuthContextValue = {
   token: string | null
@@ -29,20 +30,43 @@ function persistToken(token: string | null) {
   }
 }
 
+function readPersistedUser(): AuthUser | null {
+  const raw = localStorage.getItem(SESSION_USER_KEY)
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return normalizeUser(parsed)
+  } catch {
+    localStorage.removeItem(SESSION_USER_KEY)
+    return null
+  }
+}
+
+function persistUser(user: AuthUser | null) {
+  if (user) {
+    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user))
+  } else {
+    localStorage.removeItem(SESSION_USER_KEY)
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => readPersistedToken())
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(() => readPersistedUser())
   const [isInitializing, setIsInitializing] = useState(true)
 
   const clearSession = useCallback(() => {
     setToken(null)
     setUser(null)
     persistToken(null)
+    persistUser(null)
   }, [])
 
-  const refreshCurrentUser = useCallback(async () => {
-    const currentUser = await authService.getCurrentUser()
+  const refreshCurrentUser = useCallback(async (tokenOverride?: string) => {
+    const currentUser = await authService.getCurrentUser(tokenOverride)
     setUser(currentUser)
+    persistUser(currentUser)
   }, [])
 
   const login = useCallback(async (payload: LoginPayload) => {
@@ -52,14 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (result.user) {
       setUser(result.user)
-      return
+      persistUser(result.user)
     }
 
     try {
-      await refreshCurrentUser()
+      await refreshCurrentUser(result.token)
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
         setUser(null)
+        persistUser(null)
         return
       }
       throw error
@@ -87,6 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true
 
     if (!token) {
+      if (user) {
+        setUser(null)
+        persistUser(null)
+      }
       setIsInitializing(false)
       return () => {
         active = false

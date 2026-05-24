@@ -92,10 +92,13 @@ export function PerfilSocioPage() {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('[SOCIOS][AUTH] user role', { role: user?.role ?? null })
-      console.log('[SOCIOS][IMPORT] isAdmin', { isAdmin })
+      console.log('[SOCIOS][AUTH]', {
+        email: user?.email ?? null,
+        role: user?.role ?? null,
+        isAdmin,
+      })
     }
-  }, [user?.role, isAdmin])
+  }, [user?.email, user?.role, isAdmin])
 
   const indicadores = useMemo(() => {
     const activos = socios.filter((s) => s.estado === 'activo').length
@@ -132,8 +135,8 @@ export function PerfilSocioPage() {
   return (
     <div className="space-y-4 md:space-y-6">
       <header className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md md:p-6">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Gestion de Socios</h1>
-        <p className="mt-1 text-sm text-slate-600 md:text-base">Administracion del padron y estado de socios</p>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Gestión de Socios</h1>
+        <p className="mt-1 text-sm text-slate-600 md:text-base">Administración del padrón y estado de socios</p>
         <p className="mt-2 text-xs text-slate-500">Datos reales · API CRABB</p>
       </header>
 
@@ -187,7 +190,7 @@ export function PerfilSocioPage() {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{successMessage}</div>
       ) : null}
 
-      <Card className="border-slate-200 shadow-md" title="Filtros y busqueda">
+      <Card className="border-slate-200 shadow-md" title="Filtros y búsqueda">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="buscar-socio">
@@ -198,14 +201,14 @@ export function PerfilSocioPage() {
               type="search"
               value={search}
               onChange={(ev) => setSearch(ev.target.value)}
-              placeholder="Nombre, CUIT/DNI, email o telefono"
+              placeholder="Nombre, CUIT/DNI, email o teléfono"
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="filtro-categoria">
-              Categoria
+              Categoría
             </label>
             <select
               id="filtro-categoria"
@@ -248,7 +251,7 @@ export function PerfilSocioPage() {
               <option value="">Todos</option>
               <option value="pendiente">Pendiente</option>
               <option value="no_definido">No definido</option>
-              <option value="al-dia">Al dia</option>
+              <option value="al-dia">Al día</option>
               <option value="moroso">Moroso</option>
               <option value="vencido">Vencido</option>
             </select>
