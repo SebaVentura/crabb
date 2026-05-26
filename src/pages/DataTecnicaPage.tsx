@@ -14,7 +14,7 @@ function LogoCrabbTarjeta() {
     <div className="flex shrink-0 items-center justify-center md:self-center md:justify-end">
       <img
         src={logoCrabbUrl}
-        alt="CRABB Seccional Bahía Blanca"
+        alt="CRABB"
         width={150}
         height={150}
         decoding="async"

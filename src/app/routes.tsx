@@ -4,11 +4,12 @@ import { CapacitacionesPage } from '../pages/CapacitacionesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
+import { AdminInstitucionalPage } from '../pages/AdminInstitucionalPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
-import { ProtectedRoute, PublicOnlyRoute } from './routeGuards'
+import { AdminOnlyRoute, ProtectedRoute, PublicOnlyRoute } from './routeGuards'
 
 export const router = createHashRouter([
   {
@@ -45,6 +46,14 @@ export const router = createHashRouter([
       { path: 'data-tecnica', element: <DataTecnicaPage /> },
       { path: 'perfil', element: <PerfilSocioPage /> },
       { path: 'colegas', element: <BuscarColegasPage /> },
+      {
+        path: 'admin/institucional',
+        element: (
+          <AdminOnlyRoute>
+            <AdminInstitucionalPage />
+          </AdminOnlyRoute>
+        ),
+      },
     ],
   },
   {

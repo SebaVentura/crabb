@@ -41,7 +41,7 @@ function DashboardInstitutionalHeader() {
               aria-hidden
             >
               <span translate="no" className="notranslate">
-                CRABB Seccional Bahía Blanca
+                CRABB
               </span>
             </div>
           )}

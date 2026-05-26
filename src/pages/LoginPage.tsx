@@ -41,13 +41,13 @@ export function LoginPage() {
         <div className="mb-8 text-center">
           <img
             src={logoCrabbUrl}
-            alt="CRABB Seccional Bahía Blanca"
+            alt="CRABB"
             className="mx-auto mb-5 h-16 w-auto max-w-[200px] object-contain"
           />
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             Ingreso{' '}
             <span translate="no" className="notranslate">
-              CRABB Seccional Bahía Blanca
+              CRABB
             </span>
           </h1>
           <p className="mt-2 text-sm text-slate-500">Acceso institucional</p>

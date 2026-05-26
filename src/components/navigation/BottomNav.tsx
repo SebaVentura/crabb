@@ -1,10 +1,14 @@
 import { NavLink } from 'react-router-dom'
-import { navItems } from './nav-items'
+import { useAuth } from '../../hooks/useAuth'
+import { getNavItems } from './nav-items'
 
 export function BottomNav() {
+  const { user } = useAuth()
+  const navItems = getNavItems(user?.role)
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white px-2 py-2 md:hidden">
-      <ul className="grid grid-cols-5 gap-1">
+      <ul className="grid gap-1" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
         {navItems.map((item) => (
           <li key={item.path}>
             <NavLink

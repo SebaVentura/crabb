@@ -10,6 +10,7 @@ const titles: Record<string, string> = {
   '/data-tecnica': 'Data Técnica',
   '/perfil': 'Gestión de Socios',
   '/colegas': 'Buscar colegas',
+  '/admin/institucional': 'Contenido institucional',
 }
 
 export function AppShell() {

@@ -37,3 +37,24 @@ export function PublicOnlyRoute({ children }: { children: ReactNode }) {
 
   return <>{children}</>
 }
+
+export function AdminOnlyRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isInitializing, user } = useAuth()
+
+  if (isInitializing) {
+    return <FullScreenMessage message="Verificando permisos..." />
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  const role = (user?.role ?? '').toLowerCase()
+  const hasAdminAccess = role === 'admin' || role === 'superadmin'
+
+  if (!hasAdminAccess) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <>{children}</>
+}

@@ -23,7 +23,7 @@ export function TopHeader({ title }: TopHeaderProps) {
         <div className="min-w-0 flex-1">
           <p className="text-xs uppercase tracking-wide text-slate-500">
             <span translate="no" className="notranslate">
-              CRABB Seccional Bahía Blanca
+              CRABB
             </span>{' '}
             App
           </p>
