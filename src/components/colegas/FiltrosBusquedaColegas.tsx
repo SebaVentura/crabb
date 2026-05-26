@@ -1,6 +1,5 @@
 import { RUBROS_SOCIO, type RubroSocio } from '../../constants/rubros'
 import type { FiltrosBusquedaColegas as FiltrosBusquedaColegasType } from '../../types/colegas'
-import { sesionSocioMock } from '../../mocks/perfil.mock'
 
 type Props = {
   filtros: FiltrosBusquedaColegasType
@@ -16,8 +15,7 @@ export function FiltrosBusquedaColegas({ filtros, onChange }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
-        Por defecto se muestran colegas de otros rubros (tu rubro:{' '}
-        <span className="font-medium text-slate-800">{sesionSocioMock.rubro}</span>).
+        Ajustá los criterios para filtrar colegas por rubro, nombre, localidad o teléfono.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -90,9 +88,7 @@ export function FiltrosBusquedaColegas({ filtros, onChange }: Props) {
         />
         <span className="text-sm text-slate-700">
           <span className="font-medium text-slate-900">Incluir mi rubro / ver todos los rubros</span>
-          <span className="mt-0.5 block text-slate-600">
-            Al activarlo también verás socios de {sesionSocioMock.rubro}.
-          </span>
+          <span className="mt-0.5 block text-slate-600">Al activarlo no se aplica exclusión por rubro.</span>
         </span>
       </label>
     </div>

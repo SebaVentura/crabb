@@ -1,8 +1,21 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
-import { cuotaDashboard, dashboardCards, notifications, quickActions } from '../mocks/dashboard.mock'
+
+const moduleLinks = [
+  { title: 'Institucional', description: 'Información institucional de la entidad', path: '/institucional' },
+  { title: 'Gestión de Socios', description: 'Padrón, estado y administración de socios', path: '/perfil' },
+  { title: 'Data Técnica', description: 'Consulta de información técnica y recursos externos', path: '/data-tecnica' },
+  { title: 'Capacitaciones', description: 'Oferta y cronograma de actividades formativas', path: '/capacitaciones' },
+]
+
+const quickActionLinks = [
+  { label: 'Institucional', path: '/institucional' },
+  { label: 'Gestión de Socios', path: '/perfil' },
+  { label: 'Data Técnica', path: '/data-tecnica' },
+  { label: 'Capacitaciones', path: '/capacitaciones' },
+  { label: 'Buscar colegas', path: '/colegas' },
+]
 
 function DashboardInstitutionalHeader() {
   const [logoMissing, setLogoMissing] = useState(false)
@@ -48,24 +61,11 @@ function DashboardInstitutionalHeader() {
 }
 
 function DashboardQuotaCard({ className = '' }: { className?: string }) {
-  const vencida = cuotaDashboard.estado === 'vencida'
-
   return (
-    <Card className={`border-slate-200 shadow-md ${className}`} title="Estado de cuota">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={vencida ? 'red' : 'gray'}>{vencida ? 'Vencida' : 'Al día'}</Badge>
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-slate-900">
-        {cuotaDashboard.moneda} ${cuotaDashboard.montoCuota}
+    <Card className={`border-slate-200 shadow-md ${className}`} title="Indicadores administrativos">
+      <p className="text-sm text-slate-700">
+        Los indicadores administrativos se habilitarán cuando estén conectados a datos reales.
       </p>
-      <p className="mt-1 text-sm text-slate-600">Vencimiento: {cuotaDashboard.vencimiento}</p>
-      <button
-        type="button"
-        disabled
-        className="mt-4 w-full cursor-not-allowed rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500 transition duration-150"
-      >
-        Pagar cuota (Próximamente)
-      </button>
     </Card>
   )
 }
@@ -75,7 +75,7 @@ function DashboardQuickActions() {
     <div>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Accesos rápidos</h2>
       <div className="flex flex-wrap gap-2">
-        {quickActions.map((item) => (
+        {quickActionLinks.map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -110,28 +110,6 @@ function DashboardModuleCard({
   )
 }
 
-function DashboardNotificationsCard({ className = '' }: { className?: string }) {
-  return (
-    <Card className={`shadow-md ${className}`} title="Notificaciones">
-      <ul className="space-y-2">
-        {notifications.map((item) => (
-          <li
-            key={item.id}
-            className={`rounded-xl border p-3 text-sm ${
-              item.type === 'warning'
-                ? 'border-rose-200 bg-rose-50/80'
-                : 'border-blue-200 bg-blue-50/60'
-            }`}
-          >
-            <p className="font-semibold text-slate-900">{item.title}</p>
-            <p className="mt-1 text-slate-600">{item.detail}</p>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  )
-}
-
 export function DashboardPage() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_min(18rem,34%)] lg:gap-x-8 lg:gap-y-6">
@@ -145,7 +123,7 @@ export function DashboardPage() {
         <div className="min-w-0">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Módulos</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {dashboardCards.map((card) => (
+            {moduleLinks.map((card) => (
               <DashboardModuleCard
                 key={card.path}
                 title={card.title}
@@ -155,15 +133,10 @@ export function DashboardPage() {
             ))}
           </div>
         </div>
-
-        <div className="lg:hidden">
-          <DashboardNotificationsCard />
-        </div>
       </div>
 
       <div className="hidden min-w-0 lg:col-start-2 lg:row-start-2 lg:flex lg:flex-col lg:gap-6 lg:self-start">
         <DashboardQuotaCard />
-        <DashboardNotificationsCard />
       </div>
     </div>
   )

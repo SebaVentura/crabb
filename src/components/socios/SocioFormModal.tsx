@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../lib/apiClient'
 import type { SocioPayload } from '../../services/sociosService'
+import type { Socio } from '../../types/socios'
 
 type FieldErrors = Record<string, string>
 
@@ -8,6 +9,9 @@ type Props = {
   isOpen: boolean
   onClose: () => void
   onSubmit: (payload: SocioPayload) => Promise<void>
+  initialValues?: Socio | null
+  title?: string
+  submitLabel?: string
 }
 
 type FormState = {
@@ -44,6 +48,26 @@ function createDefaultState(): FormState {
   }
 }
 
+function fromSocioToFormState(socio: Socio): FormState {
+  const emails = socio.emails?.length ? socio.emails : socio.email ? [socio.email] : []
+
+  return {
+    nro_socio: socio.nroSocio ?? '',
+    nombre_apellido: socio.nombreApellido ?? '',
+    denominacion_taller: socio.denominacionTaller ?? '',
+    dni_cuit: socio.dniCuit ?? socio.cuitODni ?? '',
+    rubro: socio.rubro ?? '',
+    celular: socio.celular ?? socio.telefono ?? '',
+    direccion: socio.direccion ?? '',
+    localidad: socio.localidad ?? '',
+    emails: emails.join(', '),
+    categoria: socio.categoria === 'aportante' ? 'aportante' : 'socio',
+    estado: socio.estado === 'inactivo' ? 'inactivo' : 'activo',
+    estado_cuota: socio.estadoCuota ?? 'no_definido',
+    observaciones: socio.observaciones ?? '',
+  }
+}
+
 function firstError(errors: string[] | undefined): string | undefined {
   if (!errors || errors.length === 0) return undefined
   return errors[0]
@@ -68,7 +92,7 @@ function mapValidationErrors(errors: Record<string, string[]> | undefined): Fiel
   }
 }
 
-export function SocioFormModal({ isOpen, onClose, onSubmit }: Props) {
+export function SocioFormModal({ isOpen, onClose, onSubmit, initialValues = null, title, submitLabel }: Props) {
   const [state, setState] = useState<FormState>(createDefaultState)
   const [isSaving, setIsSaving] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -77,6 +101,13 @@ export function SocioFormModal({ isOpen, onClose, onSubmit }: Props) {
   const canSubmit = useMemo(() => {
     return !isSaving && state.nombre_apellido.trim() !== ''
   }, [isSaving, state.nombre_apellido])
+
+  useEffect(() => {
+    if (!isOpen) return
+    setFieldErrors({})
+    setGeneralError(null)
+    setState(initialValues ? fromSocioToFormState(initialValues) : createDefaultState())
+  }, [isOpen, initialValues])
 
   if (!isOpen) return null
 
@@ -147,7 +178,7 @@ export function SocioFormModal({ isOpen, onClose, onSubmit }: Props) {
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 id="nuevo-socio-title" className="text-lg font-semibold text-slate-900">
-            Nuevo socio
+            {title ?? 'Nuevo socio'}
           </h2>
           <button
             type="button"
@@ -270,7 +301,7 @@ export function SocioFormModal({ isOpen, onClose, onSubmit }: Props) {
             onClick={handleSubmit}
             disabled={!canSubmit}
           >
-            {isSaving ? 'Guardando...' : 'Guardar'}
+            {isSaving ? 'Guardando...' : submitLabel ?? 'Guardar'}
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { ApiError } from '../../lib/apiClient'
-import type { ImportSociosSummary } from '../../services/sociosService'
+import type { ImportSociosResult } from '../../services/sociosService'
 
 type Props = {
-  onImport: (file: File) => Promise<ImportSociosSummary>
+  onImport: (file: File) => Promise<ImportSociosResult>
 }
 
 function isXlsxFile(file: File) {
@@ -14,14 +14,32 @@ export function ImportPadronExcelPanel({ onImport }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [summary, setSummary] = useState<ImportSociosSummary | null>(null)
+  const [result, setResult] = useState<ImportSociosResult | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  const visibleErrors = useMemo(() => {
+    if (!result) return []
+    const merged = [...(result.summary?.errores ?? []), ...(result.errors ?? [])]
+    return merged
+      .filter((item) => {
+        const lowered = item.toLowerCase()
+        return !(
+          lowered.includes(' at ') ||
+          lowered.includes('stack') ||
+          lowered.includes('.php:') ||
+          lowered.includes('.ts:') ||
+          lowered.includes('.js:')
+        )
+      })
+        .filter((item, index, arr) => arr.indexOf(item) === index)
+      .slice(0, 20)
+  }, [result])
 
   const disableImport = useMemo(() => isImporting || !selectedFile, [isImporting, selectedFile])
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
-    setSummary(null)
+    setResult(null)
     setSuccessMessage(null)
 
     if (!file) {
@@ -49,8 +67,12 @@ export function ImportPadronExcelPanel({ onImport }: Props) {
 
     try {
       const result = await onImport(selectedFile)
-      setSummary(result)
-      setSuccessMessage('Importación completada. Se actualizó el padrón de socios.')
+      setResult(result)
+      if (result.message) {
+        setSuccessMessage(result.message)
+      } else {
+        setSuccessMessage('Importación procesada.')
+      }
     } catch (importError) {
       if (importError instanceof ApiError) {
         if (importError.status === 401) {
@@ -107,22 +129,27 @@ export function ImportPadronExcelPanel({ onImport }: Props) {
         <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{successMessage}</p>
       ) : null}
 
-      {summary ? (
+      {result ? (
         <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resultado de importación</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-slate-700 md:grid-cols-5">
-            <div>Leídos: {summary.leidos}</div>
-            <div>Creados: {summary.creados}</div>
-            <div>Actualizados: {summary.actualizados}</div>
-            <div>Omitidos: {summary.omitidos}</div>
-            <div>Errores: {summary.errores.length}</div>
-          </div>
+          {result.code ? <p className="mt-2 text-sm text-slate-700">Código: {result.code}</p> : null}
+          {result.debug_id ? <p className="mt-1 text-sm text-slate-700">Debug ID: {result.debug_id}</p> : null}
 
-          {summary.errores.length > 0 ? (
+          {result.summary ? (
+            <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-slate-700 md:grid-cols-5">
+              <div>Leídos: {result.summary.leidos}</div>
+              <div>Creados: {result.summary.creados}</div>
+              <div>Actualizados: {result.summary.actualizados}</div>
+              <div>Omitidos: {result.summary.omitidos}</div>
+              <div>Errores: {visibleErrors.length}</div>
+            </div>
+          ) : null}
+
+          {visibleErrors.length > 0 ? (
             <details className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               <summary className="cursor-pointer font-semibold">Ver errores parciales</summary>
               <ul className="mt-2 list-disc pl-4">
-                {summary.errores.slice(0, 20).map((item, index) => (
+                {visibleErrors.map((item, index) => (
                   <li key={`${item}-${index}`}>{item}</li>
                 ))}
               </ul>

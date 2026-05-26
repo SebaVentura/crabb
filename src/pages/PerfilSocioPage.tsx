@@ -38,8 +38,8 @@ function displaySocioName(socio: Socio) {
 
 export function PerfilSocioPage() {
   const { user } = useAuth()
-  const role = (user?.role ?? '').trim().toLowerCase()
-  const isAdmin = role === 'admin'
+  const role = user?.role
+  const isAdmin = user?.role === 'admin'
 
   const [socios, setSocios] = useState<Socio[]>([])
   const [totalSocios, setTotalSocios] = useState(0)
@@ -48,6 +48,7 @@ export function PerfilSocioPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showImportPanel, setShowImportPanel] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingSocio, setEditingSocio] = useState<Socio | null>(null)
 
   const [search, setSearch] = useState('')
   const [filtroCategoria, setFiltroCategoria] = useState<'' | CategoriaSocio>('')
@@ -115,22 +116,44 @@ export function PerfilSocioPage() {
 
   const handleImport = useCallback(
     async (file: File) => {
-      const summary = await sociosService.importSociosExcel(file)
+      const result = await sociosService.importSociosExcel(file)
       await loadSocios()
-      setSuccessMessage('Padrón importado correctamente. Listado actualizado.')
-      return summary
+      setSuccessMessage(result.message || 'Padrón importado correctamente. Listado actualizado.')
+      return result
     },
     [loadSocios],
   )
 
-  const handleCreateSocio = useCallback(
+  const handleSaveSocio = useCallback(
     async (payload: SocioPayload) => {
-      await sociosService.createSocio(payload)
+      if (editingSocio) {
+        await sociosService.updateSocio(editingSocio.id, payload)
+        setSuccessMessage('Socio actualizado correctamente. Listado actualizado.')
+      } else {
+        await sociosService.createSocio(payload)
+        setSuccessMessage('Socio creado correctamente. Listado actualizado.')
+      }
+
       await loadSocios()
-      setSuccessMessage('Socio creado correctamente. Listado actualizado.')
+      setEditingSocio(null)
     },
-    [loadSocios],
+    [editingSocio, loadSocios],
   )
+
+  const openCreateModal = () => {
+    setEditingSocio(null)
+    setIsFormOpen(true)
+  }
+
+  const openEditModal = (socio: Socio) => {
+    setEditingSocio(socio)
+    setIsFormOpen(true)
+  }
+
+  const closeFormModal = () => {
+    setIsFormOpen(false)
+    setEditingSocio(null)
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -170,11 +193,13 @@ export function PerfilSocioPage() {
             <button
               type="button"
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition duration-150 hover:bg-blue-700"
-              onClick={() => setIsFormOpen(true)}
+              onClick={openCreateModal}
             >
               Nuevo socio
             </button>
           </div>
+
+          <p className="mt-3 text-xs text-slate-500">Baja/eliminación de socios pendiente de definición de reglas de negocio.</p>
 
           {showImportPanel ? <div className="mt-4"><ImportPadronExcelPanel onImport={handleImport} /></div> : null}
         </Card>
@@ -295,6 +320,17 @@ export function PerfilSocioPage() {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">{badgeCuota(socio.estadoCuota)}</div>
                 <p className="mt-2 text-xs text-slate-600">Ultimo pago: {formatFecha(socio.fechaUltimoPago)}</p>
+                {isAdmin ? (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
+                      onClick={() => openEditModal(socio)}
+                    >
+                      Editar
+                    </button>
+                  </div>
+                ) : null}
               </Card>
             ))}
           </div>
@@ -312,6 +348,7 @@ export function PerfilSocioPage() {
                     <th className="pb-2 pr-3 font-medium">Cuota</th>
                     <th className="pb-2 pr-3 font-medium">Ultimo pago</th>
                     <th className="pb-2 pr-3 font-medium">Email</th>
+                    {isAdmin ? <th className="pb-2 pr-3 font-medium">Acciones</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -325,6 +362,17 @@ export function PerfilSocioPage() {
                       <td className="py-3 pr-3">{badgeCuota(socio.estadoCuota)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(socio.fechaUltimoPago)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.email || '-'}</td>
+                      {isAdmin ? (
+                        <td className="whitespace-nowrap py-3 pr-3">
+                          <button
+                            type="button"
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
+                            onClick={() => openEditModal(socio)}
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
@@ -334,7 +382,14 @@ export function PerfilSocioPage() {
         </>
       ) : null}
 
-      <SocioFormModal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSubmit={handleCreateSocio} />
+      <SocioFormModal
+        isOpen={isFormOpen}
+        onClose={closeFormModal}
+        onSubmit={handleSaveSocio}
+        initialValues={editingSocio}
+        title={editingSocio ? 'Editar socio' : 'Nuevo socio'}
+        submitLabel={editingSocio ? 'Guardar cambios' : 'Guardar'}
+      />
     </div>
   )
 }

@@ -44,6 +44,15 @@ export type ImportSociosSummary = {
   errores: string[]
 }
 
+export type ImportSociosResult = {
+  ok: boolean
+  message: string
+  code?: string
+  summary?: ImportSociosSummary
+  errors: string[]
+  debug_id?: string
+}
+
 export type SociosListResponse = {
   data: Socio[]
   total: number
@@ -70,6 +79,17 @@ function asString(value: unknown, fallback = ''): string {
 function asNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true' || normalized === '1' || normalized === 'ok') return true
+    if (normalized === 'false' || normalized === '0') return false
+  }
+  return fallback
 }
 
 function firstDefined<T>(...values: T[]): T | undefined {
@@ -194,6 +214,44 @@ function mapImportSummary(response: unknown): ImportSociosSummary {
   }
 }
 
+function mapImportResult(response: unknown): ImportSociosResult {
+  const root = asObject(response)
+
+  const summarySource = firstDefined(root.summary, root.resumen)
+  const summaryObject = asObject(summarySource)
+  const hasSummary =
+    summarySource !== undefined ||
+    root.leidos !== undefined ||
+    root.creados !== undefined ||
+    root.actualizados !== undefined ||
+    root.omitidos !== undefined ||
+    root.errores !== undefined
+
+  const mappedSummary = mapImportSummary(summarySource ?? response)
+  const summary = hasSummary
+    ? {
+        ...mappedSummary,
+        errores: Array.isArray(summaryObject.errores) || Array.isArray(summaryObject.errors)
+          ? mappedSummary.errores
+          : [],
+      }
+    : undefined
+
+  const errorsRaw = firstDefined(root.errors, root.errores)
+  const errors = Array.isArray(errorsRaw)
+    ? errorsRaw.map((item) => asString(item)).filter(Boolean)
+    : []
+
+  return {
+    ok: asBoolean(firstDefined(root.ok, root.success), true),
+    message: asString(firstDefined(root.message, root.mensaje), ''),
+    code: asString(root.code) || undefined,
+    summary,
+    errors,
+    debug_id: asString(root.debug_id) || undefined,
+  }
+}
+
 function buildQuery(params?: SocioFilters): string {
   if (!params) return ''
 
@@ -243,7 +301,7 @@ export const sociosService = {
     await apiRequest<void>(`/socios/${id}`, { method: 'DELETE' })
   },
 
-  async importSociosExcel(file: File): Promise<ImportSociosSummary> {
+  async importSociosExcel(file: File): Promise<ImportSociosResult> {
     const formData = new FormData()
     formData.append('file', file)
 
@@ -252,6 +310,6 @@ export const sociosService = {
       body: formData,
     })
 
-    return mapImportSummary(response)
+    return mapImportResult(response)
   },
 }

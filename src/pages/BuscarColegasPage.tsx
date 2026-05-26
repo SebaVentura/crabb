@@ -6,6 +6,8 @@ import { Card } from '../components/ui/Card'
 import { buscarColegas, colegasBackendConfigurado, filtrosBusquedaColegasIniciales } from '../services/buscarColegas'
 import type { FiltrosBusquedaColegas as FiltrosType, SocioParaRecomendar } from '../types/colegas'
 
+const COLEGAS_UNAVAILABLE_MESSAGE = 'Servicio de búsqueda no disponible por el momento.'
+
 export function BuscarColegasPage() {
   const [filtros, setFiltros] = useState<FiltrosType>(filtrosBusquedaColegasIniciales)
   const [resultados, setResultados] = useState<SocioParaRecomendar[]>([])
@@ -14,6 +16,16 @@ export function BuscarColegasPage() {
 
   useEffect(() => {
     let cancelado = false
+
+    if (!colegasBackendConfigurado()) {
+      setResultados([])
+      setError(COLEGAS_UNAVAILABLE_MESSAGE)
+      setCargando(false)
+      return () => {
+        cancelado = true
+      }
+    }
+
     setCargando(true)
     setError(null)
     buscarColegas(filtros)
@@ -46,7 +58,7 @@ export function BuscarColegasPage() {
               Directorio entre socios. Solo se muestran datos públicos de contacto para recomendaciones.
             </p>
             <p className="mt-2 text-xs text-slate-500">
-              {colegasBackendConfigurado() ? 'Consulta conectada a API' : 'Consulta simulada · endpoint pendiente backend'}
+              {colegasBackendConfigurado() ? 'Consulta conectada a API' : COLEGAS_UNAVAILABLE_MESSAGE}
             </p>
           </div>
           <Link
