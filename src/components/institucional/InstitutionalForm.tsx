@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../ui/Card'
 import type {
+  ActionLink,
   InstitutionalAuthority,
   InstitutionalContent,
-  InstitutionalFeesSummary,
-  InstitutionalMembersSummary,
   InstitutionalVisibility,
+  LandingCampaignSection,
+  LandingSection,
+  LandingService,
   SocialLink,
 } from '../../types/institutional'
 
@@ -15,12 +17,33 @@ type Props = {
   isSaving?: boolean
 }
 
-type FieldError = string | null
+type SectionId =
+  | 'institutional'
+  | 'metrics'
+  | 'landing'
+  | 'featured'
+  | 'contact'
+  | 'footer'
+  | 'visibility'
+
+type NavSection = {
+  id: SectionId
+  label: string
+}
+
+const navSections: NavSection[] = [
+  { id: 'institutional', label: 'Pagina institucional' },
+  { id: 'metrics', label: 'Metricas internas' },
+  { id: 'landing', label: 'Landing principal' },
+  { id: 'featured', label: 'Secciones destacadas' },
+  { id: 'contact', label: 'Contacto y redes' },
+  { id: 'footer', label: 'Footer' },
+  { id: 'visibility', label: 'Visibilidad publica' },
+]
 
 const emptyAuthority: InstitutionalAuthority = { role: '', name: '' }
-const emptySocial: SocialLink = { platform: '', url: '' }
-const defaultMembersSummary: InstitutionalMembersSummary = { total: 0, label: '' }
-const defaultFeesSummary: InstitutionalFeesSummary = { title: '', description: '' }
+const emptySocialLink: SocialLink = { platform: '', url: '' }
+const emptyService: LandingService = { title: '', description: '' }
 
 function cloneValues(values: InstitutionalContent): InstitutionalContent {
   return {
@@ -31,10 +54,10 @@ function cloneValues(values: InstitutionalContent): InstitutionalContent {
       objectives: [...values.institutional_page.objectives],
       members_summary: values.institutional_page.members_summary
         ? { ...values.institutional_page.members_summary }
-        : { ...defaultMembersSummary },
+        : { total: 0, label: '' },
       fees_summary: values.institutional_page.fees_summary
         ? { ...values.institutional_page.fees_summary }
-        : { ...defaultFeesSummary },
+        : { title: '', description: '' },
       benefits: [...values.institutional_page.benefits],
     },
     landing: {
@@ -79,19 +102,115 @@ function cloneValues(values: InstitutionalContent): InstitutionalContent {
 }
 
 function normalizeStringList(values: string[]): string[] {
-  return values.map((value) => value.trim()).filter(Boolean)
+  return values.map((item) => item.trim()).filter(Boolean)
+}
+
+function sanitizeLink(link: ActionLink): ActionLink {
+  return {
+    label: link.label.trim(),
+    url: link.url.trim(),
+  }
+}
+
+function sanitizeLandingSection(section: LandingSection): LandingSection {
+  return {
+    title: section.title.trim(),
+    description: section.description.trim(),
+    items: normalizeStringList(section.items),
+  }
+}
+
+function TabNav({
+  activeSection,
+  onChange,
+}: {
+  activeSection: SectionId
+  onChange: (next: SectionId) => void
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex flex-wrap gap-2">
+        {navSections.map((section) => {
+          const isActive = section.id === activeSection
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => onChange(section.id)}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                isActive
+                  ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-200'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              {section.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function DynamicTextList({
+  title,
+  values,
+  addLabel,
+  emptyMessage,
+  onChange,
+}: {
+  title: string
+  values: string[]
+  addLabel: string
+  emptyMessage: string
+  onChange: (nextValues: string[]) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+
+      {values.length === 0 ? <p className="text-sm text-slate-500">{emptyMessage}</p> : null}
+
+      {values.map((value, index) => (
+        <div key={`${title}-${index}`} className="flex gap-2">
+          <input
+            value={value}
+            onChange={(event) =>
+              onChange(values.map((item, currentIndex) => (currentIndex === index ? event.target.value : item)))
+            }
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+            onClick={() => onChange(values.filter((_, currentIndex) => currentIndex !== index))}
+          >
+            Eliminar
+          </button>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        onClick={() => onChange([...values, ''])}
+      >
+        {addLabel}
+      </button>
+    </div>
+  )
 }
 
 function ToggleField({
   label,
   checked,
-  onChange,
   description,
+  onChange,
 }: {
   label: string
   checked: boolean
-  onChange: (nextValue: boolean) => void
   description?: string
+  onChange: (nextValue: boolean) => void
 }) {
   return (
     <label className="rounded-xl border border-slate-200 bg-white p-3">
@@ -109,49 +228,105 @@ function ToggleField({
   )
 }
 
-function StringListEditor({
+function FeaturedSectionEditor({
   title,
-  addLabel,
-  values,
+  section,
   onChange,
-  emptyMessage,
 }: {
   title: string
-  addLabel: string
-  values: string[]
-  onChange: (nextValues: string[]) => void
-  emptyMessage: string
+  section: LandingSection
+  onChange: (next: LandingSection) => void
 }) {
   return (
-    <Card className="border-slate-200 shadow-md" title={title}>
-      <div className="space-y-2">
-        {values.length === 0 ? <p className="text-sm text-slate-500">{emptyMessage}</p> : null}
-        {values.map((value, index) => (
-          <div key={`${title}-${index}`} className="flex gap-2">
+    <Card className="border-slate-200" title={title}>
+      <div className="space-y-3">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Titulo</label>
+          <input
+            value={section.title}
+            onChange={(event) => onChange({ ...section, title: event.target.value })}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+          <textarea
+            rows={3}
+            value={section.description}
+            onChange={(event) => onChange({ ...section, description: event.target.value })}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+
+        <DynamicTextList
+          title="Items"
+          values={section.items}
+          addLabel="Agregar item"
+          emptyMessage="Sin items cargados."
+          onChange={(nextItems) => onChange({ ...section, items: nextItems })}
+        />
+      </div>
+    </Card>
+  )
+}
+
+function CampaignEditor({
+  section,
+  onChange,
+}: {
+  section: LandingCampaignSection
+  onChange: (next: LandingCampaignSection) => void
+}) {
+  return (
+    <Card className="border-slate-200" title="Campana de inscripcion">
+      <div className="space-y-3">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Titulo</label>
+          <input
+            value={section.title}
+            onChange={(event) => onChange({ ...section, title: event.target.value })}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+          <textarea
+            rows={3}
+            value={section.description}
+            onChange={(event) => onChange({ ...section, description: event.target.value })}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+
+        <DynamicTextList
+          title="Items"
+          values={section.items}
+          addLabel="Agregar item"
+          emptyMessage="Sin items cargados."
+          onChange={(nextItems) => onChange({ ...section, items: nextItems })}
+        />
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">CTA label</label>
             <input
-              value={value}
-              onChange={(event) =>
-                onChange(values.map((item, currentIndex) => (currentIndex === index ? event.target.value : item)))
-              }
+              value={section.cta.label}
+              onChange={(event) => onChange({ ...section, cta: { ...section.cta, label: event.target.value } })}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
-            <button
-              type="button"
-              className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
-              onClick={() => onChange(values.filter((_, currentIndex) => currentIndex !== index))}
-            >
-              Quitar
-            </button>
           </div>
-        ))}
 
-        <button
-          type="button"
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          onClick={() => onChange([...values, ''])}
-        >
-          {addLabel}
-        </button>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">CTA URL</label>
+            <input
+              value={section.cta.url}
+              onChange={(event) => onChange({ ...section, cta: { ...section.cta, url: event.target.value } })}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
       </div>
     </Card>
   )
@@ -159,7 +334,8 @@ function StringListEditor({
 
 export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }: Props) {
   const [state, setState] = useState<InstitutionalContent>(() => cloneValues(initialValues))
-  const [fieldError, setFieldError] = useState<FieldError>(null)
+  const [activeSection, setActiveSection] = useState<SectionId>('institutional')
+  const [fieldError, setFieldError] = useState<string | null>(null)
 
   useEffect(() => {
     setState(cloneValues(initialValues))
@@ -167,23 +343,6 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
   }, [initialValues])
 
   const canSubmit = useMemo(() => !isSaving, [isSaving])
-
-  const setAuthorityList = (nextValues: InstitutionalAuthority[]) => {
-    setState((prev) => ({
-      ...prev,
-      institutional_page: {
-        ...prev.institutional_page,
-        authorities: nextValues,
-      },
-    }))
-  }
-
-  const setSocialLinks = (nextValues: SocialLink[]) => {
-    setState((prev) => ({
-      ...prev,
-      social_links: nextValues,
-    }))
-  }
 
   const setVisibility = (key: keyof InstitutionalVisibility, value: boolean) => {
     setState((prev) => ({
@@ -195,34 +354,61 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
     }))
   }
 
+  const setAuthorities = (next: InstitutionalAuthority[]) => {
+    setState((prev) => ({
+      ...prev,
+      institutional_page: {
+        ...prev.institutional_page,
+        authorities: next,
+      },
+    }))
+  }
+
+  const setServices = (next: LandingService[]) => {
+    setState((prev) => ({
+      ...prev,
+      landing: {
+        ...prev.landing,
+        services: next,
+      },
+    }))
+  }
+
+  const setSocialLinks = (next: SocialLink[]) => {
+    setState((prev) => ({
+      ...prev,
+      social_links: next,
+    }))
+  }
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canSubmit) return
 
-    const authoritiesWithPartialValues = state.institutional_page.authorities.some((item) => {
+    const hasBrokenAuthority = state.institutional_page.authorities.some((item) => {
       const role = item.role.trim()
       const name = item.name.trim()
       return (role && !name) || (!role && name)
     })
 
-    if (authoritiesWithPartialValues) {
-      setFieldError('Cada autoridad debe incluir cargo y nombre, o quedar vacia para quitarla.')
+    if (hasBrokenAuthority) {
+      setFieldError('Cada autoridad debe incluir cargo y nombre, o eliminarse.')
       return
     }
 
-    const socialWithPartialValues = state.social_links.some((item) => {
+    const hasBrokenSocial = state.social_links.some((item) => {
       const platform = item.platform.trim()
       const url = item.url.trim()
       return (platform && !url) || (!platform && url)
     })
 
-    if (socialWithPartialValues) {
-      setFieldError('Cada red social debe incluir plataforma y URL, o dejarse vacia para quitarla.')
+    if (hasBrokenSocial) {
+      setFieldError('Cada red social debe incluir plataforma y URL, o eliminarse.')
       return
     }
 
     if (!state.institutional_page.title.trim() && !state.institutional_page.description.trim()) {
-      setFieldError('Completá al menos titulo o descripcion institucional.')
+      setFieldError('Completá al menos el titulo o la descripcion institucional.')
       return
     }
 
@@ -248,6 +434,33 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
           description: state.institutional_page.fees_summary?.description.trim() || '',
         },
       },
+      landing: {
+        hero: {
+          badge: state.landing.hero.badge.trim(),
+          title: state.landing.hero.title.trim(),
+          subtitle: state.landing.hero.subtitle.trim(),
+          description: state.landing.hero.description.trim(),
+          primary_cta: sanitizeLink(state.landing.hero.primary_cta),
+          secondary_cta: sanitizeLink(state.landing.hero.secondary_cta),
+        },
+        services: state.landing.services
+          .map((item) => ({ title: item.title.trim(), description: item.description.trim() }))
+          .filter((item) => item.title || item.description),
+        campaign: {
+          ...sanitizeLandingSection(state.landing.campaign),
+          cta: sanitizeLink(state.landing.campaign.cta),
+        },
+        data_tecnica: sanitizeLandingSection(state.landing.data_tecnica),
+        capacitaciones: sanitizeLandingSection(state.landing.capacitaciones),
+        crabb_auxilio: sanitizeLandingSection(state.landing.crabb_auxilio),
+        opportunities: sanitizeLandingSection(state.landing.opportunities),
+        final_cta: {
+          title: state.landing.final_cta.title.trim(),
+          description: state.landing.final_cta.description.trim(),
+          primary_cta: sanitizeLink(state.landing.final_cta.primary_cta),
+          secondary_cta: sanitizeLink(state.landing.final_cta.secondary_cta),
+        },
+      },
       contact: {
         address: state.contact.address.trim(),
         email: state.contact.email.trim(),
@@ -257,6 +470,10 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
       social_links: state.social_links
         .map((item) => ({ platform: item.platform.trim(), url: item.url.trim() }))
         .filter((item) => item.platform && item.url),
+      footer: {
+        copyright: state.footer.copyright.trim(),
+        description: state.footer.description.trim(),
+      },
       visibility: {
         ...state.visibility,
       },
@@ -267,399 +484,919 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <Card className="border-slate-200 shadow-md" title="A. General">
-        <div className="grid gap-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Titulo institucional</label>
-            <input
-              value={state.institutional_page.title}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    title: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion institucional</label>
-            <textarea
-              rows={4}
-              value={state.institutional_page.description}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    description: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
+      <Card className="border-slate-200 shadow-md" title="Contenido institucional">
+        <p className="text-sm text-slate-600">Configuracion editable para las secciones publicas de CRABB.</p>
       </Card>
 
-      <Card className="border-slate-200 shadow-md" title="B. Autoridades">
-        <div className="space-y-2">
-          {state.institutional_page.authorities.length === 0 ? (
-            <p className="text-sm text-slate-500">Todavia no hay autoridades cargadas.</p>
-          ) : null}
+      <TabNav activeSection={activeSection} onChange={setActiveSection} />
 
-          {state.institutional_page.authorities.map((authority, index) => (
-            <div key={`authority-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+      {activeSection === 'institutional' ? (
+        <Card className="border-slate-200 shadow-md" title="Pagina institucional">
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Titulo</label>
               <input
-                value={authority.role}
+                value={state.institutional_page.title}
                 onChange={(event) =>
-                  setAuthorityList(
-                    state.institutional_page.authorities.map((item, currentIndex) =>
-                      currentIndex === index ? { ...item, role: event.target.value } : item,
-                    ),
-                  )
-                }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="Cargo"
-              />
-              <input
-                value={authority.name}
-                onChange={(event) =>
-                  setAuthorityList(
-                    state.institutional_page.authorities.map((item, currentIndex) =>
-                      currentIndex === index ? { ...item, name: event.target.value } : item,
-                    ),
-                  )
-                }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="Nombre"
-              />
-              <button
-                type="button"
-                className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
-                onClick={() => setAuthorityList(state.institutional_page.authorities.filter((_, currentIndex) => currentIndex !== index))}
-              >
-                Quitar
-              </button>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            onClick={() => setAuthorityList([...state.institutional_page.authorities, { ...emptyAuthority }])}
-          >
-            Agregar autoridad
-          </button>
-        </div>
-      </Card>
-
-      <StringListEditor
-        title="C. Objetivos"
-        addLabel="Agregar objetivo"
-        values={state.institutional_page.objectives}
-        emptyMessage="Todavia no hay objetivos cargados."
-        onChange={(nextValues) =>
-          setState((prev) => ({
-            ...prev,
-            institutional_page: {
-              ...prev.institutional_page,
-              objectives: nextValues,
-            },
-          }))
-        }
-      />
-
-      <StringListEditor
-        title="D. Beneficios"
-        addLabel="Agregar beneficio"
-        values={state.institutional_page.benefits}
-        emptyMessage="Todavia no hay beneficios cargados."
-        onChange={(nextValues) =>
-          setState((prev) => ({
-            ...prev,
-            institutional_page: {
-              ...prev.institutional_page,
-              benefits: nextValues,
-            },
-          }))
-        }
-      />
-
-      <Card className="border-slate-200 shadow-md" title="E. Contacto">
-        <div className="grid gap-3 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Direccion</label>
-            <input
-              value={state.contact.address}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  contact: {
-                    ...prev.contact,
-                    address: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Email</label>
-            <input
-              type="email"
-              value={state.contact.email}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  contact: {
-                    ...prev.contact,
-                    email: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Telefono</label>
-            <input
-              value={state.contact.phone}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  contact: {
-                    ...prev.contact,
-                    phone: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Horarios (hours)</label>
-            <input
-              value={state.contact.hours}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  contact: {
-                    ...prev.contact,
-                    hours: event.target.value,
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              placeholder="Opcional"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="border-slate-200 shadow-md" title="F. Redes sociales">
-        <div className="space-y-2">
-          {state.social_links.length === 0 ? (
-            <p className="text-sm text-slate-500">Todavia no hay redes sociales cargadas.</p>
-          ) : null}
-
-          {state.social_links.map((social, index) => (
-            <div key={`social-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
-              <input
-                value={social.platform}
-                onChange={(event) =>
-                  setSocialLinks(
-                    state.social_links.map((item, currentIndex) =>
-                      currentIndex === index ? { ...item, platform: event.target.value } : item,
-                    ),
-                  )
-                }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="Plataforma"
-              />
-              <input
-                value={social.url}
-                onChange={(event) =>
-                  setSocialLinks(
-                    state.social_links.map((item, currentIndex) =>
-                      currentIndex === index ? { ...item, url: event.target.value } : item,
-                    ),
-                  )
-                }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="URL"
-              />
-              <button
-                type="button"
-                className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
-                onClick={() => setSocialLinks(state.social_links.filter((_, currentIndex) => currentIndex !== index))}
-              >
-                Quitar
-              </button>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            onClick={() => setSocialLinks([...state.social_links, { ...emptySocial }])}
-          >
-            Agregar red
-          </button>
-        </div>
-      </Card>
-
-      <Card className="border-slate-200 shadow-md" title="G. Visibilidad publica">
-        <div className="grid gap-3 md:grid-cols-2">
-          <ToggleField
-            label="Mostrar autoridades"
-            checked={state.visibility.show_authorities}
-            onChange={(nextValue) => setVisibility('show_authorities', nextValue)}
-          />
-          <ToggleField
-            label="Mostrar objetivos"
-            checked={state.visibility.show_objectives}
-            onChange={(nextValue) => setVisibility('show_objectives', nextValue)}
-          />
-          <ToggleField
-            label="Mostrar beneficios"
-            checked={state.visibility.show_benefits}
-            onChange={(nextValue) => setVisibility('show_benefits', nextValue)}
-          />
-          <ToggleField
-            label="Mostrar contacto"
-            checked={state.visibility.show_contact}
-            onChange={(nextValue) => setVisibility('show_contact', nextValue)}
-          />
-          <ToggleField
-            label="Mostrar redes sociales"
-            checked={state.visibility.show_social_links}
-            onChange={(nextValue) => setVisibility('show_social_links', nextValue)}
-          />
-          <ToggleField
-            label="Mostrar resumen de socios"
-            checked={state.visibility.show_members_summary}
-            onChange={(nextValue) => setVisibility('show_members_summary', nextValue)}
-            description="Dato interno: solo deberia publicarse cuando sea necesario."
-          />
-          <ToggleField
-            label="Mostrar resumen de cuotas"
-            checked={state.visibility.show_fees_summary}
-            onChange={(nextValue) => setVisibility('show_fees_summary', nextValue)}
-            description="Dato interno: solo deberia publicarse cuando sea necesario."
-          />
-        </div>
-      </Card>
-
-      <Card className="border-slate-200 shadow-md" title="Datos internos (opcional)">
-        <p className="mb-3 text-xs text-slate-500">
-          Estos datos son internos. Solo se veran en publico si se activa la visibilidad correspondiente.
-        </p>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Socios totales</label>
-            <input
-              type="number"
-              min={0}
-              value={state.institutional_page.members_summary?.total ?? 0}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    members_summary: {
-                      total: Number(event.target.value),
-                      label: prev.institutional_page.members_summary?.label ?? '',
-                    },
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Leyenda de socios</label>
-            <input
-              value={state.institutional_page.members_summary?.label ?? ''}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    members_summary: {
-                      total: prev.institutional_page.members_summary?.total ?? 0,
-                      label: event.target.value,
-                    },
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Titulo cuotas</label>
-            <input
-              value={state.institutional_page.fees_summary?.title ?? ''}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    fees_summary: {
+                  setState((prev) => ({
+                    ...prev,
+                    institutional_page: {
+                      ...prev.institutional_page,
                       title: event.target.value,
-                      description: prev.institutional_page.fees_summary?.description ?? '',
                     },
-                  },
-                }))
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion cuotas</label>
-            <input
-              value={state.institutional_page.fees_summary?.description ?? ''}
-              onChange={(event) =>
-                setState((prev) => ({
-                  ...prev,
-                  institutional_page: {
-                    ...prev.institutional_page,
-                    fees_summary: {
-                      title: prev.institutional_page.fees_summary?.title ?? '',
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+              <textarea
+                rows={4}
+                value={state.institutional_page.description}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    institutional_page: {
+                      ...prev.institutional_page,
                       description: event.target.value,
                     },
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Autoridades</p>
+
+              {state.institutional_page.authorities.length === 0 ? (
+                <p className="text-sm text-slate-500">Todavia no hay autoridades cargadas.</p>
+              ) : null}
+
+              {state.institutional_page.authorities.map((authority, index) => (
+                <div key={`authority-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                  <input
+                    value={authority.role}
+                    onChange={(event) =>
+                      setAuthorities(
+                        state.institutional_page.authorities.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, role: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Cargo"
+                  />
+
+                  <input
+                    value={authority.name}
+                    onChange={(event) =>
+                      setAuthorities(
+                        state.institutional_page.authorities.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, name: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Nombre"
+                  />
+
+                  <button
+                    type="button"
+                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                    onClick={() => setAuthorities(state.institutional_page.authorities.filter((_, currentIndex) => currentIndex !== index))}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onClick={() => setAuthorities([...state.institutional_page.authorities, { ...emptyAuthority }])}
+              >
+                Agregar autoridad
+              </button>
+            </div>
+
+            <DynamicTextList
+              title="Objetivos"
+              values={state.institutional_page.objectives}
+              addLabel="Agregar objetivo"
+              emptyMessage="Todavia no hay objetivos cargados."
+              onChange={(nextValues) =>
+                setState((prev) => ({
+                  ...prev,
+                  institutional_page: {
+                    ...prev.institutional_page,
+                    objectives: nextValues,
                   },
                 }))
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            />
+
+            <DynamicTextList
+              title="Beneficios"
+              values={state.institutional_page.benefits}
+              addLabel="Agregar beneficio"
+              emptyMessage="Todavia no hay beneficios cargados."
+              onChange={(nextValues) =>
+                setState((prev) => ({
+                  ...prev,
+                  institutional_page: {
+                    ...prev.institutional_page,
+                    benefits: nextValues,
+                  },
+                }))
+              }
             />
           </div>
+        </Card>
+      ) : null}
+
+      {activeSection === 'metrics' ? (
+        <Card className="border-slate-200 shadow-md" title="Metricas internas">
+          <div className="space-y-4">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Estos datos son internos. Solo se publican si se habilitan explicitamente desde Visibilidad publica.
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Socios totales</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={state.institutional_page.members_summary?.total ?? 0}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      institutional_page: {
+                        ...prev.institutional_page,
+                        members_summary: {
+                          total: Number(event.target.value),
+                          label: prev.institutional_page.members_summary?.label ?? '',
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Leyenda socios</label>
+                <input
+                  value={state.institutional_page.members_summary?.label ?? ''}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      institutional_page: {
+                        ...prev.institutional_page,
+                        members_summary: {
+                          total: prev.institutional_page.members_summary?.total ?? 0,
+                          label: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Titulo cuotas y pagos</label>
+                <input
+                  value={state.institutional_page.fees_summary?.title ?? ''}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      institutional_page: {
+                        ...prev.institutional_page,
+                        fees_summary: {
+                          title: event.target.value,
+                          description: prev.institutional_page.fees_summary?.description ?? '',
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion cuotas y pagos</label>
+                <input
+                  value={state.institutional_page.fees_summary?.description ?? ''}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      institutional_page: {
+                        ...prev.institutional_page,
+                        fees_summary: {
+                          title: prev.institutional_page.fees_summary?.title ?? '',
+                          description: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {activeSection === 'landing' ? (
+        <Card className="border-slate-200 shadow-md" title="Landing principal">
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Badge</label>
+                <input
+                  value={state.landing.hero.badge}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          badge: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Titulo</label>
+                <input
+                  value={state.landing.hero.title}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          title: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Subtitulo</label>
+              <input
+                value={state.landing.hero.subtitle}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    landing: {
+                      ...prev.landing,
+                      hero: {
+                        ...prev.landing.hero,
+                        subtitle: event.target.value,
+                      },
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+              <textarea
+                rows={3}
+                value={state.landing.hero.description}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    landing: {
+                      ...prev.landing,
+                      hero: {
+                        ...prev.landing.hero,
+                        description: event.target.value,
+                      },
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">CTA principal label</label>
+                <input
+                  value={state.landing.hero.primary_cta.label}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          primary_cta: {
+                            ...prev.landing.hero.primary_cta,
+                            label: event.target.value,
+                          },
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">CTA principal URL</label>
+                <input
+                  value={state.landing.hero.primary_cta.url}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          primary_cta: {
+                            ...prev.landing.hero.primary_cta,
+                            url: event.target.value,
+                          },
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">CTA secundaria label</label>
+                <input
+                  value={state.landing.hero.secondary_cta.label}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          secondary_cta: {
+                            ...prev.landing.hero.secondary_cta,
+                            label: event.target.value,
+                          },
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">CTA secundaria URL</label>
+                <input
+                  value={state.landing.hero.secondary_cta.url}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        hero: {
+                          ...prev.landing.hero,
+                          secondary_cta: {
+                            ...prev.landing.hero.secondary_cta,
+                            url: event.target.value,
+                          },
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Servicios</p>
+
+              {state.landing.services.length === 0 ? (
+                <p className="text-sm text-slate-500">Todavia no hay servicios cargados.</p>
+              ) : null}
+
+              {state.landing.services.map((service, index) => (
+                <div key={`service-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                  <input
+                    value={service.title}
+                    onChange={(event) =>
+                      setServices(
+                        state.landing.services.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, title: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Titulo"
+                  />
+
+                  <input
+                    value={service.description}
+                    onChange={(event) =>
+                      setServices(
+                        state.landing.services.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, description: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Descripcion"
+                  />
+
+                  <button
+                    type="button"
+                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                    onClick={() => setServices(state.landing.services.filter((_, currentIndex) => currentIndex !== index))}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onClick={() => setServices([...state.landing.services, { ...emptyService }])}
+              >
+                Agregar servicio
+              </button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {activeSection === 'featured' ? (
+        <div className="space-y-4">
+          <CampaignEditor
+            section={state.landing.campaign}
+            onChange={(next) =>
+              setState((prev) => ({
+                ...prev,
+                landing: {
+                  ...prev.landing,
+                  campaign: next,
+                },
+              }))
+            }
+          />
+
+          <FeaturedSectionEditor
+            title="Data tecnica"
+            section={state.landing.data_tecnica}
+            onChange={(next) =>
+              setState((prev) => ({
+                ...prev,
+                landing: {
+                  ...prev.landing,
+                  data_tecnica: next,
+                },
+              }))
+            }
+          />
+
+          <FeaturedSectionEditor
+            title="Capacitaciones"
+            section={state.landing.capacitaciones}
+            onChange={(next) =>
+              setState((prev) => ({
+                ...prev,
+                landing: {
+                  ...prev.landing,
+                  capacitaciones: next,
+                },
+              }))
+            }
+          />
+
+          <FeaturedSectionEditor
+            title="CRABB Auxilio"
+            section={state.landing.crabb_auxilio}
+            onChange={(next) =>
+              setState((prev) => ({
+                ...prev,
+                landing: {
+                  ...prev.landing,
+                  crabb_auxilio: next,
+                },
+              }))
+            }
+          />
+
+          <FeaturedSectionEditor
+            title="Nuevas oportunidades"
+            section={state.landing.opportunities}
+            onChange={(next) =>
+              setState((prev) => ({
+                ...prev,
+                landing: {
+                  ...prev.landing,
+                  opportunities: next,
+                },
+              }))
+            }
+          />
+
+          <Card className="border-slate-200" title="CTA final landing">
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Titulo</label>
+                <input
+                  value={state.landing.final_cta.title}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        final_cta: {
+                          ...prev.landing.final_cta,
+                          title: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+                <textarea
+                  rows={3}
+                  value={state.landing.final_cta.description}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      landing: {
+                        ...prev.landing,
+                        final_cta: {
+                          ...prev.landing.final_cta,
+                          description: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">CTA principal label</label>
+                  <input
+                    value={state.landing.final_cta.primary_cta.label}
+                    onChange={(event) =>
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          final_cta: {
+                            ...prev.landing.final_cta,
+                            primary_cta: {
+                              ...prev.landing.final_cta.primary_cta,
+                              label: event.target.value,
+                            },
+                          },
+                        },
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">CTA principal URL</label>
+                  <input
+                    value={state.landing.final_cta.primary_cta.url}
+                    onChange={(event) =>
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          final_cta: {
+                            ...prev.landing.final_cta,
+                            primary_cta: {
+                              ...prev.landing.final_cta.primary_cta,
+                              url: event.target.value,
+                            },
+                          },
+                        },
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">CTA secundaria label</label>
+                  <input
+                    value={state.landing.final_cta.secondary_cta.label}
+                    onChange={(event) =>
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          final_cta: {
+                            ...prev.landing.final_cta,
+                            secondary_cta: {
+                              ...prev.landing.final_cta.secondary_cta,
+                              label: event.target.value,
+                            },
+                          },
+                        },
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">CTA secundaria URL</label>
+                  <input
+                    value={state.landing.final_cta.secondary_cta.url}
+                    onChange={(event) =>
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          final_cta: {
+                            ...prev.landing.final_cta,
+                            secondary_cta: {
+                              ...prev.landing.final_cta.secondary_cta,
+                              url: event.target.value,
+                            },
+                          },
+                        },
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
-      </Card>
+      ) : null}
+
+      {activeSection === 'contact' ? (
+        <Card className="border-slate-200 shadow-md" title="Contacto y redes">
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Direccion</label>
+                <input
+                  value={state.contact.address}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      contact: {
+                        ...prev.contact,
+                        address: event.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Email</label>
+                <input
+                  type="email"
+                  value={state.contact.email}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      contact: {
+                        ...prev.contact,
+                        email: event.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Telefono</label>
+                <input
+                  value={state.contact.phone}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      contact: {
+                        ...prev.contact,
+                        phone: event.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Hours</label>
+                <input
+                  value={state.contact.hours}
+                  onChange={(event) =>
+                    setState((prev) => ({
+                      ...prev,
+                      contact: {
+                        ...prev.contact,
+                        hours: event.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Redes sociales</p>
+
+              {state.social_links.length === 0 ? (
+                <p className="text-sm text-slate-500">Todavia no hay redes sociales cargadas.</p>
+              ) : null}
+
+              {state.social_links.map((social, index) => (
+                <div key={`social-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                  <input
+                    value={social.platform}
+                    onChange={(event) =>
+                      setSocialLinks(
+                        state.social_links.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, platform: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Plataforma"
+                  />
+
+                  <input
+                    value={social.url}
+                    onChange={(event) =>
+                      setSocialLinks(
+                        state.social_links.map((item, currentIndex) =>
+                          currentIndex === index ? { ...item, url: event.target.value } : item,
+                        ),
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="URL"
+                  />
+
+                  <button
+                    type="button"
+                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                    onClick={() => setSocialLinks(state.social_links.filter((_, currentIndex) => currentIndex !== index))}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onClick={() => setSocialLinks([...state.social_links, { ...emptySocialLink }])}
+              >
+                Agregar red social
+              </button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {activeSection === 'footer' ? (
+        <Card className="border-slate-200 shadow-md" title="Footer">
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Copyright</label>
+              <input
+                value={state.footer.copyright}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    footer: {
+                      ...prev.footer,
+                      copyright: event.target.value,
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Descripcion</label>
+              <textarea
+                rows={3}
+                value={state.footer.description}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    footer: {
+                      ...prev.footer,
+                      description: event.target.value,
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {activeSection === 'visibility' ? (
+        <Card className="border-slate-200 shadow-md" title="Visibilidad publica">
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+              show_members_summary y show_fees_summary estan desactivados por defecto para evitar publicar metricas internas por accidente.
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <ToggleField
+                label="Mostrar autoridades"
+                checked={state.visibility.show_authorities}
+                onChange={(nextValue) => setVisibility('show_authorities', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar objetivos"
+                checked={state.visibility.show_objectives}
+                onChange={(nextValue) => setVisibility('show_objectives', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar beneficios"
+                checked={state.visibility.show_benefits}
+                onChange={(nextValue) => setVisibility('show_benefits', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar contacto"
+                checked={state.visibility.show_contact}
+                onChange={(nextValue) => setVisibility('show_contact', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar redes sociales"
+                checked={state.visibility.show_social_links}
+                onChange={(nextValue) => setVisibility('show_social_links', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar resumen de socios"
+                checked={state.visibility.show_members_summary}
+                description="Solo activar cuando este validado para publicacion."
+                onChange={(nextValue) => setVisibility('show_members_summary', nextValue)}
+              />
+              <ToggleField
+                label="Mostrar resumen de cuotas"
+                checked={state.visibility.show_fees_summary}
+                description="Solo activar cuando este validado para publicacion."
+                onChange={(nextValue) => setVisibility('show_fees_summary', nextValue)}
+              />
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       {fieldError ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{fieldError}</div>
       ) : null}
 
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={!canSubmit}
-        >
-          {isSaving ? 'Guardando...' : 'Guardar cambios'}
-        </button>
+      <div className="sticky bottom-2 z-10 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-slate-500">Guardado global: se envia todo el contenido institucional en una sola solicitud.</p>
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={!canSubmit}
+          >
+            {isSaving ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        </div>
       </div>
     </form>
   )
