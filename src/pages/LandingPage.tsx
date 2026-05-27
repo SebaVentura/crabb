@@ -184,11 +184,12 @@ export function LandingPage() {
           </section>
         </div>
 
-        <div className="mx-auto mt-8 max-w-7xl space-y-8 px-4 pb-8 md:px-8 md:pb-12">
-          <BenefitsGrid services={benefitCards} />
-          <div id="data-tecnica" className="h-0" />
-          <div id="capacitaciones" className="h-0" />
-          <FeaturedSectionsGrid sections={featuredSections} />
+        <BenefitsGrid services={benefitCards} />
+        <div id="data-tecnica" className="h-0" />
+        <div id="capacitaciones" className="h-0" />
+        <FeaturedSectionsGrid sections={featuredSections} />
+
+        <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 md:px-8 md:pb-12">
           <ContactCommunitySection
             contact={content.contact}
             socialLinks={socialLinks}
