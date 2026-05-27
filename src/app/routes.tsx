@@ -47,6 +47,14 @@ export const router = createHashRouter([
       { path: 'perfil', element: <PerfilSocioPage /> },
       { path: 'colegas', element: <BuscarColegasPage /> },
       {
+        path: 'admin',
+        element: (
+          <AdminOnlyRoute>
+            <Navigate to="/admin/institucional" replace />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
         path: 'admin/institucional',
         element: (
           <AdminOnlyRoute>

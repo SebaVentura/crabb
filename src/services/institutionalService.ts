@@ -1,14 +1,15 @@
 import { apiRequest } from '../lib/apiClient'
 import type {
   ActionLink,
-  ContactContent,
   FooterContent,
   InstitutionalAuthority,
   InstitutionalContent,
+  InstitutionalContact,
   InstitutionalFeesSummary,
   InstitutionalMembersSummary,
   InstitutionalPageContent,
   InstitutionalUpdatePayload,
+  InstitutionalVisibility,
   LandingCampaignSection,
   LandingContent,
   LandingFinalCta,
@@ -36,6 +37,17 @@ function asString(value: unknown): string {
 function asNumber(value: unknown): number {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true' || normalized === '1') return true
+    if (normalized === 'false' || normalized === '0') return false
+  }
+  return fallback
 }
 
 function normalizeStringList(value: unknown): string[] {
@@ -78,14 +90,16 @@ function normalizeFeesSummary(value: unknown): InstitutionalFeesSummary {
 function normalizeInstitutionalPage(value: unknown): InstitutionalPageContent {
   const source = asObject(value)
   const authoritiesRaw = source.authorities
+  const hasMembersSummary = Object.prototype.hasOwnProperty.call(source, 'members_summary')
+  const hasFeesSummary = Object.prototype.hasOwnProperty.call(source, 'fees_summary')
 
   return {
     title: asString(source.title),
     description: asString(source.description),
     authorities: Array.isArray(authoritiesRaw) ? authoritiesRaw.map(normalizeAuthority) : [],
     objectives: normalizeStringList(source.objectives),
-    members_summary: normalizeMembersSummary(source.members_summary),
-    fees_summary: normalizeFeesSummary(source.fees_summary),
+    members_summary: hasMembersSummary ? normalizeMembersSummary(source.members_summary) : undefined,
+    fees_summary: hasFeesSummary ? normalizeFeesSummary(source.fees_summary) : undefined,
     benefits: normalizeStringList(source.benefits),
   }
 }
@@ -153,23 +167,34 @@ function normalizeLanding(value: unknown): LandingContent {
   }
 }
 
-function normalizeContact(value: unknown): ContactContent {
+function normalizeContact(value: unknown): InstitutionalContact {
   const source = asObject(value)
   return {
-    title: asString(source.title),
     address: asString(source.address),
     email: asString(source.email),
     phone: asString(source.phone),
-    schedule: asString(source.schedule),
-    whatsapp: normalizeActionLink(source.whatsapp),
+    hours: asString(source.hours || source.schedule),
   }
 }
 
 function normalizeSocialLink(value: unknown): SocialLink {
   const source = asObject(value)
   return {
-    label: asString(source.label),
+    platform: asString(source.platform || source.label),
     url: asString(source.url),
+  }
+}
+
+function normalizeVisibility(value: unknown): InstitutionalVisibility {
+  const source = asObject(value)
+  return {
+    show_authorities: asBoolean(source.show_authorities, true),
+    show_objectives: asBoolean(source.show_objectives, true),
+    show_benefits: asBoolean(source.show_benefits, true),
+    show_contact: asBoolean(source.show_contact, true),
+    show_social_links: asBoolean(source.show_social_links, true),
+    show_members_summary: asBoolean(source.show_members_summary, false),
+    show_fees_summary: asBoolean(source.show_fees_summary, false),
   }
 }
 
@@ -191,6 +216,7 @@ function normalizeInstitutionalContent(value: unknown): InstitutionalContent {
     contact: normalizeContact(source.contact),
     social_links: Array.isArray(socialLinksRaw) ? socialLinksRaw.map(normalizeSocialLink) : [],
     footer: normalizeFooter(source.footer),
+    visibility: normalizeVisibility(source.visibility),
   }
 }
 
@@ -207,14 +233,8 @@ export function createEmptyInstitutionalContent(): InstitutionalContent {
       description: '',
       authorities: [],
       objectives: [],
-      members_summary: {
-        total: 0,
-        label: '',
-      },
-      fees_summary: {
-        title: '',
-        description: '',
-      },
+      members_summary: undefined,
+      fees_summary: undefined,
       benefits: [],
     },
     landing: {
@@ -261,17 +281,24 @@ export function createEmptyInstitutionalContent(): InstitutionalContent {
       },
     },
     contact: {
-      title: '',
       address: '',
       email: '',
       phone: '',
-      schedule: '',
-      whatsapp: { label: '', url: '' },
+      hours: '',
     },
     social_links: [],
     footer: {
       copyright: '',
       description: '',
+    },
+    visibility: {
+      show_authorities: true,
+      show_objectives: true,
+      show_benefits: true,
+      show_contact: true,
+      show_social_links: true,
+      show_members_summary: false,
+      show_fees_summary: false,
     },
   }
 }
@@ -288,10 +315,10 @@ export function hasInstitutionalPageContent(content: InstitutionalContent): bool
     section.authorities.some((item) => hasValue(item.role) || hasValue(item.name)) ||
     section.objectives.length > 0 ||
     section.benefits.length > 0 ||
-    section.members_summary.total > 0 ||
-    hasValue(section.members_summary.label) ||
-    hasValue(section.fees_summary.title) ||
-    hasValue(section.fees_summary.description)
+    (section.members_summary ? section.members_summary.total > 0 || hasValue(section.members_summary.label) : false) ||
+    (section.fees_summary
+      ? hasValue(section.fees_summary.title) || hasValue(section.fees_summary.description)
+      : false)
   )
 }
 
@@ -330,14 +357,11 @@ export function hasLandingContent(content: InstitutionalContent): boolean {
     hasValue(landing.final_cta.primary_cta.url) ||
     hasValue(landing.final_cta.secondary_cta.label) ||
     hasValue(landing.final_cta.secondary_cta.url) ||
-    hasValue(content.contact.title) ||
     hasValue(content.contact.address) ||
     hasValue(content.contact.email) ||
     hasValue(content.contact.phone) ||
-    hasValue(content.contact.schedule) ||
-    hasValue(content.contact.whatsapp.label) ||
-    hasValue(content.contact.whatsapp.url) ||
-    content.social_links.some((item) => hasValue(item.label) || hasValue(item.url)) ||
+    hasValue(content.contact.hours) ||
+    content.social_links.some((item) => hasValue(item.platform) || hasValue(item.url)) ||
     hasValue(content.footer.copyright) ||
     hasValue(content.footer.description)
   )

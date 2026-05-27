@@ -13,13 +13,23 @@ export type InstitutionalFeesSummary = {
   description: string
 }
 
+export type InstitutionalVisibility = {
+  show_authorities: boolean
+  show_objectives: boolean
+  show_benefits: boolean
+  show_contact: boolean
+  show_social_links: boolean
+  show_members_summary: boolean
+  show_fees_summary: boolean
+}
+
 export type InstitutionalPageContent = {
   title: string
   description: string
   authorities: InstitutionalAuthority[]
   objectives: string[]
-  members_summary: InstitutionalMembersSummary
-  fees_summary: InstitutionalFeesSummary
+  members_summary?: InstitutionalMembersSummary
+  fees_summary?: InstitutionalFeesSummary
   benefits: string[]
 }
 
@@ -70,17 +80,15 @@ export type LandingContent = {
   final_cta: LandingFinalCta
 }
 
-export type ContactContent = {
-  title: string
+export type InstitutionalContact = {
   address: string
   email: string
   phone: string
-  schedule: string
-  whatsapp: ActionLink
+  hours: string
 }
 
 export type SocialLink = {
-  label: string
+  platform: string
   url: string
 }
 
@@ -92,9 +100,10 @@ export type FooterContent = {
 export type InstitutionalContent = {
   institutional_page: InstitutionalPageContent
   landing: LandingContent
-  contact: ContactContent
+  contact: InstitutionalContact
   social_links: SocialLink[]
   footer: FooterContent
+  visibility: InstitutionalVisibility
 }
 
 export type InstitutionalUpdatePayload = InstitutionalContent
