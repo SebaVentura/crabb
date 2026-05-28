@@ -11,49 +11,110 @@ type PublicFooterProps = {
   linkGroups: FooterLinkGroup[]
 }
 
-export function PublicFooter({ footer, socialLinks, linkGroups }: PublicFooterProps) {
+export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
+  // TODO: reemplazar esta configuracion local por datos administrables desde Superadmin.
+  const footerConfig = {
+    brand: 'CRABB',
+    description: 'Cámara de Reparación de Automotores de Bahía Blanca',
+    summary: footer.description?.trim() || 'Representación institucional del ecosistema automotor regional.',
+    contact: {
+      email: 'info@crabb.com',
+      phone: '+54 291 400-0000',
+      location: 'Bahía Blanca, Buenos Aires',
+    },
+    navLinks: [
+      { label: 'Inicio', url: '#inicio' },
+      { label: 'Institucional', url: '/institucional' },
+      { label: 'Servicios', url: '#servicios' },
+      { label: 'Capacitaciones', url: '/capacitaciones' },
+      { label: 'Data Técnica', url: '/data-tecnica' },
+      { label: 'Contacto', url: '#contacto' },
+    ] satisfies ActionLink[],
+    socials: [
+      {
+        label: 'Instagram',
+        href: socialLinks.find((link) => link.platform.toLowerCase().includes('instagram'))?.url || '#',
+      },
+      {
+        label: 'Facebook',
+        href: socialLinks.find((link) => link.platform.toLowerCase().includes('facebook'))?.url || '#',
+      },
+      {
+        label: 'LinkedIn',
+        href: socialLinks.find((link) => link.platform.toLowerCase().includes('linkedin'))?.url || '#',
+      },
+    ],
+  }
+
   return (
-    <footer className="rounded-t-[2rem] border-t border-slate-700/80 bg-slate-950 px-6 py-10 md:px-10">
-      <div className="mx-auto grid max-w-6xl gap-7 md:grid-cols-[1.1fr_2fr]">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-100">CRABB</p>
-          <p className="mt-2 max-w-sm text-sm text-slate-400">{footer.description}</p>
-          <p className="mt-4 text-xs text-slate-500">{footer.copyright}</p>
+    <footer className="w-full border-t border-slate-200 bg-white py-10 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr_0.85fr]">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-900">{footerConfig.brand}</p>
+            <p className="mt-3 max-w-md text-sm font-medium text-slate-800">{footerConfig.description}</p>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">{footerConfig.summary}</p>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Navegación</h4>
+            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
+              {footerConfig.navLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.url}
+                    className="text-sm text-slate-700 transition hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Contacto</h4>
+            <div className="mt-4 space-y-2 text-sm text-slate-700">
+              <p>
+                <a
+                  href={`mailto:${footerConfig.contact.email}`}
+                  className="transition hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                >
+                  {footerConfig.contact.email}
+                </a>
+              </p>
+              <p>{footerConfig.contact.location}</p>
+              <p>
+                <a
+                  href={`tel:${footerConfig.contact.phone}`}
+                  className="transition hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                >
+                  {footerConfig.contact.phone}
+                </a>
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {footerConfig.socials.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target={item.href.startsWith('http') ? '_blank' : undefined}
+                  rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  aria-label={`Abrir ${item.label}`}
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-3">
-          {linkGroups.map((group) => (
-            <div key={group.title}>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">{group.title}</h4>
-              <ul className="mt-3 space-y-2">
-                {group.links.map((link) => (
-                  <li key={`${group.title}-${link.label}`}>
-                    <a href={link.url} className="text-sm text-slate-400 transition hover:text-slate-200">
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="mt-8 border-t border-slate-200 pt-5">
+          <p className="text-xs text-slate-500">{footer.copyright || '© CRABB. Todos los derechos reservados.'}</p>
         </div>
       </div>
-
-      {socialLinks.length > 0 ? (
-        <div className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-2 border-t border-slate-800 pt-5">
-          {socialLinks.map((item) => (
-            <a
-              key={item.platform}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-xs uppercase tracking-[0.14em] text-slate-400 transition hover:border-slate-500 hover:text-slate-200"
-            >
-              {item.platform}
-            </a>
-          ))}
-        </div>
-      ) : null}
     </footer>
   )
 }

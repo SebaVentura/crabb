@@ -132,27 +132,31 @@ export function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-[#06111f] text-slate-100">
+    <main className="min-h-screen w-full overflow-x-hidden bg-slate-50">
       <PublicHeader
         navItems={[
           { label: 'Inicio', href: '#inicio' },
           { label: 'Institucional', href: '/institucional' },
           { label: 'Servicios', href: '#servicios' },
           { label: 'Capacitaciones', href: '/capacitaciones' },
-          { label: 'Data Tecnica', href: '/data-tecnica' },
+          { label: 'Data Técnica', href: '/data-tecnica' },
           { label: 'Contacto', href: '#contacto' },
         ]}
       />
 
       {error ? (
-        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100 md:px-8">
+        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl rounded-xl border border-amber-300/50 bg-amber-100/80 px-4 py-4 text-sm text-amber-900 md:px-8">
           Contenido cargado con fallback visual temporal. Detalle tecnico: {error}
         </section>
       ) : null}
 
       {isLoading ? (
-        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl rounded-xl border border-slate-700/70 bg-slate-900/60 px-4 py-4 text-sm text-slate-300 md:px-8">
-          Actualizando contenido institucional...
+        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl px-4 md:px-8" aria-label="Cargando contenido institucional">
+          <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-blue-600/70" aria-hidden="true" />
+            <span className="h-2.5 w-28 rounded-full bg-slate-200" aria-hidden="true" />
+            <span className="h-2.5 w-16 rounded-full bg-slate-100" aria-hidden="true" />
+          </div>
         </section>
       ) : null}
 
@@ -168,15 +172,13 @@ export function LandingPage() {
       <BenefitsGrid services={benefitCards} />
       <FeaturedSectionsGrid sections={featuredSections} />
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 md:px-8 md:pb-12">
-        <ContactCommunitySection
-          contact={content.contact}
-          socialLinks={socialLinks}
-          finalCta={landing.final_cta}
-          showContact={visibleContact}
-          showSocialLinks={visibleSocialLinks}
-        />
-      </section>
+      <ContactCommunitySection
+        contact={content.contact}
+        socialLinks={socialLinks}
+        finalCta={landing.final_cta}
+        showContact={visibleContact}
+        showSocialLinks={visibleSocialLinks}
+      />
 
       <PublicFooter
         footer={content.footer}
