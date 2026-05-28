@@ -8,7 +8,6 @@ import {
 import { PublicFooter } from '../components/public/PublicFooter'
 import { PublicHeader } from '../components/public/PublicHeader'
 import { PublicHero } from '../components/public/PublicHero'
-import { PublicSectionHeader } from '../components/public/PublicSectionHeader'
 import {
   getInstitutionalContentWithFallback,
   institutionalPreviewFooterLinkGroups,
@@ -133,72 +132,51 @@ export function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-slate-950 text-slate-100">
+    <main className="min-h-screen w-full overflow-x-hidden bg-[#06111f] text-slate-100">
       <PublicHeader
         navItems={[
           { label: 'Inicio', href: '#inicio' },
-          { label: 'Institucional', href: '#institucional' },
+          { label: 'Institucional', href: '/institucional' },
           { label: 'Servicios', href: '#servicios' },
-          { label: 'Capacitaciones', href: '#capacitaciones' },
-          { label: 'Data Tecnica', href: '#data-tecnica' },
+          { label: 'Capacitaciones', href: '/capacitaciones' },
+          { label: 'Data Tecnica', href: '/data-tecnica' },
           { label: 'Contacto', href: '#contacto' },
         ]}
       />
 
-      <div className="w-full">
-        {error ? (
-          <div className="mx-auto max-w-7xl px-4 pt-5 md:px-8 md:pt-7">
-            <section className="mb-5 rounded-xl border border-amber-300/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-              Contenido cargado con fallback visual temporal. Detalle tecnico: {error}
-            </section>
-          </div>
-        ) : null}
+      {error ? (
+        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl rounded-xl border border-amber-300/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100 md:px-8">
+          Contenido cargado con fallback visual temporal. Detalle tecnico: {error}
+        </section>
+      ) : null}
 
-        {isLoading ? (
-          <div className="mx-auto max-w-7xl px-4 pt-5 md:px-8 md:pt-7">
-            <section className="mb-5 rounded-xl border border-slate-700/70 bg-slate-900/60 p-4 text-sm text-slate-300">
-              Actualizando contenido institucional...
-            </section>
-          </div>
-        ) : null}
+      {isLoading ? (
+        <section className="mx-auto mb-5 mt-5 w-full max-w-7xl rounded-xl border border-slate-700/70 bg-slate-900/60 px-4 py-4 text-sm text-slate-300 md:px-8">
+          Actualizando contenido institucional...
+        </section>
+      ) : null}
 
-        <PublicHero
-          badge={landing.hero.badge}
-          title={landing.hero.title}
-          description={landing.hero.description}
-          primaryCta={landing.hero.primary_cta}
-          secondaryCta={landing.hero.secondary_cta}
-          kpis={heroKpis}
+      <PublicHero
+        badge={landing.hero.badge}
+        title={landing.hero.title}
+        description={landing.hero.description}
+        primaryCta={landing.hero.primary_cta}
+        secondaryCta={landing.hero.secondary_cta}
+        kpis={heroKpis}
+      />
+
+      <BenefitsGrid services={benefitCards} />
+      <FeaturedSectionsGrid sections={featuredSections} />
+
+      <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 md:px-8 md:pb-12">
+        <ContactCommunitySection
+          contact={content.contact}
+          socialLinks={socialLinks}
+          finalCta={landing.final_cta}
+          showContact={visibleContact}
+          showSocialLinks={visibleSocialLinks}
         />
-
-        <div className="mx-auto mt-8 max-w-7xl px-4 md:px-8">
-          <section
-            id="institucional"
-            className="rounded-[2rem] border border-slate-700/80 bg-slate-900/70 px-6 py-10 md:px-10 md:py-12"
-          >
-            <PublicSectionHeader
-              eyebrow="Institucional"
-              title={content.institutional_page.title}
-              description={content.institutional_page.description}
-            />
-          </section>
-        </div>
-
-        <BenefitsGrid services={benefitCards} />
-        <div id="data-tecnica" className="h-0" />
-        <div id="capacitaciones" className="h-0" />
-        <FeaturedSectionsGrid sections={featuredSections} />
-
-        <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 md:px-8 md:pb-12">
-          <ContactCommunitySection
-            contact={content.contact}
-            socialLinks={socialLinks}
-            finalCta={landing.final_cta}
-            showContact={visibleContact}
-            showSocialLinks={visibleSocialLinks}
-          />
-        </div>
-      </div>
+      </section>
 
       <PublicFooter
         footer={content.footer}
