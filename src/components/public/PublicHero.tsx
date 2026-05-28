@@ -1,6 +1,4 @@
 import type { ActionLink } from '../../types/institutional'
-import { BlueprintBackground } from './BlueprintBackground'
-import { BlueprintCar } from './BlueprintCar'
 import { PublicActionLink } from './PublicActionLink'
 
 type HeroKpi = {
@@ -17,56 +15,129 @@ type PublicHeroProps = {
   kpis?: HeroKpi[]
 }
 
-export function PublicHero({
-  badge,
-  title,
-  description,
-  primaryCta,
-  secondaryCta,
-  kpis = [],
-}: PublicHeroProps) {
+export function PublicHero({ primaryCta, secondaryCta, kpis = [] }: PublicHeroProps) {
+  const eyebrowText = 'Juntos movemos mas'
+  const headingText = 'Camara de Reparacion de Automotores de Bahia Blanca'
+  const descriptionText =
+    'Representamos, acompanamos y fortalecemos a talleres, concesionarias, agencias y pymes vinculadas al ecosistema automotor regional.'
+
+  // TODO: reemplazar esta configuracion local por datos administrables desde Superadmin.
+  const heroVisual: {
+    imageSrc: string | null
+    alt: string
+    caption: string
+  } = {
+    imageSrc: null,
+    alt: 'Imagen institucional CRABB',
+    caption: 'Representacion institucional del sector automotor',
+  }
+
+  // TODO: reemplazar microvalores por contenido configurable desde Superadmin.
+  const institutionalValues = [
+    'Trabajo conjunto',
+    'Profesionalismo',
+    'Cercania',
+    'Compromiso regional',
+  ]
+
+  // TODO: reemplazar highlights por contenido configurable desde Superadmin.
+  const heroHighlights = [
+    'Representacion institucional',
+    'Gestion y asesoramiento',
+    'Capacitacion continua',
+  ]
+
+  const primaryLink: ActionLink = {
+    ...primaryCta,
+    label: 'Conocer la institucion',
+    url: primaryCta.url || '/institucional',
+  }
+
+  const secondaryLink: ActionLink = {
+    ...secondaryCta,
+    label: 'Ver servicios',
+    url: secondaryCta.url || '#servicios',
+  }
+
   return (
-    <section id="inicio" className="relative min-h-[680px] w-full overflow-hidden bg-[#06111f]">
-      <BlueprintBackground />
+    <section id="inicio" className="w-full bg-slate-50">
+      <div className="mx-auto max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-28">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(340px,460px)] lg:gap-12">
+          <div className="max-w-3xl">
+            <p className="inline-flex rounded-full border border-sky-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
+              {eyebrowText}
+            </p>
 
-      <div className="pointer-events-none absolute right-[-4%] top-1/2 hidden w-[56%] -translate-y-1/2 opacity-65 [filter:drop-shadow(0_0_30px_rgba(125,211,252,0.18))] lg:block xl:w-[52%]">
-        <BlueprintCar />
-      </div>
+            <h1 className="mt-5 text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+              {headingText}
+            </h1>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 py-24 lg:grid-cols-[1fr_0.9fr] lg:px-8 lg:py-32">
-        <div className="max-w-3xl">
-          <p className="inline-flex rounded-full border border-sky-300/50 bg-slate-950/70 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-200">
-            {badge}
-          </p>
-          <h1 className="mt-6 text-4xl font-semibold leading-[1.06] text-white md:text-6xl xl:text-7xl">
-            {title}
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-200 md:text-xl">{description}</p>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+              {descriptionText}
+            </p>
 
-          <div className="mt-9 flex flex-wrap gap-4">
-            <PublicActionLink
-              link={primaryCta}
-              className="rounded-md bg-sky-500 px-7 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
-            />
-            <PublicActionLink
-              link={secondaryCta}
-              className="rounded-md border border-slate-500 bg-slate-900/40 px-7 py-3.5 text-sm font-semibold text-slate-100 transition hover:border-slate-300"
-            />
-          </div>
-        </div>
+            <div className="mt-8 flex flex-wrap gap-3.5">
+              <PublicActionLink
+                link={primaryLink}
+                className="rounded-md bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              />
+              <PublicActionLink
+                link={secondaryLink}
+                className="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+              />
+            </div>
 
-        {kpis.length > 0 ? (
-          <aside className="self-end justify-self-start lg:justify-self-end">
-            <div className="grid gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/75 p-4 backdrop-blur">
-              {kpis.map((item) => (
-                <article key={item.label} className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2.5">
-                  <p className="text-lg font-semibold text-slate-100">{item.value}</p>
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{item.label}</p>
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {institutionalValues.map((value) => (
+                <article key={value} className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                  <div className="mb-1 h-1.5 w-8 rounded-full bg-sky-500/60" aria-hidden="true" />
+                  <p className="text-xs font-medium text-slate-700">{value}</p>
                 </article>
               ))}
             </div>
+
+            {kpis.length > 0 ? (
+              <div className="mt-8 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+                {kpis.map((item) => (
+                  <article key={item.label} className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-lg font-semibold text-slate-900">{item.value}</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <aside className="w-full lg:justify-self-end">
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_50px_-30px_rgba(15,23,42,0.24)]">
+              <div className="flex h-[280px] items-center justify-center bg-slate-100 p-5 sm:h-[330px] lg:h-[390px]">
+                {heroVisual.imageSrc ? (
+                  <img
+                    src={heroVisual.imageSrc}
+                    alt={heroVisual.alt}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 text-center text-sm font-medium text-slate-500">
+                    Imagen institucional configurable
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-slate-200 bg-white px-5 py-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{heroVisual.caption}</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {heroHighlights.map((highlight) => (
+                    <div key={highlight} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                      {highlight}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </article>
           </aside>
-        ) : null}
+        </div>
       </div>
     </section>
   )
