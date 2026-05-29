@@ -1,13 +1,15 @@
 import { apiRequest } from '../lib/apiClient'
-import type { Socio } from '../types/socios'
+import type { CondicionSocio, Socio } from '../types/socios'
 
 export type SocioFilters = {
   search?: string
   categoria?: string
+  condicion?: string
   estado?: string
   estado_cuota?: string
   page?: number
   per_page?: number
+  perPage?: number
 }
 
 export type SocioPayload = Partial<{
@@ -21,7 +23,8 @@ export type SocioPayload = Partial<{
   dni_cuit: string
   rubro: string
   observaciones: string
-  categoria: 'socio' | 'aportante'
+  categoria: 'socio' | 'adherente' | 'aportante'
+  condicion: 'socio' | 'adherente' | 'aportante'
   estado: 'activo' | 'inactivo'
   estado_cuota: 'no_definido' | 'al-dia' | 'moroso' | 'vencido' | 'pendiente'
   localidad: string
@@ -54,11 +57,13 @@ export type ImportSociosResult = {
 }
 
 export type SociosListResponse = {
-  data: Socio[]
-  total: number
-  currentPage: number
-  lastPage: number
-  perPage: number
+  items: Socio[]
+  pagination: {
+    page: number
+    perPage: number
+    total: number
+    lastPage: number
+  } | null
 }
 
 type UnknownObject = Record<string, unknown>
@@ -96,6 +101,10 @@ function firstDefined<T>(...values: T[]): T | undefined {
   return values.find((value) => value !== undefined)
 }
 
+function normalizeMembershipValue(value: string): string {
+  return value.trim().toLowerCase()
+}
+
 function normalizeEstado(estado: string): Socio['estado'] {
   return estado === 'inactivo' ? 'inactivo' : 'activo'
 }
@@ -109,9 +118,17 @@ function normalizeEstadoCuota(estado: string): Socio['estadoCuota'] {
   return 'no_definido'
 }
 
-function normalizeCategoria(categoria: string): Socio['categoria'] {
-  if (categoria === 'aportante') return 'aportante'
-  if (categoria === 'socio') return 'socio'
+function normalizeCategoria(categoria: string): NonNullable<Socio['categoria']> {
+  const normalized = normalizeMembershipValue(categoria)
+  if (normalized === 'adherente') return 'adherente'
+  if (normalized === 'aportante') return 'aportante'
+  return 'socio'
+}
+
+function normalizeCondicion(condicion: string): CondicionSocio {
+  const normalized = normalizeMembershipValue(condicion)
+  if (normalized === 'adherente') return 'adherente'
+  if (normalized === 'aportante') return 'aportante'
   return 'socio'
 }
 
@@ -144,6 +161,12 @@ function normalizeSocio(row: unknown): Socio {
   const nombreRazonSocial = denominacionTaller || nombreApellido
   const emailPrincipal = asString(firstDefined(source.email, emails[0]))
 
+  const categoriaRaw = asString(source.categoria)
+  const condicionRaw = asString(
+    firstDefined(source.condicion, source.condicion_socio, source.condicionSocio, categoriaRaw),
+  )
+  const categoria = normalizeCategoria(categoriaRaw || condicionRaw)
+
   return {
     id: asString(firstDefined(source.id, source.socio_id), crypto.randomUUID()),
     nroSocio: asString(firstDefined(source.nroSocio, source.nro_socio)),
@@ -160,7 +183,8 @@ function normalizeSocio(row: unknown): Socio {
     direccion: asString(source.direccion),
     localidad: asString(source.localidad),
     rubro: asString(source.rubro),
-    categoria: normalizeCategoria(asString(source.categoria, 'socio')),
+    categoria,
+    condicion: normalizeCondicion(condicionRaw || categoria || 'socio'),
     estado: normalizeEstado(asString(source.estado, 'activo')),
     estadoCuota: normalizeEstadoCuota(
       asString(firstDefined(source.estadoCuota, source.estado_cuota), 'no_definido'),
@@ -178,23 +202,56 @@ function toCreatePayload(payload: SocioPayload): SocioPayload {
 
 function mapListResponse(response: unknown): SociosListResponse {
   const root = asObject(response)
-  const dataValue = firstDefined(root.data, root.items)
+  const rootData = asObject(root.data)
+  const dataValue = firstDefined(root.data, root.items, rootData.data)
 
   const rows = Array.isArray(dataValue) ? dataValue : []
-  const data = rows.map(normalizeSocio)
+  const items = rows.map(normalizeSocio)
 
-  const meta = asObject(root.meta)
-  const total = asNumber(firstDefined(root.total, meta.total), data.length)
-  const currentPage = asNumber(firstDefined(root.current_page, meta.current_page), 1)
-  const lastPage = asNumber(firstDefined(root.last_page, meta.last_page), 1)
-  const perPage = asNumber(firstDefined(root.per_page, meta.per_page), data.length || 1)
+  const meta = asObject(firstDefined(root.meta, rootData.meta))
+  const pagination = asObject(firstDefined(root.pagination, rootData.pagination))
+
+  const pageSource = firstDefined(root.current_page, root.page, meta.current_page, pagination.page)
+  const perPageSource = firstDefined(
+    root.per_page,
+    root.perPage,
+    meta.per_page,
+    pagination.per_page,
+    pagination.perPage,
+  )
+  const totalSource = firstDefined(root.total, meta.total, pagination.total)
+  const lastPageSource = firstDefined(root.last_page, meta.last_page, pagination.last_page)
+
+  const hasPagination =
+    pageSource !== undefined ||
+    perPageSource !== undefined ||
+    totalSource !== undefined ||
+    lastPageSource !== undefined ||
+    root.meta !== undefined ||
+    root.pagination !== undefined ||
+    root.links !== undefined
+
+  if (!hasPagination) {
+    return {
+      items,
+      pagination: null,
+    }
+  }
+
+  const total = asNumber(totalSource, items.length)
+  const page = asNumber(pageSource, 1)
+  const perPage = asNumber(perPageSource, items.length || 1)
+  const inferredLastPage = perPage > 0 ? Math.max(1, Math.ceil(total / perPage)) : 1
+  const lastPage = asNumber(lastPageSource, inferredLastPage)
 
   return {
-    data,
-    total,
-    currentPage,
-    lastPage,
-    perPage,
+    items,
+    pagination: {
+      page,
+      perPage,
+      total,
+      lastPage,
+    },
   }
 }
 
@@ -258,10 +315,12 @@ function buildQuery(params?: SocioFilters): string {
   const query = new URLSearchParams()
   if (params.search?.trim()) query.set('search', params.search.trim())
   if (params.categoria?.trim()) query.set('categoria', params.categoria.trim())
+  if (params.condicion?.trim()) query.set('condicion', params.condicion.trim())
   if (params.estado?.trim()) query.set('estado', params.estado.trim())
   if (params.estado_cuota?.trim()) query.set('estado_cuota', params.estado_cuota.trim())
   if (params.page) query.set('page', String(params.page))
-  if (params.per_page) query.set('per_page', String(params.per_page))
+  const perPage = params.perPage ?? params.per_page
+  if (perPage) query.set('per_page', String(perPage))
 
   const encoded = query.toString()
   return encoded ? `?${encoded}` : ''
@@ -297,7 +356,7 @@ export const sociosService = {
     return normalizeSocio(firstDefined(root.data, response))
   },
 
-  async deleteSocio(id: string): Promise<void> {
+  async deleteSocio(id: number | string): Promise<void> {
     await apiRequest<void>(`/socios/${id}`, { method: 'DELETE' })
   },
 

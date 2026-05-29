@@ -6,7 +6,8 @@ import { Card } from '../components/ui/Card'
 import { useAuth } from '../hooks/useAuth'
 import { ApiError } from '../lib/apiClient'
 import { sociosService, type SocioPayload } from '../services/sociosService'
-import type { CategoriaSocio, EstadoCuotaSocio, EstadoSocio, Socio } from '../types/socios'
+import type { CategoriaSocio, CondicionSocio, EstadoCuotaSocio, EstadoSocio, Socio } from '../types/socios'
+import { formatPhone } from '../utils/formatPhone'
 
 function formatFecha(iso: string) {
   if (!iso) return '-'
@@ -27,8 +28,10 @@ function badgeCuota(estadoCuota: EstadoCuotaSocio) {
   return <Badge tone="yellow">Pendiente</Badge>
 }
 
-function badgeCategoria(categoria: CategoriaSocio | undefined) {
-  if (categoria === 'aportante') return <Badge tone="blue">Aportante</Badge>
+function badgeCondicion(condicion: CondicionSocio | undefined, categoria: CategoriaSocio | undefined) {
+  const normalized = condicion ?? categoria ?? 'socio'
+  if (normalized === 'adherente') return <Badge tone="yellow">Adherente</Badge>
+  if (normalized === 'aportante') return <Badge tone="blue">Aportante</Badge>
   return <Badge tone="gray">Socio</Badge>
 }
 
@@ -49,13 +52,30 @@ export function PerfilSocioPage() {
   const [showImportPanel, setShowImportPanel] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingSocio, setEditingSocio] = useState<Socio | null>(null)
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null)
 
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [filtroCategoria, setFiltroCategoria] = useState<'' | CategoriaSocio>('')
+  const [filtroCondicion, setFiltroCondicion] = useState<'' | CondicionSocio>('')
   const [filtroEstado, setFiltroEstado] = useState<'' | EstadoSocio>('')
   const [filtroEstadoCuota, setFiltroEstadoCuota] = useState<'' | EstadoCuotaSocio>('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+  const [perPage, setPerPage] = useState(20)
+  const [isServerPagination, setIsServerPagination] = useState(false)
 
-  const loadSocios = useCallback(async () => {
+  const hasFiltersApplied =
+    search.trim() !== '' ||
+    filtroCategoria !== '' ||
+    filtroCondicion !== '' ||
+    filtroEstado !== '' ||
+    filtroEstadoCuota !== ''
+
+  const loadSocios = useCallback(async (options?: { page?: number; perPage?: number }) => {
+    const requestedPage = Math.max(1, options?.page ?? currentPage)
+    const requestedPerPage = Math.max(1, options?.perPage ?? perPage)
+
     setIsLoading(true)
     setLoadError(null)
 
@@ -63,13 +83,44 @@ export function PerfilSocioPage() {
       const response = await sociosService.getSocios({
         search,
         categoria: filtroCategoria || undefined,
+        condicion: filtroCondicion || undefined,
         estado: filtroEstado || undefined,
         estado_cuota: filtroEstadoCuota || undefined,
-        per_page: 500,
+        page: requestedPage,
+        perPage: requestedPerPage,
       })
 
-      setSocios(response.data)
-      setTotalSocios(response.total)
+      if (response.pagination) {
+        setIsServerPagination(true)
+        setSocios(response.items)
+        setTotalSocios(response.pagination.total)
+        setCurrentPage(response.pagination.page)
+        setLastPage(Math.max(1, response.pagination.lastPage))
+        setPerPage(response.pagination.perPage)
+        return {
+          visibleItems: response.items.length,
+          page: response.pagination.page,
+        }
+      }
+
+      setIsServerPagination(false)
+      const localTotal = response.items.length
+      const calculatedLastPage = Math.max(1, Math.ceil(localTotal / requestedPerPage))
+      const safePage = Math.min(requestedPage, calculatedLastPage)
+      const start = (safePage - 1) * requestedPerPage
+      const end = start + requestedPerPage
+      const pageItems = response.items.slice(start, end)
+
+      setSocios(pageItems)
+      setTotalSocios(localTotal)
+      setCurrentPage(safePage)
+      setLastPage(calculatedLastPage)
+      setPerPage(requestedPerPage)
+
+      return {
+        visibleItems: pageItems.length,
+        page: safePage,
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 422) {
@@ -82,14 +133,20 @@ export function PerfilSocioPage() {
       }
       setSocios([])
       setTotalSocios(0)
+      setCurrentPage(1)
+      setLastPage(1)
+      return {
+        visibleItems: 0,
+        page: 1,
+      }
     } finally {
       setIsLoading(false)
     }
-  }, [search, filtroCategoria, filtroEstado, filtroEstadoCuota])
+  }, [currentPage, perPage, search, filtroCategoria, filtroCondicion, filtroEstado, filtroEstadoCuota])
 
   useEffect(() => {
-    void loadSocios()
-  }, [loadSocios])
+    void loadSocios({ page: currentPage, perPage })
+  }, [loadSocios, currentPage, perPage])
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -117,11 +174,11 @@ export function PerfilSocioPage() {
   const handleImport = useCallback(
     async (file: File) => {
       const result = await sociosService.importSociosExcel(file)
-      await loadSocios()
+      await loadSocios({ page: currentPage, perPage })
       setSuccessMessage(result.message || 'Padrón importado correctamente. Listado actualizado.')
       return result
     },
-    [loadSocios],
+    [currentPage, loadSocios, perPage],
   )
 
   const handleSaveSocio = useCallback(
@@ -134,11 +191,70 @@ export function PerfilSocioPage() {
         setSuccessMessage('Socio creado correctamente. Listado actualizado.')
       }
 
-      await loadSocios()
+      await loadSocios({ page: currentPage, perPage })
       setEditingSocio(null)
     },
-    [editingSocio, loadSocios],
+    [currentPage, editingSocio, loadSocios, perPage],
   )
+
+  const handleDeleteSocio = useCallback(
+    async (socio: Socio) => {
+      const socioName = displaySocioName(socio)
+      const confirmMessage = `¿Seguro que querés eliminar este socio? Esta acción no se puede deshacer.\n\nSocio: ${socioName}`
+      if (!window.confirm(confirmMessage)) return
+
+      setIsDeletingId(socio.id)
+      setLoadError(null)
+      setSuccessMessage(null)
+
+      try {
+        await sociosService.deleteSocio(socio.id)
+
+        const refreshed = await loadSocios({ page: currentPage, perPage })
+        if (refreshed.visibleItems === 0 && refreshed.page > 1) {
+          await loadSocios({ page: refreshed.page - 1, perPage })
+        }
+
+        setSuccessMessage('Socio eliminado correctamente. Listado actualizado.')
+      } catch (error) {
+        if (error instanceof ApiError) {
+          if (error.status === 404) {
+            setLoadError('No se pudo eliminar el socio porque el endpoint DELETE todavía no está disponible o el socio no existe.')
+          } else {
+            setLoadError(error.message)
+          }
+        } else {
+          setLoadError('No se pudo eliminar el socio. Intentá nuevamente.')
+        }
+      } finally {
+        setIsDeletingId(null)
+      }
+    },
+    [currentPage, loadSocios, perPage],
+  )
+
+  const handleSearch = () => {
+    setCurrentPage(1)
+    setSearch(searchInput.trim())
+  }
+
+  const clearFilters = () => {
+    setSearchInput('')
+    setSearch('')
+    setFiltroCategoria('')
+    setFiltroCondicion('')
+    setFiltroEstado('')
+    setFiltroEstadoCuota('')
+    setCurrentPage(1)
+  }
+
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1))
+  }
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(lastPage, prev + 1))
+  }
 
   const openCreateModal = () => {
     setEditingSocio(null)
@@ -199,8 +315,6 @@ export function PerfilSocioPage() {
             </button>
           </div>
 
-          <p className="mt-3 text-xs text-slate-500">Baja/eliminación de socios pendiente de definición de reglas de negocio.</p>
-
           {showImportPanel ? <div className="mt-4"><ImportPadronExcelPanel onImport={handleImport} /></div> : null}
         </Card>
       ) : null}
@@ -224,9 +338,15 @@ export function PerfilSocioPage() {
             <input
               id="buscar-socio"
               type="search"
-              value={search}
-              onChange={(ev) => setSearch(ev.target.value)}
-              placeholder="Nombre, CUIT/DNI, email o teléfono"
+              value={searchInput}
+              onChange={(ev) => setSearchInput(ev.target.value)}
+              onKeyDown={(ev) => {
+                if (ev.key === 'Enter') {
+                  ev.preventDefault()
+                  handleSearch()
+                }
+              }}
+              placeholder="Nombre, denominación, Nro socio, DNI/CUIT o email"
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
             />
           </div>
@@ -238,11 +358,35 @@ export function PerfilSocioPage() {
             <select
               id="filtro-categoria"
               value={filtroCategoria}
-              onChange={(ev) => setFiltroCategoria(ev.target.value as '' | CategoriaSocio)}
+              onChange={(ev) => {
+                setFiltroCategoria(ev.target.value as '' | CategoriaSocio)
+                setCurrentPage(1)
+              }}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Todas</option>
               <option value="socio">Socio</option>
+              <option value="adherente">Adherente</option>
+              <option value="aportante">Aportante</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="filtro-condicion">
+              Condición
+            </label>
+            <select
+              id="filtro-condicion"
+              value={filtroCondicion}
+              onChange={(ev) => {
+                setFiltroCondicion(ev.target.value as '' | CondicionSocio)
+                setCurrentPage(1)
+              }}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="">Todas</option>
+              <option value="socio">Socio</option>
+              <option value="adherente">Adherente</option>
               <option value="aportante">Aportante</option>
             </select>
           </div>
@@ -254,7 +398,10 @@ export function PerfilSocioPage() {
             <select
               id="filtro-estado"
               value={filtroEstado}
-              onChange={(ev) => setFiltroEstado(ev.target.value as '' | EstadoSocio)}
+              onChange={(ev) => {
+                setFiltroEstado(ev.target.value as '' | EstadoSocio)
+                setCurrentPage(1)
+              }}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Todos</option>
@@ -270,7 +417,10 @@ export function PerfilSocioPage() {
             <select
               id="filtro-cuota"
               value={filtroEstadoCuota}
-              onChange={(ev) => setFiltroEstadoCuota(ev.target.value as '' | EstadoCuotaSocio)}
+              onChange={(ev) => {
+                setFiltroEstadoCuota(ev.target.value as '' | EstadoCuotaSocio)
+                setCurrentPage(1)
+              }}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Todos</option>
@@ -281,6 +431,26 @@ export function PerfilSocioPage() {
               <option value="vencido">Vencido</option>
             </select>
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition duration-150 hover:bg-blue-700"
+            onClick={handleSearch}
+          >
+            Buscar
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
+            onClick={clearFilters}
+          >
+            Limpiar
+          </button>
+          <p className="text-xs text-slate-500">
+            Mostrando {socios.length} de {totalSocios} socios {isServerPagination ? '(paginación API)' : '(paginación local temporal)'}.
+          </p>
         </div>
       </Card>
 
@@ -296,8 +466,17 @@ export function PerfilSocioPage() {
 
       {!isLoading && !loadError && socios.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">
-          <p>Todavía no hay socios cargados.</p>
-          <p className="mt-1">Importá un padrón Excel o cargá un socio manualmente para comenzar.</p>
+          {hasFiltersApplied ? (
+            <>
+              <p>No se encontraron resultados para la búsqueda aplicada.</p>
+              <p className="mt-1">Probá ajustar filtros o limpiar la búsqueda.</p>
+            </>
+          ) : (
+            <>
+              <p>Todavía no hay socios cargados.</p>
+              <p className="mt-1">Importá un padrón Excel o cargá un socio manualmente para comenzar.</p>
+            </>
+          )}
         </div>
       ) : null}
 
@@ -311,23 +490,34 @@ export function PerfilSocioPage() {
                     <p className="font-semibold text-slate-900">{displaySocioName(socio)}</p>
                     <p className="text-xs text-slate-600">Nro: {socio.nroSocio || '-'}</p>
                     <p className="text-xs text-slate-600">{socio.dniCuit || socio.cuitODni || '-'}</p>
-                    <p className="mt-1 text-xs text-slate-600">{socio.celular || socio.telefono || '-'}</p>
+                    <p className="mt-1 text-xs text-slate-600">{formatPhone(socio.celular || socio.telefono)}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     {badgeEstado(socio.estado)}
-                    {badgeCategoria(socio.categoria)}
+                    {badgeCondicion(socio.condicion, socio.categoria)}
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">{badgeCuota(socio.estadoCuota)}</div>
                 <p className="mt-2 text-xs text-slate-600">Ultimo pago: {formatFecha(socio.fechaUltimoPago)}</p>
                 {isAdmin ? (
-                  <div className="mt-3">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
                       onClick={() => openEditModal(socio)}
+                      disabled={isDeletingId === socio.id}
                     >
                       Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition duration-150 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => {
+                        void handleDeleteSocio(socio)
+                      }}
+                      disabled={isDeletingId === socio.id}
+                    >
+                      {isDeletingId === socio.id ? 'Eliminando...' : 'Eliminar'}
                     </button>
                   </div>
                 ) : null}
@@ -337,11 +527,13 @@ export function PerfilSocioPage() {
 
           <Card className="hidden border-slate-200 shadow-md md:block" title={`Socios (${socios.length})`}>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="pb-2 pr-3 font-medium">Socio</th>
-                    <th className="pb-2 pr-3 font-medium">Categoria</th>
+                    <th className="pb-2 pr-3 font-medium">Nro socio</th>
+                    <th className="pb-2 pr-3 font-medium">Socio / Titular</th>
+                    <th className="pb-2 pr-3 font-medium">Denominación / Taller</th>
+                    <th className="pb-2 pr-3 font-medium">Condición</th>
                     <th className="pb-2 pr-3 font-medium">CUIT/DNI</th>
                     <th className="pb-2 pr-3 font-medium">Telefono</th>
                     <th className="pb-2 pr-3 font-medium">Estado</th>
@@ -354,29 +546,90 @@ export function PerfilSocioPage() {
                 <tbody>
                   {socios.map((socio) => (
                     <tr key={socio.id} className="border-b border-slate-100 last:border-0 even:bg-slate-50">
-                      <td className="max-w-[230px] py-3 pr-3 font-medium text-slate-900">{displaySocioName(socio)}</td>
-                      <td className="py-3 pr-3">{badgeCategoria(socio.categoria)}</td>
+                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.nroSocio || '-'}</td>
+                      <td className="max-w-[260px] py-3 pr-3 font-medium text-slate-900">{displaySocioName(socio)}</td>
+                      <td className="max-w-[260px] py-3 pr-3 text-slate-700">{socio.denominacionTaller || socio.nombreRazonSocial || '-'}</td>
+                      <td className="py-3 pr-3">{badgeCondicion(socio.condicion, socio.categoria)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.dniCuit || socio.cuitODni || '-'}</td>
-                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.celular || socio.telefono || '-'}</td>
+                      <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatPhone(socio.celular || socio.telefono)}</td>
                       <td className="py-3 pr-3">{badgeEstado(socio.estado)}</td>
                       <td className="py-3 pr-3">{badgeCuota(socio.estadoCuota)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(socio.fechaUltimoPago)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.email || '-'}</td>
                       {isAdmin ? (
                         <td className="whitespace-nowrap py-3 pr-3">
+                          <div className="flex gap-2">
                           <button
                             type="button"
                             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
                             onClick={() => openEditModal(socio)}
+                            disabled={isDeletingId === socio.id}
                           >
                             Editar
                           </button>
+                            <button
+                              type="button"
+                              className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition duration-150 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                              onClick={() => {
+                                void handleDeleteSocio(socio)
+                              }}
+                              disabled={isDeletingId === socio.id}
+                            >
+                              {isDeletingId === socio.id ? 'Eliminando...' : 'Eliminar'}
+                            </button>
+                          </div>
                         </td>
                       ) : null}
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </Card>
+
+          <Card className="border-slate-200 shadow-md" title="Paginación">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={goToPreviousPage}
+                disabled={currentPage <= 1 || isLoading}
+              >
+                Anterior
+              </button>
+
+              <p className="text-sm text-slate-700">
+                Página {currentPage} de {lastPage}
+              </p>
+
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={goToNextPage}
+                disabled={currentPage >= lastPage || isLoading}
+              >
+                Siguiente
+              </button>
+
+              <label className="ml-2 text-sm text-slate-700" htmlFor="per-page">
+                Por página
+              </label>
+              <select
+                id="per-page"
+                value={perPage}
+                onChange={(event) => {
+                  const nextPerPage = Number(event.target.value)
+                  setPerPage(nextPerPage)
+                  setCurrentPage(1)
+                }}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                disabled={isLoading}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
             </div>
           </Card>
         </>

@@ -24,7 +24,8 @@ type FormState = {
   direccion: string
   localidad: string
   emails: string
-  categoria: 'socio' | 'aportante'
+  categoria: 'socio' | 'adherente' | 'aportante'
+  condicion: 'socio' | 'adherente' | 'aportante'
   estado: 'activo' | 'inactivo'
   estado_cuota: 'no_definido' | 'al-dia' | 'moroso' | 'vencido' | 'pendiente'
   observaciones: string
@@ -42,6 +43,7 @@ function createDefaultState(): FormState {
     localidad: '',
     emails: '',
     categoria: 'socio',
+    condicion: 'socio',
     estado: 'activo',
     estado_cuota: 'no_definido',
     observaciones: '',
@@ -61,7 +63,8 @@ function fromSocioToFormState(socio: Socio): FormState {
     direccion: socio.direccion ?? '',
     localidad: socio.localidad ?? '',
     emails: emails.join(', '),
-    categoria: socio.categoria === 'aportante' ? 'aportante' : 'socio',
+    categoria: socio.categoria ?? 'socio',
+    condicion: socio.condicion ?? socio.categoria ?? 'socio',
     estado: socio.estado === 'inactivo' ? 'inactivo' : 'activo',
     estado_cuota: socio.estadoCuota ?? 'no_definido',
     observaciones: socio.observaciones ?? '',
@@ -86,6 +89,7 @@ function mapValidationErrors(errors: Record<string, string[]> | undefined): Fiel
     localidad: firstError(errors.localidad) ?? '',
     emails: firstError(errors.emails) ?? firstError(errors['emails.0']) ?? '',
     categoria: firstError(errors.categoria) ?? '',
+    condicion: firstError(errors.condicion) ?? '',
     estado: firstError(errors.estado) ?? '',
     estado_cuota: firstError(errors.estado_cuota) ?? '',
     observaciones: firstError(errors.observaciones) ?? '',
@@ -137,6 +141,7 @@ export function SocioFormModal({ isOpen, onClose, onSubmit, initialValues = null
         .map((item) => item.trim())
         .filter(Boolean),
       categoria: state.categoria,
+      condicion: state.condicion,
       estado: state.estado,
       estado_cuota: state.estado_cuota,
       observaciones: state.observaciones.trim(),
@@ -250,9 +255,20 @@ export function SocioFormModal({ isOpen, onClose, onSubmit, initialValues = null
               <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
               <select className={inputClass('categoria')} value={state.categoria} onChange={(e) => setField('categoria', e.target.value as FormState['categoria'])}>
                 <option value="socio">Socio</option>
+                <option value="adherente">Adherente</option>
                 <option value="aportante">Aportante</option>
               </select>
               {fieldErrors.categoria ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.categoria}</p> : null}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Condición</label>
+              <select className={inputClass('condicion')} value={state.condicion} onChange={(e) => setField('condicion', e.target.value as FormState['condicion'])}>
+                <option value="socio">Socio</option>
+                <option value="adherente">Adherente</option>
+                <option value="aportante">Aportante</option>
+              </select>
+              {fieldErrors.condicion ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.condicion}</p> : null}
             </div>
 
             <div>

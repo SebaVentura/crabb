@@ -2,7 +2,9 @@ export type EstadoSocio = 'activo' | 'inactivo'
 
 export type EstadoCuotaSocio = 'al-dia' | 'moroso' | 'vencido' | 'pendiente' | 'no_definido'
 
-export type CategoriaSocio = 'socio' | 'aportante'
+export type CategoriaSocio = 'socio' | 'adherente' | 'aportante'
+
+export type CondicionSocio = 'socio' | 'adherente' | 'aportante'
 
 export type Socio = {
   id: string
@@ -21,6 +23,7 @@ export type Socio = {
   localidad: string
   rubro?: string
   categoria?: CategoriaSocio
+  condicion?: CondicionSocio
   estado: EstadoSocio
   estadoCuota: EstadoCuotaSocio
   fechaAlta: string
