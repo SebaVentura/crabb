@@ -1,4 +1,4 @@
-import type { ActionLink } from '../../types/institutional'
+import type { ActionLink, LandingHeroVisual } from '../../types/institutional'
 import { PublicActionLink } from './PublicActionLink'
 
 type HeroKpi = {
@@ -12,36 +12,53 @@ type PublicHeroProps = {
   description: string
   primaryCta: ActionLink
   secondaryCta: ActionLink
+  imageUrl: string
+  imageAlt: string
+  values?: string[]
+  visual?: LandingHeroVisual
   kpis?: HeroKpi[]
 }
 
-export function PublicHero({ primaryCta, secondaryCta, kpis = [] }: PublicHeroProps) {
-  // TODO: reemplazar esta configuracion local por datos administrables desde Superadmin.
-  const heroContent = {
-    eyebrow: 'JUNTOS MOVEMOS MAS',
-    title: 'Cámara de Reparación de Automotores de Bahía Blanca',
-    description:
-      'Representamos, acompañamos y fortalecemos a talleres, concesionarias, agencias y pymes vinculadas al ecosistema automotor regional.',
-    values: ['Trabajo conjunto', 'Profesionalismo', 'Cercanía', 'Compromiso regional'],
-    visualTitle: 'Sector automotor regional',
-    visualSubtitle: 'Representación, gestión y formación para empresas del ecosistema automotor.',
-    visualModules: [
-      'Representación institucional',
-      'Gestión y asesoramiento',
-      'Capacitación continua',
-    ],
-    regionTag: 'Bahía Blanca y región',
-  }
+const fallbackHeroContent = {
+  badge: 'JUNTOS MOVEMOS MAS',
+  title: 'Camara de Reparacion de Automotores de Bahia Blanca',
+  description:
+    'Representamos, acompanamos y fortalecemos a talleres, concesionarias, agencias y pymes vinculadas al ecosistema automotor regional.',
+  values: ['Trabajo conjunto', 'Profesionalismo', 'Cercania', 'Compromiso regional'],
+  visualTitle: 'Sector automotor regional',
+  visualSubtitle: 'Representacion, gestion y formacion para empresas del ecosistema automotor.',
+  visualModules: ['Representacion institucional', 'Gestion y asesoramiento', 'Capacitacion continua'],
+  regionTag: 'Bahia Blanca y region',
+}
+
+export function PublicHero({
+  badge,
+  title,
+  description,
+  primaryCta,
+  secondaryCta,
+  imageUrl,
+  imageAlt,
+  values = [],
+  visual,
+  kpis = [],
+}: PublicHeroProps) {
+  const hasHeroImage = imageUrl.trim().length > 0
+  const heroValues = values.length > 0 ? values : fallbackHeroContent.values
+  const visualModules = visual?.items && visual.items.length > 0 ? visual.items : fallbackHeroContent.visualModules
+  const visualTitle = visual?.title?.trim() || fallbackHeroContent.visualTitle
+  const visualSubtitle = visual?.description?.trim() || fallbackHeroContent.visualSubtitle
+  const regionTag = visual?.region_label?.trim() || fallbackHeroContent.regionTag
 
   const primaryLink: ActionLink = {
     ...primaryCta,
-    label: 'Conocer la institución',
+    label: primaryCta.label || 'Conocer la institucion',
     url: primaryCta.url || '/institucional',
   }
 
   const secondaryLink: ActionLink = {
     ...secondaryCta,
-    label: 'Ver servicios',
+    label: secondaryCta.label || 'Ver servicios',
     url: secondaryCta.url || '#servicios',
   }
 
@@ -51,15 +68,15 @@ export function PublicHero({ primaryCta, secondaryCta, kpis = [] }: PublicHeroPr
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-12">
           <div className="max-w-3xl">
             <p className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-700">
-              {heroContent.eyebrow}
+              {badge || fallbackHeroContent.badge}
             </p>
 
             <h1 className="mt-5 text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              {heroContent.title}
+              {title || fallbackHeroContent.title}
             </h1>
 
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              {heroContent.description}
+              {description || fallbackHeroContent.description}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3.5">
@@ -74,7 +91,7 @@ export function PublicHero({ primaryCta, secondaryCta, kpis = [] }: PublicHeroPr
             </div>
 
             <div className="mt-8 flex flex-wrap gap-2.5">
-              {heroContent.values.map((value) => (
+              {heroValues.map((value) => (
                 <article key={value} className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5">
                   <p className="text-xs font-medium text-slate-700">{value}</p>
                 </article>
@@ -94,33 +111,50 @@ export function PublicHero({ primaryCta, secondaryCta, kpis = [] }: PublicHeroPr
           </div>
 
           <aside className="w-full lg:justify-self-end">
-            <article className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.2)] sm:p-7">
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-100/60" aria-hidden="true" />
-              <div className="absolute bottom-5 right-6 h-16 w-16 rounded-full border border-blue-200/70 bg-white/80" aria-hidden="true" />
+            {hasHeroImage ? (
+              <article className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.2)] sm:p-5">
+                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <img
+                    src={imageUrl}
+                    alt={imageAlt || 'Imagen institucional de CRABB'}
+                    loading="lazy"
+                    className="h-[320px] w-full object-cover sm:h-[400px]"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent px-4 pb-4 pt-10 text-white sm:px-5 sm:pb-5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/85">Vision institucional</p>
+                    <p className="mt-1 text-sm font-medium leading-snug sm:text-base">{visualTitle}</p>
+                  </div>
+                </div>
+              </article>
+            ) : (
+              <article className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.2)] sm:p-7">
+                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-100/60" aria-hidden="true" />
+                <div className="absolute bottom-5 right-6 h-16 w-16 rounded-full border border-blue-200/70 bg-white/80" aria-hidden="true" />
 
-              <div className="relative">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">Visión institucional</p>
-                <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-900 sm:text-[1.75rem]">
-                  {heroContent.visualTitle}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">{heroContent.visualSubtitle}</p>
-              </div>
+                <div className="relative">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">Vision institucional</p>
+                  <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-900 sm:text-[1.75rem]">
+                    {visualTitle}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">{visualSubtitle}</p>
+                </div>
 
-              <div className="relative mt-6 grid gap-3">
-                {heroContent.visualModules.map((module) => (
-                  <article key={module} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-2 w-2 rounded-full bg-blue-600" aria-hidden="true" />
-                      <p className="text-sm font-medium text-slate-700">{module}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                <div className="relative mt-6 grid gap-3">
+                  {visualModules.map((module) => (
+                    <article key={module} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-2 w-2 rounded-full bg-blue-600" aria-hidden="true" />
+                        <p className="text-sm font-medium text-slate-700">{module}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
 
-              <div className="relative mt-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">{heroContent.regionTag}</p>
-              </div>
-            </article>
+                <div className="relative mt-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">{regionTag}</p>
+                </div>
+              </article>
+            )}
           </aside>
         </div>
       </div>

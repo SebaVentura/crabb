@@ -106,6 +106,7 @@ function normalizeInstitutionalPage(value: unknown): InstitutionalPageContent {
 
 function normalizeLandingHero(value: unknown): LandingHero {
   const source = asObject(value)
+  const visualSource = asObject(source.visual)
   return {
     badge: asString(source.badge),
     title: asString(source.title),
@@ -113,6 +114,15 @@ function normalizeLandingHero(value: unknown): LandingHero {
     description: asString(source.description),
     primary_cta: normalizeActionLink(source.primary_cta),
     secondary_cta: normalizeActionLink(source.secondary_cta),
+    image_url: asString(source.image_url),
+    image_alt: asString(source.image_alt),
+    values: normalizeStringList(source.values),
+    visual: {
+      title: asString(visualSource.title),
+      description: asString(visualSource.description),
+      items: normalizeStringList(visualSource.items),
+      region_label: asString(visualSource.region_label),
+    },
   }
 }
 
@@ -245,6 +255,15 @@ export function createEmptyInstitutionalContent(): InstitutionalContent {
         description: '',
         primary_cta: { label: '', url: '' },
         secondary_cta: { label: '', url: '' },
+        image_url: '',
+        image_alt: '',
+        values: [],
+        visual: {
+          title: '',
+          description: '',
+          items: [],
+          region_label: '',
+        },
       },
       services: [],
       campaign: {
@@ -333,6 +352,13 @@ export function hasLandingContent(content: InstitutionalContent): boolean {
     hasValue(landing.hero.primary_cta.url) ||
     hasValue(landing.hero.secondary_cta.label) ||
     hasValue(landing.hero.secondary_cta.url) ||
+    hasValue(landing.hero.image_url ?? '') ||
+    hasValue(landing.hero.image_alt ?? '') ||
+    (landing.hero.values ?? []).length > 0 ||
+    hasValue(landing.hero.visual?.title ?? '') ||
+    hasValue(landing.hero.visual?.description ?? '') ||
+    (landing.hero.visual?.items ?? []).length > 0 ||
+    hasValue(landing.hero.visual?.region_label ?? '') ||
     landing.services.some((item) => hasValue(item.title) || hasValue(item.description)) ||
     hasValue(landing.campaign.title) ||
     hasValue(landing.campaign.description) ||

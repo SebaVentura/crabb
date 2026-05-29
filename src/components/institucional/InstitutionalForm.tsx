@@ -44,6 +44,7 @@ const navSections: NavSection[] = [
 const emptyAuthority: InstitutionalAuthority = { role: '', name: '' }
 const emptySocialLink: SocialLink = { platform: '', url: '' }
 const emptyService: LandingService = { title: '', description: '' }
+const fallbackHeroImageAlt = 'Imagen institucional de CRABB'
 
 function cloneValues(values: InstitutionalContent): InstitutionalContent {
   return {
@@ -65,6 +66,18 @@ function cloneValues(values: InstitutionalContent): InstitutionalContent {
         ...values.landing.hero,
         primary_cta: { ...values.landing.hero.primary_cta },
         secondary_cta: { ...values.landing.hero.secondary_cta },
+        values: [...(values.landing.hero.values ?? [])],
+        visual: values.landing.hero.visual
+          ? {
+              ...values.landing.hero.visual,
+              items: [...(values.landing.hero.visual.items ?? [])],
+            }
+          : {
+              title: '',
+              description: '',
+              items: [],
+              region_label: '',
+            },
       },
       services: values.landing.services.map((item) => ({ ...item })),
       campaign: {
@@ -336,13 +349,29 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
   const [state, setState] = useState<InstitutionalContent>(() => cloneValues(initialValues))
   const [activeSection, setActiveSection] = useState<SectionId>('institutional')
   const [fieldError, setFieldError] = useState<string | null>(null)
+  const [heroImageLoadError, setHeroImageLoadError] = useState(false)
+  const [localHeroImagePreviewUrl, setLocalHeroImagePreviewUrl] = useState<string>('')
+  const [localHeroImageFileName, setLocalHeroImageFileName] = useState<string>('')
 
   useEffect(() => {
     setState(cloneValues(initialValues))
     setFieldError(null)
+    setHeroImageLoadError(false)
+    setLocalHeroImagePreviewUrl('')
+    setLocalHeroImageFileName('')
   }, [initialValues])
 
+  useEffect(() => {
+    return () => {
+      if (localHeroImagePreviewUrl) {
+        URL.revokeObjectURL(localHeroImagePreviewUrl)
+      }
+    }
+  }, [localHeroImagePreviewUrl])
+
   const canSubmit = useMemo(() => !isSaving, [isSaving])
+  const heroImageSource = localHeroImagePreviewUrl || state.landing.hero.image_url?.trim() || ''
+  const hasHeroImageSource = heroImageSource.length > 0
 
   const setVisibility = (key: keyof InstitutionalVisibility, value: boolean) => {
     setState((prev) => ({
@@ -379,6 +408,29 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
       ...prev,
       social_links: next,
     }))
+  }
+
+  const handleHeroImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextFile = event.target.files?.[0]
+
+    if (!nextFile) {
+      if (localHeroImagePreviewUrl) {
+        URL.revokeObjectURL(localHeroImagePreviewUrl)
+      }
+      setLocalHeroImagePreviewUrl('')
+      setLocalHeroImageFileName('')
+      setHeroImageLoadError(false)
+      return
+    }
+
+    if (localHeroImagePreviewUrl) {
+      URL.revokeObjectURL(localHeroImagePreviewUrl)
+    }
+
+    const objectUrl = URL.createObjectURL(nextFile)
+    setLocalHeroImagePreviewUrl(objectUrl)
+    setLocalHeroImageFileName(nextFile.name)
+    setHeroImageLoadError(false)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -442,6 +494,15 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
           description: state.landing.hero.description.trim(),
           primary_cta: sanitizeLink(state.landing.hero.primary_cta),
           secondary_cta: sanitizeLink(state.landing.hero.secondary_cta),
+          image_url: state.landing.hero.image_url?.trim() ?? '',
+          image_alt: state.landing.hero.image_alt?.trim() ?? '',
+          values: normalizeStringList(state.landing.hero.values ?? []),
+          visual: {
+            title: state.landing.hero.visual?.title?.trim() ?? '',
+            description: state.landing.hero.visual?.description?.trim() ?? '',
+            items: normalizeStringList(state.landing.hero.visual?.items ?? []),
+            region_label: state.landing.hero.visual?.region_label?.trim() ?? '',
+          },
         },
         services: state.landing.services
           .map((item) => ({ title: item.title.trim(), description: item.description.trim() }))
@@ -795,6 +856,91 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
                 }
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">URL de imagen del Hero</label>
+                  <input
+                    value={state.landing.hero.image_url ?? ''}
+                    onChange={(event) => {
+                      setHeroImageLoadError(false)
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          hero: {
+                            ...prev.landing.hero,
+                            image_url: event.target.value,
+                          },
+                        },
+                      }))
+                    }}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="/media/hero-crabb.jpg"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    La imagen se mostrara en la tarjeta principal del Hero. Si se deja vacia, se usara la composicion institucional por defecto.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">Texto alternativo de la imagen</label>
+                  <input
+                    value={state.landing.hero.image_alt ?? ''}
+                    onChange={(event) =>
+                      setState((prev) => ({
+                        ...prev,
+                        landing: {
+                          ...prev.landing,
+                          hero: {
+                            ...prev.landing.hero,
+                            image_alt: event.target.value,
+                          },
+                        },
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder={fallbackHeroImageAlt}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">Describe brevemente la imagen para accesibilidad.</p>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-3">
+                <label className="mb-1 block text-xs font-medium text-slate-600">Preview local (opcional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleHeroImageFileChange}
+                  className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                />
+                <p className="mt-1 text-xs text-slate-500">Carga de archivo pendiente de conexion con backend.</p>
+                <p className="mt-1 text-xs text-slate-500">La persistencia actual se realiza por URL. El archivo seleccionado se usa solo para preview temporal.</p>
+              </div>
+
+              <div className="mt-3">
+                {hasHeroImageSource && !heroImageLoadError ? (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <img
+                      src={heroImageSource}
+                      alt={state.landing.hero.image_alt?.trim() || fallbackHeroImageAlt}
+                      className="h-44 w-full object-cover"
+                      onError={() => setHeroImageLoadError(true)}
+                    />
+                    {localHeroImageFileName ? (
+                      <p className="border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
+                        Preview local activo: {localHeroImageFileName}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-4 text-sm text-slate-500">
+                    Sin imagen cargada. La landing usara la composicion institucional por defecto.
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">

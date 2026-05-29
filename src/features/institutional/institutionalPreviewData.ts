@@ -33,6 +33,15 @@ export type InstitutionalPreviewContract = {
     description: string
     primary_cta: ActionLink
     secondary_cta: ActionLink
+    image_url: string
+    image_alt: string
+    values: string[]
+    visual: {
+      title: string
+      description: string
+      items: string[]
+      region_label: string
+    }
     services: LandingService[]
     campaign: PreviewLandingSection & { cta: ActionLink }
     data_technical: PreviewLandingSection
@@ -84,6 +93,15 @@ export const institutionalPreviewData: InstitutionalPreviewContract = {
       'Una institucion enfocada en representar, capacitar y potenciar al entramado automotor regional con una agenda profesional y sustentable.',
     primary_cta: { label: 'Conocer servicios', url: '#servicios' },
     secondary_cta: { label: 'Contacto institucional', url: '#contacto' },
+    image_url: '',
+    image_alt: 'Imagen institucional de CRABB',
+    values: ['Trabajo conjunto', 'Profesionalismo', 'Cercania', 'Compromiso regional'],
+    visual: {
+      title: 'Sector automotor regional',
+      description: 'Representacion, gestion y formacion para empresas del ecosistema automotor.',
+      items: ['Representacion institucional', 'Gestion y asesoramiento', 'Capacitacion continua'],
+      region_label: 'Bahia Blanca y region',
+    },
     services: [
       {
         title: 'Representacion y Gestion',
@@ -208,6 +226,18 @@ function mergeLandingSection(apiSection: LandingSection, fallbackSection: Landin
   }
 }
 
+function mergeHeroVisual(
+  apiVisual: InstitutionalContent['landing']['hero']['visual'],
+  fallbackVisual: InstitutionalContent['landing']['hero']['visual'],
+) {
+  return {
+    title: mergeString(apiVisual?.title ?? '', fallbackVisual?.title ?? ''),
+    description: mergeString(apiVisual?.description ?? '', fallbackVisual?.description ?? ''),
+    items: mergeStringList(apiVisual?.items ?? [], fallbackVisual?.items ?? []),
+    region_label: mergeString(apiVisual?.region_label ?? '', fallbackVisual?.region_label ?? ''),
+  }
+}
+
 export function mapPreviewContractToInstitutionalContent(
   preview: InstitutionalPreviewContract,
 ): InstitutionalContent {
@@ -229,6 +259,10 @@ export function mapPreviewContractToInstitutionalContent(
         description: preview.landing.description,
         primary_cta: preview.landing.primary_cta,
         secondary_cta: preview.landing.secondary_cta,
+        image_url: preview.landing.image_url,
+        image_alt: preview.landing.image_alt,
+        values: preview.landing.values,
+        visual: preview.landing.visual,
       },
       services: preview.landing.services,
       campaign: {
@@ -345,6 +379,13 @@ export function getInstitutionalContentWithFallback(
           apiContent.landing.hero.secondary_cta,
           fallback.landing.hero.secondary_cta,
         ),
+        image_url: mergeString(apiContent.landing.hero.image_url ?? '', fallback.landing.hero.image_url ?? ''),
+        image_alt: mergeString(
+          apiContent.landing.hero.image_alt ?? '',
+          fallback.landing.hero.image_alt ?? '',
+        ),
+        values: mergeStringList(apiContent.landing.hero.values ?? [], fallback.landing.hero.values ?? []),
+        visual: mergeHeroVisual(apiContent.landing.hero.visual, fallback.landing.hero.visual),
       },
       services: mergeServices(apiContent.landing.services, fallback.landing.services),
       campaign: {

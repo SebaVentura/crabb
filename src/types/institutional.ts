@@ -38,6 +38,13 @@ export type ActionLink = {
   url: string
 }
 
+export type LandingHeroVisual = {
+  title?: string
+  description?: string
+  items?: string[]
+  region_label?: string
+}
+
 export type LandingHero = {
   badge: string
   title: string
@@ -45,6 +52,10 @@ export type LandingHero = {
   description: string
   primary_cta: ActionLink
   secondary_cta: ActionLink
+  image_url?: string
+  image_alt?: string
+  values?: string[]
+  visual?: LandingHeroVisual
 }
 
 export type LandingService = {

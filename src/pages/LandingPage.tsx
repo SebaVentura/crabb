@@ -166,6 +166,10 @@ export function LandingPage() {
         description={landing.hero.description}
         primaryCta={landing.hero.primary_cta}
         secondaryCta={landing.hero.secondary_cta}
+        imageUrl={landing.hero.image_url ?? ''}
+        imageAlt={landing.hero.image_alt ?? 'Imagen institucional de CRABB'}
+        values={landing.hero.values ?? []}
+        visual={landing.hero.visual}
         kpis={heroKpis}
       />
 
