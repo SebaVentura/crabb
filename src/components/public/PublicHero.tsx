@@ -1,4 +1,5 @@
 import type { ActionLink, LandingHeroVisual } from '../../types/institutional'
+import heroBlueprintCar from '../../assets/hero-blueprint-car.png'
 import { PublicActionLink } from './PublicActionLink'
 
 type HeroKpi = {
@@ -20,15 +21,9 @@ type PublicHeroProps = {
 }
 
 const fallbackHeroContent = {
-  badge: 'JUNTOS MOVEMOS MAS',
-  title: 'Camara de Reparacion de Automotores de Bahia Blanca',
+  badge: 'CÁMARA REGIONAL AUTOMOTOR',
   description:
-    'Representamos, acompanamos y fortalecemos a talleres, concesionarias, agencias y pymes vinculadas al ecosistema automotor regional.',
-  values: ['Trabajo conjunto', 'Profesionalismo', 'Cercania', 'Compromiso regional'],
-  visualTitle: 'Sector automotor regional',
-  visualSubtitle: 'Representacion, gestion y formacion para empresas del ecosistema automotor.',
-  visualModules: ['Representacion institucional', 'Gestion y asesoramiento', 'Capacitacion continua'],
-  regionTag: 'Bahia Blanca y region',
+    'Representamos, acompañamos y fortalecemos al sector automotor regional, promoviendo la profesionalización, la innovación y el desarrollo sostenible.',
 }
 
 export function PublicHero({
@@ -37,125 +32,135 @@ export function PublicHero({
   description,
   primaryCta,
   secondaryCta,
-  imageUrl,
-  imageAlt,
-  values = [],
-  visual,
-  kpis = [],
 }: PublicHeroProps) {
-  const hasHeroImage = imageUrl.trim().length > 0
-  const heroValues = values.length > 0 ? values : fallbackHeroContent.values
-  const visualModules = visual?.items && visual.items.length > 0 ? visual.items : fallbackHeroContent.visualModules
-  const visualTitle = visual?.title?.trim() || fallbackHeroContent.visualTitle
-  const visualSubtitle = visual?.description?.trim() || fallbackHeroContent.visualSubtitle
-  const regionTag = visual?.region_label?.trim() || fallbackHeroContent.regionTag
+  const normalizedTitle = title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+
+  const useReferenceTitle =
+    normalizedTitle.length === 0 ||
+    normalizedTitle === 'crabb' ||
+    normalizedTitle.includes('camara regional automotor')
+
+  const titleLines = useReferenceTitle
+    ? ['Cámara Regional', 'Automotor de', 'Bahía Blanca']
+    : title
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
 
   const primaryLink: ActionLink = {
     ...primaryCta,
-    label: primaryCta.label || 'Conocer la institucion',
-    url: primaryCta.url || '/institucional',
+    label: primaryCta.label || 'CONOCÉ NUESTROS SERVICIOS',
+    url: primaryCta.url || '#servicios',
   }
 
   const secondaryLink: ActionLink = {
     ...secondaryCta,
-    label: secondaryCta.label || 'Ver servicios',
-    url: secondaryCta.url || '#servicios',
+    label: secondaryCta.label || 'CONTACTANOS',
+    url: secondaryCta.url || '#contacto',
   }
 
   return (
-    <section id="inicio" className="w-full bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-12">
-          <div className="max-w-3xl">
-            <p className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-700">
-              {badge || fallbackHeroContent.badge}
-            </p>
+    <section
+      id="inicio"
+      className="relative min-h-[720px] w-full overflow-hidden bg-[#06111f]"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(56,189,248,0.18),transparent_38%),radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.16),transparent_36%),linear-gradient(180deg,#06111f_0%,#071527_58%,#06111f_100%)]"
+      />
 
-            <h1 className="mt-5 text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              {title || fallbackHeroContent.title}
-            </h1>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(148,163,184,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.16)_1px,transparent_1px)] [background-size:48px_48px]"
+      />
 
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              {description || fallbackHeroContent.description}
-            </p>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:radial-gradient(circle_at_18%_28%,rgba(186,230,253,0.24)_0_1px,transparent_1px),radial-gradient(circle_at_74%_32%,rgba(186,230,253,0.22)_0_1px,transparent_1px)] [background-size:140px_140px]"
+      />
 
-            <div className="mt-8 flex flex-wrap gap-3.5">
-              <PublicActionLink
-                link={primaryLink}
-                className="rounded-full bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
-              />
-              <PublicActionLink
-                link={secondaryLink}
-                className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
-              />
-            </div>
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-35"
+        viewBox="0 0 1920 900"
+        fill="none"
+        preserveAspectRatio="none"
+      >
+        <path d="M0 710H1920" stroke="rgba(148,163,184,0.22)" strokeDasharray="7 12" />
+        <path d="M0 618H1920" stroke="rgba(148,163,184,0.18)" strokeDasharray="5 12" />
+        <path d="M0 530H1920" stroke="rgba(148,163,184,0.14)" strokeDasharray="5 12" />
+        <path
+          d="M280 770C620 610 1040 588 1490 660"
+          stroke="rgba(125,211,252,0.24)"
+          strokeWidth="1.6"
+          strokeDasharray="6 10"
+        />
+        <path
+          d="M420 302C760 226 1080 232 1460 292"
+          stroke="rgba(125,211,252,0.16)"
+          strokeWidth="1.4"
+          strokeDasharray="6 10"
+        />
+      </svg>
 
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              {heroValues.map((value) => (
-                <article key={value} className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5">
-                  <p className="text-xs font-medium text-slate-700">{value}</p>
-                </article>
-              ))}
-            </div>
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 py-20 lg:min-h-[620px] lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
+        <div className="relative z-20 max-w-[680px]">
+          <p className="inline-flex rounded-full border border-sky-300/35 bg-sky-300/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-100">
+            {badge || fallbackHeroContent.badge}
+          </p>
 
-            {kpis.length > 0 ? (
-              <div className="mt-8 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2 lg:grid-cols-3">
-                {kpis.map((item) => (
-                  <article key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-lg font-semibold text-slate-900">{item.value}</p>
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
-                  </article>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <aside className="w-full lg:justify-self-end">
-            {hasHeroImage ? (
-              <article className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.2)] sm:p-5">
-                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                  <img
-                    src={imageUrl}
-                    alt={imageAlt || 'Imagen institucional de CRABB'}
-                    loading="lazy"
-                    className="h-[320px] w-full object-cover sm:h-[400px]"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent px-4 pb-4 pt-10 text-white sm:px-5 sm:pb-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/85">Vision institucional</p>
-                    <p className="mt-1 text-sm font-medium leading-snug sm:text-base">{visualTitle}</p>
-                  </div>
-                </div>
-              </article>
+          <h1 className="mt-7 text-5xl font-bold leading-[0.96] text-white sm:text-6xl lg:text-[4.9rem] xl:text-[5.35rem]">
+            {titleLines.length > 0 ? (
+              titleLines.map((line, index) => (
+                <span
+                  key={`${line}-${index}`}
+                  className={`block whitespace-nowrap ${
+                    index === 2
+                      ? 'text-sky-300 [text-shadow:0_0_24px_rgba(56,189,248,0.45)]'
+                      : ''
+                  }`}
+                >
+                  {line}
+                </span>
+              ))
             ) : (
-              <article className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.2)] sm:p-7">
-                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-100/60" aria-hidden="true" />
-                <div className="absolute bottom-5 right-6 h-16 w-16 rounded-full border border-blue-200/70 bg-white/80" aria-hidden="true" />
-
-                <div className="relative">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">Vision institucional</p>
-                  <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-900 sm:text-[1.75rem]">
-                    {visualTitle}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">{visualSubtitle}</p>
-                </div>
-
-                <div className="relative mt-6 grid gap-3">
-                  {visualModules.map((module) => (
-                    <article key={module} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex h-2 w-2 rounded-full bg-blue-600" aria-hidden="true" />
-                        <p className="text-sm font-medium text-slate-700">{module}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="relative mt-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">{regionTag}</p>
-                </div>
-              </article>
+              <span className="block text-white">Cámara Regional Automotor</span>
             )}
-          </aside>
+          </h1>
+
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate-300">
+            {description || fallbackHeroContent.description}
+          </p>
+
+          <div className="mt-9 flex flex-wrap gap-4">
+            <PublicActionLink
+              link={primaryLink}
+              className="rounded-md bg-sky-300 px-7 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#06213c] shadow-[0_18px_45px_rgba(56,189,248,0.22)] transition hover:bg-sky-200"
+            />
+            <PublicActionLink
+              link={secondaryLink}
+              className="rounded-md border border-white/35 bg-white/5 px-7 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white transition hover:border-sky-300/60 hover:bg-white/10"
+            />
+          </div>
+        </div>
+
+        <div className="pointer-events-none relative hidden min-h-[500px] overflow-visible md:block lg:min-h-[580px]">
+          <div
+            aria-hidden="true"
+            className="absolute right-[-180px] top-1/2 h-[520px] w-[620px] -translate-y-1/2 rounded-full bg-sky-300/20 blur-[120px] lg:right-[-260px]"
+          />
+
+          <img
+            src={heroBlueprintCar}
+            alt=""
+            aria-hidden="true"
+            className="absolute right-[-260px] top-1/2 w-[980px] max-w-none -translate-y-1/2 select-none opacity-95 mix-blend-screen drop-shadow-[0_0_42px_rgba(56,189,248,0.25)] md:right-[-360px] md:w-[1120px] lg:right-[-430px] lg:w-[1280px] xl:right-[-500px] xl:w-[1400px]"
+            draggable={false}
+          />
         </div>
       </div>
     </section>
