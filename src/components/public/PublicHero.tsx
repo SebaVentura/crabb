@@ -66,7 +66,7 @@ export function PublicHero({
   return (
     <section
       id="inicio"
-      className="relative min-h-[720px] w-full overflow-hidden bg-[#06111f]"
+      className="relative min-h-[700px] w-full overflow-hidden bg-[#06111f]"
     >
       <div
         aria-hidden="true"
@@ -107,8 +107,43 @@ export function PublicHero({
         />
       </svg>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 py-20 lg:min-h-[620px] lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
-        <div className="relative z-20 max-w-[680px]">
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[74vw] overflow-hidden md:block lg:w-[69vw] [mask-image:linear-gradient(to_right,transparent_0%,black_22%,black_88%,transparent_100%)]">
+        <div
+          aria-hidden="true"
+          className="absolute right-[-130px] top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full bg-sky-300/16 blur-[120px] md:right-[-180px] md:h-[520px] md:w-[520px] lg:right-[-240px] lg:h-[620px] lg:w-[620px]"
+        />
+
+        <img
+          src={heroBlueprintCar}
+          alt=""
+          aria-hidden="true"
+          className="absolute right-[-260px] top-[52%] w-[980px] max-w-none -translate-y-1/2 select-none opacity-58 mix-blend-screen brightness-[0.72] contrast-[1.18] saturate-[0.7] drop-shadow-[0_0_38px_rgba(56,189,248,0.18)] md:right-[-340px] md:w-[1120px] lg:right-[-430px] lg:top-[53%] lg:w-[1300px] xl:right-[-500px] xl:w-[1420px]"
+          draggable={false}
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 w-full bg-[radial-gradient(circle_at_72%_48%,transparent_0%,rgba(6,17,31,0.1)_26%,rgba(6,17,31,0.34)_58%,rgba(6,17,31,0.72)_100%)]"
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-[58%] bg-gradient-to-r from-[#06111f] via-[#06111f]/95 via-55% to-transparent"
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#06111f] via-[#06111f]/78 to-transparent"
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#06111f]/70 via-[#06111f]/28 to-transparent"
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 py-16 sm:py-18 lg:min-h-[620px] lg:grid-cols-[0.88fr_1.12fr] lg:px-8 lg:py-20">
+        <div className="relative z-20 max-w-[660px]">
           <p className="inline-flex rounded-full border border-sky-300/35 bg-sky-300/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-100">
             {badge || fallbackHeroContent.badge}
           </p>
@@ -148,20 +183,7 @@ export function PublicHero({
           </div>
         </div>
 
-        <div className="pointer-events-none relative hidden min-h-[500px] overflow-visible md:block lg:min-h-[580px]">
-          <div
-            aria-hidden="true"
-            className="absolute right-[-180px] top-1/2 h-[520px] w-[620px] -translate-y-1/2 rounded-full bg-sky-300/20 blur-[120px] lg:right-[-260px]"
-          />
-
-          <img
-            src={heroBlueprintCar}
-            alt=""
-            aria-hidden="true"
-            className="absolute right-[-260px] top-1/2 w-[980px] max-w-none -translate-y-1/2 select-none opacity-95 mix-blend-screen drop-shadow-[0_0_42px_rgba(56,189,248,0.25)] md:right-[-360px] md:w-[1120px] lg:right-[-430px] lg:w-[1280px] xl:right-[-500px] xl:w-[1400px]"
-            draggable={false}
-          />
-        </div>
+        <div className="hidden lg:block" aria-hidden="true" />
       </div>
     </section>
   )
