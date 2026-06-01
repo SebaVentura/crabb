@@ -14,5 +14,5 @@ export function getNavItems(role?: string): NavItem[] {
 
   if (!isAdmin) return baseNavItems
 
-  return [...baseNavItems, { label: 'Contenido institucional', path: '/admin' }]
+  return [...baseNavItems, { label: 'Contenido institucional', path: '/admin' }, { label: 'Gestión de cobranzas', path: '/admin/gestion-cobranzas' }]
 }

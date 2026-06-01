@@ -12,6 +12,7 @@ const titles: Record<string, string> = {
   '/colegas': 'Buscar colegas',
   '/admin': 'Administración',
   '/admin/institucional': 'Contenido institucional',
+  '/admin/gestion-cobranzas': 'Gestión de cobranzas',
 }
 
 export function AppShell() {

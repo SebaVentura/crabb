@@ -4,6 +4,7 @@ import { CapacitacionesPage } from '../pages/CapacitacionesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
+import { AdminGestionCobranzasPage } from '../pages/AdminGestionCobranzasPage'
 import { AdminInstitucionalPage } from '../pages/AdminInstitucionalPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
@@ -51,6 +52,14 @@ export const router = createHashRouter([
         element: (
           <AdminOnlyRoute>
             <Navigate to="/admin/institucional" replace />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/gestion-cobranzas',
+        element: (
+          <AdminOnlyRoute>
+            <AdminGestionCobranzasPage />
           </AdminOnlyRoute>
         ),
       },
