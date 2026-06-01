@@ -21,6 +21,27 @@ import type {
 
 type UnknownObject = Record<string, unknown>
 
+type BackendLegalLink = {
+  label: string
+  url: string
+}
+
+type BackendInstitutionalPayload = UnknownObject & {
+  landing: UnknownObject & {
+    intro?: UnknownObject
+    membership_campaign?: UnknownObject
+    technical_data?: UnknownObject
+    training?: UnknownObject
+    auxilio?: UnknownObject
+    final_cta?: UnknownObject
+    services?: LandingService[]
+    service_cards?: Array<{ title: string; description: string }>
+  }
+  footer?: UnknownObject & {
+    legal_links?: BackendLegalLink[]
+  }
+}
+
 function asObject(value: unknown): UnknownObject {
   if (value && typeof value === 'object') {
     return value as UnknownObject
@@ -43,6 +64,124 @@ function asOptionalNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function safeString(value: unknown, fallback = ''): string {
+  if (typeof value !== 'string') return fallback
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : fallback
+}
+
+function safeLabel(value: unknown, fallback = 'Ver más'): string {
+  return safeString(value, fallback)
+}
+
+function safeHref(value: unknown, fallback = '/contacto'): string {
+  return safeString(value, fallback)
+}
+
+function asOptionalLooseObject<T extends UnknownObject>(value: unknown): T {
+  return asObject(value) as T
+}
+
+function toBackendLegalLinks(legalLinks: unknown): BackendLegalLink[] {
+  if (!Array.isArray(legalLinks)) {
+    return [
+      { label: 'Términos y condiciones', url: '/terminos' },
+      { label: 'Política de privacidad', url: '/privacidad' },
+    ]
+  }
+
+  const normalizedLinks = legalLinks
+    .map((item) => {
+      const source = asObject(item)
+      return {
+        label: safeString(source.label),
+        url: safeString(source.url ?? source.href),
+      }
+    })
+    .filter((item) => item.label && item.url)
+
+  if (normalizedLinks.length > 0) return normalizedLinks
+
+  return [
+    { label: 'Términos y condiciones', url: '/terminos' },
+    { label: 'Política de privacidad', url: '/privacidad' },
+  ]
+}
+
+function toBackendInstitutionalPayload(content: InstitutionalContent): BackendInstitutionalPayload {
+  const campaignSource = asOptionalLooseObject<{
+    cta_label?: string
+    cta_url?: string
+  }>(content.landing.campaign)
+
+  const finalCtaSource = asOptionalLooseObject<{
+    cta_label?: string
+    cta_url?: string
+  }>(content.landing.final_cta)
+
+  const serviceCards = content.landing.services.map((service) => ({
+    title: safeString(service.title, 'Servicio institucional'),
+    description: safeString(service.description, 'Descripción institucional.'),
+  }))
+
+  return {
+    ...content,
+    institutional_page: {
+      ...content.institutional_page,
+    },
+    landing: {
+      ...content.landing,
+      intro: {
+        title: safeString(content.landing.hero.title, 'Información institucional'),
+        description: safeString(content.landing.hero.description, 'Contenido institucional de CRABB.'),
+      },
+      membership_campaign: {
+        title: safeString(content.landing.campaign.title, 'Campaña de membresía'),
+        description: safeString(content.landing.campaign.description, 'Contenido institucional de CRABB.'),
+        cta_label: safeLabel(campaignSource.cta_label, 'Asociarme'),
+        cta_url: safeHref(campaignSource.cta_url, '/contacto'),
+      },
+      technical_data: {
+        title: safeString(content.landing.data_tecnica.title, 'Datos técnicos'),
+        description: safeString(content.landing.data_tecnica.description, 'Información institucional de CRABB.'),
+      },
+      training: {
+        title: safeString(content.landing.capacitaciones.title, 'Capacitación'),
+        description: safeString(content.landing.capacitaciones.description, 'Información institucional de CRABB.'),
+      },
+      auxilio: {
+        title: safeString(content.landing.crabb_auxilio.title, 'Auxilio institucional'),
+        description: safeString(content.landing.crabb_auxilio.description, 'Información institucional de CRABB.'),
+      },
+      final_cta: {
+        title: safeString(content.landing.final_cta.title, 'Conectate con CRABB'),
+        description: safeString(content.landing.final_cta.description, 'Contenido institucional de CRABB.'),
+        cta_label: safeLabel(finalCtaSource.cta_label ?? content.landing.final_cta.primary_cta?.label, 'Contactar'),
+        cta_url: safeHref(finalCtaSource.cta_url ?? content.landing.final_cta.primary_cta?.url, '/contacto'),
+        primary_cta: {
+          ...content.landing.final_cta.primary_cta,
+        },
+        secondary_cta: {
+          ...content.landing.final_cta.secondary_cta,
+        },
+      },
+      services: content.landing.services.map((service) => ({
+        ...service,
+        title: safeString(service.title, 'Servicio institucional'),
+        description: safeString(service.description, 'Descripción institucional.'),
+        cta_label: safeLabel(service.cta_label, 'Ver más'),
+        cta_href: safeHref(service.cta_href, '/contacto'),
+        visible: service.visible ?? true,
+      })),
+      service_cards: serviceCards,
+    },
+    footer: {
+      ...content.footer,
+      legal_links: toBackendLegalLinks((content.footer as FooterContent & { legal_links?: unknown }).legal_links),
+    },
+  }
 }
 
 function asBoolean(value: unknown, fallback = false): boolean {
@@ -184,10 +323,15 @@ function normalizeLandingFinalCta(value: unknown): LandingFinalCta {
 function normalizeLanding(value: unknown): LandingContent {
   const source = asObject(value)
   const servicesRaw = source.services
+  const legacyServiceCardsRaw = source.service_cards
 
   return {
     hero: normalizeLandingHero(source.hero),
-    services: Array.isArray(servicesRaw) ? servicesRaw.map(normalizeLandingService) : [],
+    services: Array.isArray(servicesRaw)
+      ? servicesRaw.map(normalizeLandingService)
+      : Array.isArray(legacyServiceCardsRaw)
+        ? legacyServiceCardsRaw.map(normalizeLandingService)
+        : [],
     campaign: normalizeLandingCampaign(source.campaign),
     data_tecnica: normalizeLandingSection(source.data_tecnica),
     capacitaciones: normalizeLandingSection(source.capacitaciones),
@@ -425,9 +569,10 @@ export const institutionalService = {
   },
 
   async updateInstitutionalContent(payload: InstitutionalUpdatePayload): Promise<InstitutionalContent> {
+    const backendPayload = toBackendInstitutionalPayload(payload)
     const response = await apiRequest<unknown>('/admin/institutional', {
       method: 'PUT',
-      body: payload,
+      body: backendPayload,
     })
 
     return normalizeInstitutionalContent(extractPayload(response))
