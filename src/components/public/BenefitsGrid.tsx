@@ -3,8 +3,8 @@ import { PublicActionLink } from './PublicActionLink'
 import { PublicSectionHeader } from './PublicSectionHeader'
 
 type ServiceWithAction = LandingService & {
-  cta: ActionLink
-  icon: 'representacion' | 'capacitacion' | 'data' | 'red'
+  cta?: ActionLink
+  icon?: 'representacion' | 'capacitacion' | 'data' | 'red'
 }
 
 type BenefitsGridProps = {
@@ -12,6 +12,14 @@ type BenefitsGridProps = {
 }
 
 function Icon({ kind }: { kind: ServiceWithAction['icon'] }) {
+  if (!kind) {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      </svg>
+    )
+  }
+
   if (kind === 'representacion') {
     return (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
@@ -107,7 +115,7 @@ export function BenefitsGrid({ services }: BenefitsGridProps) {
               <h3 className="mt-5 text-xl font-semibold leading-tight text-slate-900">{service.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">{service.description}</p>
               <div className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-sky-700 transition hover:text-sky-500">
-                <PublicActionLink link={service.cta} className="text-inherit" />
+                <PublicActionLink link={service.cta ?? { label: 'Ver mas', url: '#servicios' }} className="text-inherit" />
                 <span className="transition group-hover:translate-x-0.5">&rarr;</span>
               </div>
             </article>

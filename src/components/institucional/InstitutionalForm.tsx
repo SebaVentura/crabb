@@ -43,7 +43,15 @@ const navSections: NavSection[] = [
 
 const emptyAuthority: InstitutionalAuthority = { role: '', name: '' }
 const emptySocialLink: SocialLink = { platform: '', url: '' }
-const emptyService: LandingService = { title: '', description: '' }
+const emptyService: LandingService = {
+  title: '',
+  description: '',
+  cta_label: '',
+  cta_href: '',
+  icon: 'representacion',
+  order: undefined,
+  visible: true,
+}
 const fallbackHeroImageAlt = 'Imagen institucional de CRABB'
 
 function cloneValues(values: InstitutionalContent): InstitutionalContent {
@@ -505,8 +513,28 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
           },
         },
         services: state.landing.services
-          .map((item) => ({ title: item.title.trim(), description: item.description.trim() }))
-          .filter((item) => item.title || item.description),
+          .map((item) => {
+            const icon = item.icon
+            const isValidIcon =
+              icon === 'representacion' ||
+              icon === 'capacitacion' ||
+              icon === 'data' ||
+              icon === 'red'
+
+            return {
+              title: item.title.trim(),
+              description: item.description.trim(),
+              cta_label: item.cta_label?.trim() ?? '',
+              cta_href: item.cta_href?.trim() ?? '',
+              icon: isValidIcon ? icon : undefined,
+              order:
+                item.order === undefined || item.order === null || Number.isNaN(Number(item.order))
+                  ? undefined
+                  : Number(item.order),
+              visible: item.visible ?? true,
+            }
+          })
+          .filter((item) => item.title || item.description || item.cta_label || item.cta_href),
         campaign: {
           ...sanitizeLandingSection(state.landing.campaign),
           cta: sanitizeLink(state.landing.campaign.cta),
@@ -1045,40 +1073,148 @@ export function InstitutionalForm({ initialValues, onSubmit, isSaving = false }:
               ) : null}
 
               {state.landing.services.map((service, index) => (
-                <div key={`service-${index}`} className="grid gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
-                  <input
-                    value={service.title}
-                    onChange={(event) =>
-                      setServices(
-                        state.landing.services.map((item, currentIndex) =>
-                          currentIndex === index ? { ...item, title: event.target.value } : item,
-                        ),
-                      )
-                    }
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    placeholder="Titulo"
-                  />
+                <div key={`service-${index}`} className="space-y-3 rounded-xl border border-slate-200 p-3">
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <input
+                      value={service.title}
+                      onChange={(event) =>
+                        setServices(
+                          state.landing.services.map((item, currentIndex) =>
+                            currentIndex === index ? { ...item, title: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      placeholder="Titulo"
+                    />
 
-                  <input
-                    value={service.description}
-                    onChange={(event) =>
-                      setServices(
-                        state.landing.services.map((item, currentIndex) =>
-                          currentIndex === index ? { ...item, description: event.target.value } : item,
-                        ),
-                      )
-                    }
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    placeholder="Descripcion"
-                  />
+                    <input
+                      value={service.description}
+                      onChange={(event) =>
+                        setServices(
+                          state.landing.services.map((item, currentIndex) =>
+                            currentIndex === index ? { ...item, description: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      placeholder="Descripcion"
+                    />
+                  </div>
 
-                  <button
-                    type="button"
-                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
-                    onClick={() => setServices(state.landing.services.filter((_, currentIndex) => currentIndex !== index))}
-                  >
-                    Eliminar
-                  </button>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <input
+                      value={service.cta_label ?? ''}
+                      onChange={(event) =>
+                        setServices(
+                          state.landing.services.map((item, currentIndex) =>
+                            currentIndex === index ? { ...item, cta_label: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      placeholder="CTA label"
+                    />
+
+                    <input
+                      value={service.cta_href ?? ''}
+                      onChange={(event) =>
+                        setServices(
+                          state.landing.services.map((item, currentIndex) =>
+                            currentIndex === index ? { ...item, cta_href: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      placeholder="CTA URL"
+                    />
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-600">Icono</label>
+                      <select
+                        value={service.icon ?? 'representacion'}
+                        onChange={(event) =>
+                          setServices(
+                            state.landing.services.map((item, currentIndex) =>
+                              currentIndex === index
+                                ? {
+                                    ...item,
+                                    icon: event.target.value as
+                                      | 'representacion'
+                                      | 'capacitacion'
+                                      | 'data'
+                                      | 'red',
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="representacion">Representacion</option>
+                        <option value="capacitacion">Capacitacion</option>
+                        <option value="data">Data</option>
+                        <option value="red">Red</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-600">Orden</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={service.order ?? ''}
+                        onChange={(event) =>
+                          setServices(
+                            state.landing.services.map((item, currentIndex) =>
+                              currentIndex === index
+                                ? {
+                                    ...item,
+                                    order:
+                                      event.target.value === ''
+                                        ? undefined
+                                        : Number(event.target.value),
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                        placeholder="1"
+                      />
+                    </div>
+
+                    <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={service.visible ?? true}
+                        onChange={(event) =>
+                          setServices(
+                            state.landing.services.map((item, currentIndex) =>
+                              currentIndex === index
+                                ? {
+                                    ...item,
+                                    visible: event.target.checked,
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                      />
+                      <span className="text-sm text-slate-700">Visible</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                      onClick={() => setServices(state.landing.services.filter((_, currentIndex) => currentIndex !== index))}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               ))}
 

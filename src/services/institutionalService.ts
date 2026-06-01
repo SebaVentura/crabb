@@ -39,6 +39,12 @@ function asNumber(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+function asOptionalNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 function asBoolean(value: unknown, fallback = false): boolean {
   if (typeof value === 'boolean') return value
   if (typeof value === 'number') return value !== 0
@@ -128,9 +134,23 @@ function normalizeLandingHero(value: unknown): LandingHero {
 
 function normalizeLandingService(value: unknown): LandingService {
   const source = asObject(value)
+  const normalizedIcon = asString(source.icon)
+  const isValidIcon =
+    normalizedIcon === 'representacion' ||
+    normalizedIcon === 'capacitacion' ||
+    normalizedIcon === 'data' ||
+    normalizedIcon === 'red'
+
   return {
     title: asString(source.title),
     description: asString(source.description),
+    cta_label: asString(source.cta_label),
+    cta_href: asString(source.cta_href),
+    icon: isValidIcon ? normalizedIcon : undefined,
+    order: asOptionalNumber(source.order),
+    visible: Object.prototype.hasOwnProperty.call(source, 'visible')
+      ? asBoolean(source.visible, true)
+      : undefined,
   }
 }
 

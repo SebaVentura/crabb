@@ -61,6 +61,11 @@ export type LandingHero = {
 export type LandingService = {
   title: string
   description: string
+  cta_label?: string
+  cta_href?: string
+  icon?: 'representacion' | 'capacitacion' | 'data' | 'red'
+  order?: number
+  visible?: boolean
 }
 
 export type LandingSection = {

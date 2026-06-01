@@ -64,18 +64,31 @@ export function LandingPage() {
   const visibleContact = content.visibility.show_contact
   const visibleSocialLinks = content.visibility.show_social_links
 
-  const benefitCards = landing.services.slice(0, 4).map((service, index) => {
-    const cardConfig = [
-      { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
-      { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '#capacitaciones' } },
-      { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '#data-tecnica' } },
-      { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '#contacto' } },
-    ]
+  const serviceFallbackByIndex = [
+    { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
+    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '#capacitaciones' } },
+    { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '#data-tecnica' } },
+    { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '#contacto' } },
+  ]
+
+  const sortedVisibleServices = [...landing.services]
+    .filter((service) => service.visible !== false)
+    .sort((a, b) => {
+      const aOrder = a.order ?? Number.MAX_SAFE_INTEGER
+      const bOrder = b.order ?? Number.MAX_SAFE_INTEGER
+      return aOrder - bOrder
+    })
+
+  const benefitCards = sortedVisibleServices.slice(0, 4).map((service, index) => {
+    const fallbackConfig = serviceFallbackByIndex[index]
 
     return {
       ...service,
-      icon: cardConfig[index]?.icon ?? 'representacion',
-      cta: cardConfig[index]?.cta ?? { label: 'Ver mas', url: '#servicios' },
+      icon: service.icon ?? fallbackConfig?.icon ?? 'representacion',
+      cta: {
+        label: service.cta_label || fallbackConfig?.cta.label || 'Ver mas',
+        url: service.cta_href || fallbackConfig?.cta.url || '#servicios',
+      },
     }
   })
 
