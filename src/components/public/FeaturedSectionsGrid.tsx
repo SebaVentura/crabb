@@ -172,45 +172,60 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
     secondaryItems.length <= 1
       ? 'grid-cols-1'
       : secondaryItems.length === 2
-        ? 'grid-cols-1 sm:grid-cols-2 mx-auto max-w-4xl'
+        ? 'grid-cols-1 sm:grid-cols-2'
         : secondaryItems.length === 3
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-6xl'
-          : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-2'
+          ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+          : 'grid-cols-1 sm:grid-cols-2'
 
   return (
-    <section className="w-full bg-slate-50 py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <header className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-blue-700">DESTACADOS</p>
-          <h2 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl lg:text-5xl">
-            Programas activos para impulsar al sector
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-slate-600 md:text-base">
-            Cada bloque conecta gestión institucional con acciones concretas para socios, talleres y empresas del
-            ecosistema automotor regional.
-          </p>
-        </header>
+    <section className="relative w-full overflow-hidden bg-slate-100 pb-12 sm:pb-14 lg:pb-16">
+      <div className="relative overflow-hidden bg-[#0b1f3a] pb-14 pt-14 sm:pb-18 sm:pt-16 lg:pb-24 lg:pt-20">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.2),transparent_38%),radial-gradient(circle_at_82%_0%,rgba(96,165,250,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0)_100%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(148,163,184,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.2)_1px,transparent_1px)] [background-size:46px_46px]"
+          aria-hidden="true"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-slate-200/40 to-transparent" aria-hidden="true" />
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-12 lg:items-stretch">
-          <article className="relative overflow-hidden rounded-[2rem] bg-[#0f2747] text-white shadow-[0_28px_60px_-36px_rgba(15,39,71,0.8)] lg:col-span-5">
-            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full border border-white/10 bg-white/5" aria-hidden="true" />
-            <div className="absolute bottom-6 right-6 h-24 w-24 rounded-full border border-blue-300/20 bg-blue-400/10" aria-hidden="true" />
-            <div className="flex h-full flex-col p-7 sm:p-8 lg:p-9">
+        <div className="relative mx-auto w-full max-w-[1500px] px-5 sm:px-8 lg:px-12 2xl:px-16">
+          <header className="mx-auto max-w-4xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-100">DESTACADOS</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight text-white md:text-4xl lg:text-5xl">
+            Programas activos para impulsar al sector
+            </h2>
+            <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-slate-200 md:text-base">
+              Cada bloque conecta gestión institucional con acciones concretas para socios, talleres y empresas del
+              ecosistema automotor regional.
+            </p>
+          </header>
+        </div>
+      </div>
+
+      <div className="relative mx-auto mt-0 w-full max-w-[1500px] px-5 sm:-mt-14 sm:px-8 lg:-mt-16 lg:px-12 2xl:px-16">
+        <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch lg:gap-6 xl:gap-7">
+          <article className="relative overflow-hidden self-start rounded-[1.6rem] border border-slate-200/70 bg-gradient-to-br from-[#103057] to-[#0f2747] text-white shadow-[0_24px_55px_-34px_rgba(8,22,43,0.88)] lg:col-span-5">
+            <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full border border-white/15 bg-white/8" aria-hidden="true" />
+            <div className="absolute -bottom-12 left-8 h-24 w-24 rounded-full bg-blue-300/12 blur-xl" aria-hidden="true" />
+
+            <div className="flex flex-col p-5 sm:p-6 lg:p-7">
               <SectionEyebrow tone="primary" />
 
-              <div className="mt-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-sky-100 shadow-[0_16px_30px_-20px_rgba(255,255,255,0.35)]">
+              <div className="mt-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/12 text-sky-100">
                 <SectionIcon keyName={primaryItem.key} />
               </div>
 
-              <div className="mt-7 max-w-xl">
-                <h3 className="text-2xl font-semibold leading-tight text-white sm:text-[2rem]">{primaryItem.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-sky-100/90 sm:text-base">{primaryItem.description}</p>
+              <div className="mt-4 max-w-2xl">
+                <h3 className="text-xl font-semibold leading-tight text-white sm:text-2xl">{primaryItem.title}</h3>
+                <p className="mt-2.5 text-sm leading-7 text-sky-100/95 sm:text-[0.97rem]">{primaryItem.description}</p>
               </div>
 
-              <ul className="mt-7 space-y-3">
+              <ul className="mt-4 space-y-2.5">
                 {primaryItem.items.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-sky-50/90">
-                    <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-sky-100 ring-1 ring-white/15" aria-hidden="true">
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-sky-50/95">
+                    <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/12 text-sky-100 ring-1 ring-white/20" aria-hidden="true">
                       <CheckIcon tone="dark" />
                     </span>
                     <span>{item}</span>
@@ -218,36 +233,36 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
                 ))}
               </ul>
 
-              <div className="mt-auto pt-8">
+              <div className="mt-5 pt-1">
                 <PublicActionLink
                   link={{
                     ...primaryItem.cta,
                     url: getSafePublicHref(primaryItem.cta.url, '/contacto') ?? '/contacto',
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-semibold text-[#0f2747] transition duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f2747] transition duration-200 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                 />
               </div>
             </div>
           </article>
 
           <div className="lg:col-span-7">
-            <div className={`grid gap-6 ${secondaryGridClass}`}>
+            <div className={`grid gap-5 sm:gap-6 ${secondaryGridClass}`}>
               {secondaryItems.map((section) => (
                 <article
                   key={section.key}
-                  className="group flex h-full min-h-[280px] flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.28)]"
+                  className="group flex h-full min-h-[255px] flex-col rounded-[1.4rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.26)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_20px_40px_-28px_rgba(15,23,42,0.28)] sm:p-6"
                 >
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700">
                     <SectionIcon keyName={section.key} />
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <SectionEyebrow tone="secondary" />
-                    <h3 className="mt-4 text-lg font-semibold leading-tight text-slate-900 md:text-xl">{section.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">{section.description}</p>
+                    <h3 className="mt-3 text-lg font-semibold leading-tight text-slate-900">{section.title}</h3>
+                    <p className="mt-2.5 text-sm leading-7 text-slate-600">{section.description}</p>
                   </div>
 
-                  <ul className="mt-5 space-y-2.5">
+                  <ul className="mt-4 space-y-2">
                     {section.items.map((item) => (
                       <li key={`${section.key}-${item}`} className="flex items-start gap-2.5 text-sm text-slate-700">
                         <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100" aria-hidden="true">
@@ -258,13 +273,13 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
                     ))}
                   </ul>
 
-                  <div className="mt-auto pt-6">
+                  <div className="mt-auto pt-5">
                     <PublicActionLink
                       link={{
                         ...section.cta,
                         url: getSafePublicHref(section.cta.url, section.key === 'data-tecnica' ? '/data-tecnica' : section.key === 'capacitaciones' ? '/capacitaciones' : '/contacto') ?? '/contacto',
                       }}
-                      className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition duration-200 hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
+                      className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition duration-200 hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
                     />
                     <span className="ml-2 inline-flex text-sky-700 transition duration-200 group-hover:translate-x-1" aria-hidden="true">
                       →
@@ -276,18 +291,16 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
           </div>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-[1.75rem] border border-blue-950/5 bg-white shadow-[0_18px_40px_-30px_rgba(15,39,71,0.22)]">
-          <div className="flex flex-col gap-5 px-6 py-6 sm:px-8 sm:py-7 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-700">Atención institucional</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900 sm:text-xl">¿Necesitás ayuda o más información?</p>
-              <p className="mt-2 text-sm leading-7 text-slate-600">
-                Nuestro equipo está para acompañarte y orientarte según tu necesidad.
-              </p>
+        <div className="mt-6 overflow-hidden rounded-[1.2rem] border border-blue-100 bg-gradient-to-r from-[#edf4ff] via-[#f7fbff] to-[#eef6ff] shadow-[0_10px_24px_-22px_rgba(15,39,71,0.45)] sm:mt-7">
+          <div className="flex flex-col gap-3 px-5 py-4 sm:px-6 sm:py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-blue-700">Atención institucional</p>
+              <p className="mt-1.5 text-base font-semibold text-slate-900 sm:text-lg">¿Necesitás ayuda o más información?</p>
+              <p className="mt-1.5 text-sm text-slate-600">Nuestro equipo está para acompañarte y orientarte según tu necesidad.</p>
             </div>
             <a
               href="#contacto"
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
             >
               Contactanos →
             </a>
