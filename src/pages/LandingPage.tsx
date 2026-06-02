@@ -66,10 +66,22 @@ export function LandingPage() {
 
   const serviceFallbackByIndex = [
     { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
-    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '#capacitaciones' } },
-    { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '#data-tecnica' } },
-    { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '#contacto' } },
+    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '/capacitaciones' } },
+    { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '/data-tecnica' } },
+    { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '/contacto' } },
   ]
+
+  const isUnsafePublicHref = (href?: string | null) => {
+    if (!href) return true
+
+    const normalized = href.trim().toLowerCase()
+    return (
+      normalized.includes('admin') ||
+      normalized.includes('/#/admin') ||
+      normalized.includes('/admin') ||
+      normalized.includes('login')
+    )
+  }
 
   const sortedVisibleServices = [...landing.services]
     .filter((service) => service.visible !== false)
@@ -81,13 +93,14 @@ export function LandingPage() {
 
   const benefitCards = sortedVisibleServices.slice(0, 4).map((service, index) => {
     const fallbackConfig = serviceFallbackByIndex[index]
+    const safeHref = isUnsafePublicHref(service.cta_href) ? fallbackConfig?.cta.url : service.cta_href
 
     return {
       ...service,
       icon: service.icon ?? fallbackConfig?.icon ?? 'representacion',
       cta: {
         label: service.cta_label || fallbackConfig?.cta.label || 'Ver mas',
-        url: service.cta_href || fallbackConfig?.cta.url || '#servicios',
+        url: safeHref || fallbackConfig?.cta.url || '/institucional',
       },
     }
   })
