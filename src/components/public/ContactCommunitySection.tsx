@@ -116,22 +116,31 @@ export function ContactCommunitySection({
   ]
 
   return (
-    <section id="contacto" className="w-full bg-slate-50 pb-14 pt-20 sm:pb-16 sm:pt-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="contacto" className="relative w-full overflow-hidden bg-gradient-to-b from-slate-100 via-[#f5f9ff] to-[#edf3fb] pb-10 pt-16 sm:pb-12 sm:pt-20">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(56,189,248,0.12),transparent_36%),radial-gradient(circle_at_86%_22%,rgba(30,64,175,0.08),transparent_34%)]"
+        aria-hidden="true"
+      />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent" aria-hidden="true" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-700">CONTACTO INSTITUCIONAL</p>
-            <h2 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">Conectá con CRABB</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
+            <h2 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl lg:text-[2.65rem]">Conectá con CRABB</h2>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-600 md:text-base">
               Estamos para acompañar a talleres, concesionarias, agencias y empresas vinculadas al ecosistema automotor
               regional.
             </p>
 
-            <div className="mt-8 space-y-4">
+            <div className="mt-7 space-y-3.5 sm:space-y-4">
               {supportPoints.map((point) => (
-                <article key={point.title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <article
+                  key={point.title}
+                  className="group rounded-2xl border border-slate-200/85 bg-white/90 p-4 shadow-[0_10px_22px_-18px_rgba(15,23,42,0.3)] backdrop-blur-sm transition duration-250 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_34px_-20px_rgba(15,23,42,0.34)] sm:p-5"
+                >
                   <div className="flex items-start gap-4">
-                    <span className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                    <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700 ring-1 ring-white transition duration-200 group-hover:border-blue-200 group-hover:bg-blue-100/80 sm:h-11 sm:w-11">
                       <ContactIcon kind={point.icon} />
                     </span>
                     <div>
@@ -144,16 +153,20 @@ export function ContactCommunitySection({
             </div>
           </div>
 
-          <aside className="rounded-[1.75rem] bg-[#0f2747] p-6 text-white shadow-[0_24px_55px_-34px_rgba(15,39,71,0.9)] sm:p-8">
+          <aside className="relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-gradient-to-br from-[#113059] via-[#0f2747] to-[#0b1f3a] p-5 text-white shadow-[0_26px_58px_-34px_rgba(15,39,71,0.92)] ring-1 ring-slate-900/10 sm:p-7">
+            <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full border border-white/10 bg-white/5" aria-hidden="true" />
+            <div className="pointer-events-none absolute bottom-0 left-8 h-20 w-20 rounded-full bg-blue-300/12 blur-xl" aria-hidden="true" />
+
+            <div className="relative">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">
               <span className="inline-flex h-2 w-2 rounded-full bg-blue-300" aria-hidden="true" />
               Atención CRABB
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-4">
               {showContact ? (
                 <div className="space-y-3 text-sm text-blue-50">
-                  <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/6 px-4 py-3">
                     <span className="mt-0.5 text-blue-200">
                       <ContactIcon kind="institution" />
                     </span>
@@ -163,7 +176,7 @@ export function ContactCommunitySection({
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/6 px-4 py-3">
                     <span className="mt-0.5 text-blue-200">
                       <ContactIcon kind="mail" />
                     </span>
@@ -179,7 +192,7 @@ export function ContactCommunitySection({
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/6 px-4 py-3">
                       <span className="mt-0.5 text-blue-200">
                         <ContactIcon kind="phone" />
                       </span>
@@ -194,7 +207,7 @@ export function ContactCommunitySection({
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/6 px-4 py-3">
                       <span className="mt-0.5 text-blue-200">
                         <ContactIcon kind="clock" />
                       </span>
@@ -207,19 +220,19 @@ export function ContactCommunitySection({
                 </div>
               ) : null}
 
-              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+              <div className="grid gap-2.5 pt-2 sm:grid-cols-2">
                 <PublicActionLink
                   link={finalCta.primary_cta}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0f2747] transition hover:bg-blue-50"
+                  className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f2747] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                 />
                 <PublicActionLink
                   link={finalCta.secondary_cta}
-                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
+                  className="inline-flex items-center justify-center rounded-full border border-white/24 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                 />
               </div>
 
               {showSocialLinks ? (
-                <div className="pt-2">
+                <div className="rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">Redes sociales</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {contactConfig.socials.map((social) => (
@@ -229,7 +242,7 @@ export function ContactCommunitySection({
                         target={social.href.startsWith('http') ? '_blank' : undefined}
                         rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                         aria-label={`Abrir ${social.label}`}
-                        className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-blue-50 transition hover:border-white/30 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
+                        className="rounded-full border border-white/18 bg-white/[0.06] px-3.5 py-1.5 text-xs font-medium text-blue-50 transition hover:border-white/34 hover:bg-white/[0.14] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                       >
                         {social.label}
                       </a>
@@ -237,6 +250,7 @@ export function ContactCommunitySection({
                   </div>
                 </div>
               ) : null}
+            </div>
             </div>
           </aside>
         </div>
