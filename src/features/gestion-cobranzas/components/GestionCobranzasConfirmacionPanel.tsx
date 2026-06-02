@@ -1,8 +1,10 @@
 import { ADVERTENCIA_CONFIRMACION } from '../constants'
 import { Card } from '../../../components/ui/Card'
+import type { CampaniaCobranza } from '../types'
 import { GestionCobranzasMensajePreview } from './GestionCobranzasMensajePreview'
 
 type Props = {
+  campania: CampaniaCobranza
   seleccionados: number
   validos: number
   invalidos: number
@@ -15,6 +17,7 @@ type Props = {
 }
 
 export function GestionCobranzasConfirmacionPanel({
+  campania,
   seleccionados,
   validos,
   invalidos,
@@ -30,6 +33,10 @@ export function GestionCobranzasConfirmacionPanel({
       <Card className="border-amber-200 bg-amber-50/50 shadow-md" title="Confirmar envío simulado">
         <div className="space-y-3 text-sm text-slate-700">
           <p>{ADVERTENCIA_CONFIRMACION}</p>
+          <div className="rounded-xl border border-amber-100 bg-white/80 p-3">
+            <p className="font-medium text-slate-900">Campaña seleccionada: {campania.label}</p>
+            <p className="mt-1 text-slate-600">{campania.descripcion}</p>
+          </div>
           <ul className="list-inside list-disc space-y-1">
             <li>Socios seleccionados: {seleccionados}</li>
             <li>Teléfonos válidos: {validos}</li>
@@ -59,7 +66,7 @@ export function GestionCobranzasConfirmacionPanel({
           <p className="mt-3 text-sm text-rose-700">No hay teléfonos válidos entre los socios seleccionados.</p>
         ) : null}
       </Card>
-      <GestionCobranzasMensajePreview ejemploRenderizado={ejemploPreview} />
+      <GestionCobranzasMensajePreview campania={campania} ejemploRenderizado={ejemploPreview} />
     </div>
   )
 }

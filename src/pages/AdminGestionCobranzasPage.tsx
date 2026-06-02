@@ -1,6 +1,7 @@
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { useAuth } from '../hooks/useAuth'
 import { BANNER_SIMULACION } from '../features/gestion-cobranzas/constants'
+import { GestionCobranzasCampaniaSelector } from '../features/gestion-cobranzas/components/GestionCobranzasCampaniaSelector'
 import { GestionCobranzasConfirmacionPanel } from '../features/gestion-cobranzas/components/GestionCobranzasConfirmacionPanel'
 import { GestionCobranzasHistorialSection } from '../features/gestion-cobranzas/components/GestionCobranzasHistorialSection'
 import { GestionCobranzasLogPanel } from '../features/gestion-cobranzas/components/GestionCobranzasLogPanel'
@@ -22,6 +23,7 @@ export function AdminGestionCobranzasPage() {
 
   const envio = useGestionCobranzasEnvio(admin)
   const uiLocked = envio.isSending || envio.isPreparing
+  const campaniaLocked = uiLocked || envio.fase !== 'inicial'
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -57,8 +59,16 @@ export function AdminGestionCobranzasPage() {
             ultimoEnvio={envio.ultimoEnvio}
           />
 
+          <GestionCobranzasCampaniaSelector
+            campanias={envio.campanias}
+            selectedId={envio.campaniaSeleccionada.id}
+            disabled={campaniaLocked}
+            onSelect={envio.setCampaniaSeleccionada}
+          />
+
           {envio.fase === 'confirmacion' ? (
             <GestionCobranzasConfirmacionPanel
+              campania={envio.campaniaSeleccionada}
               seleccionados={envio.seleccionStats.seleccionados}
               validos={envio.seleccionStats.validos}
               invalidos={envio.seleccionStats.invalidos}
@@ -74,6 +84,7 @@ export function AdminGestionCobranzasPage() {
           {envio.fase === 'enviando' ? (
             <>
               <GestionCobranzasProgresoPanel
+                campaniaLabel={envio.campaniaSeleccionada.label}
                 progress={envio.sendProgress}
                 currentMember={envio.currentMember}
                 nextSendInMs={envio.nextSendInMs}
@@ -107,7 +118,10 @@ export function AdminGestionCobranzasPage() {
                 onSeleccionarTodos={envio.seleccionarTodos}
                 onDeseleccionarTodos={envio.deseleccionarTodos}
               />
-              <GestionCobranzasMensajePreview ejemploRenderizado={envio.ejemploPreview} />
+              <GestionCobranzasMensajePreview
+                campania={envio.campaniaSeleccionada}
+                ejemploRenderizado={envio.ejemploPreview}
+              />
               <div>
                 <button
                   type="button"

@@ -1,3 +1,13 @@
+export type CampaniaCobranzaId = 'inicio_mes' | 'cuota_pendiente' | 'socio_moroso' | 'ultimo_aviso'
+
+export type CampaniaCobranza = {
+  id: CampaniaCobranzaId
+  label: string
+  descripcion: string
+  tono: string
+  template: string
+}
+
 export type EstadoCuotaCobranza = 'moroso' | 'vencido' | 'pendiente'
 
 export type EstadoEnvioFila =
@@ -39,6 +49,7 @@ export type SendProgress = {
 }
 
 export type ResumenCampana = {
+  campaniaLabel: string
   seleccionados: number
   enviados: number
   errores: number

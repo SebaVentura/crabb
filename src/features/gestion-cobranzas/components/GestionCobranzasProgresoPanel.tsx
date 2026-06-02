@@ -2,6 +2,7 @@ import { Card } from '../../../components/ui/Card'
 import type { ResumenCampana, SendProgress, SocioCobranza } from '../types'
 
 type Props = {
+  campaniaLabel: string
   progress: SendProgress
   currentMember: SocioCobranza | null
   nextSendInMs: number
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export function GestionCobranzasProgresoPanel({
+  campaniaLabel,
   progress,
   currentMember,
   nextSendInMs,
@@ -22,6 +24,7 @@ export function GestionCobranzasProgresoPanel({
     <Card className="border-blue-200 bg-blue-50/30 shadow-md" title="Envío en progreso">
       <div className="space-y-3 text-sm text-slate-700">
         <p className="font-medium text-slate-900">Simulación de recordatorios en curso</p>
+        <p>Campaña: {campaniaLabel}</p>
         {currentMember ? <p>Enviando mensaje a: {currentMember.nombre}</p> : null}
         <p>Enviados: {progress.enviados} / {progress.total}</p>
         <p>Pendientes: {progress.pendientes}</p>
@@ -63,6 +66,7 @@ export function GestionCobranzasResumenFinal({
   return (
     <Card className="border-emerald-200 bg-emerald-50/40 shadow-md" title="Resumen del envío simulado">
       <ul className="space-y-1 text-sm text-slate-700">
+        <li>Campaña ejecutada: {resumen.campaniaLabel}</li>
         <li>Total seleccionados: {resumen.seleccionados}</li>
         <li>Enviados correctamente: {resumen.enviados}</li>
         <li>Con error: {resumen.errores}</li>
