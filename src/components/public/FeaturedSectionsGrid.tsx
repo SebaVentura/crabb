@@ -116,6 +116,41 @@ function SectionIcon({ keyName }: { keyName: string }) {
   )
 }
 
+function CheckIcon({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
+  const strokeColor = tone === 'dark' ? 'currentColor' : 'currentColor'
+
+  return (
+    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
+      <path d="M4 10.5L8 14.5L16 6.5" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function SectionEyebrow({ tone }: { tone: FeaturedItemTone }) {
+  return (
+    <span
+      className={
+        tone === 'primary'
+          ? 'inline-flex rounded-full border border-cyan-400/20 bg-white/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-sky-100'
+          : 'inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-blue-700'
+      }
+    >
+      {tone === 'primary' ? 'Acceso prioritario' : 'Programa activo'}
+    </span>
+  )
+}
+
+function isUnsafePublicHref(href?: string) {
+  if (!href) return true
+
+  const normalized = href.trim().toLowerCase()
+  return normalized.includes('admin') || normalized.includes('/login') || normalized.includes('/#/admin')
+}
+
+function getSafePublicHref(href: string | undefined, fallbackHref: string) {
+  return isUnsafePublicHref(href) ? fallbackHref : href
+}
+
 export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
   // TODO: reemplazar esta configuracion local por datos administrables desde Superadmin.
   const featuredItems: FeaturedItemPresentation[] = featuredItemDefinitions.map((definition) => {
@@ -133,92 +168,107 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
 
   const primaryItem = featuredItems[0]
   const secondaryItems = featuredItems.slice(1)
+  const secondaryGridClass =
+    secondaryItems.length <= 1
+      ? 'grid-cols-1'
+      : secondaryItems.length === 2
+        ? 'grid-cols-1 sm:grid-cols-2 mx-auto max-w-4xl'
+        : secondaryItems.length === 3
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-6xl'
+          : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-2'
 
   return (
     <section className="w-full bg-slate-50 py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-700">DESTACADOS</p>
-            <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight text-slate-900 md:text-4xl lg:text-5xl">
-              Programas activos para impulsar al sector
-            </h2>
-          </div>
-          <div className="lg:col-span-5 lg:justify-self-end">
-            <p className="max-w-xl text-sm leading-relaxed text-slate-600 md:text-base lg:max-w-md lg:text-right">
-              Cada bloque conecta gestion institucional con acciones concretas para socios, talleres y empresas del
-              ecosistema automotor regional.
-            </p>
-          </div>
-        </div>
+        <header className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-blue-700">DESTACADOS</p>
+          <h2 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl lg:text-5xl">
+            Programas activos para impulsar al sector
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-slate-600 md:text-base">
+            Cada bloque conecta gestión institucional con acciones concretas para socios, talleres y empresas del
+            ecosistema automotor regional.
+          </p>
+        </header>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-12">
-          <article className="relative overflow-hidden rounded-[1.75rem] bg-[#0f2747] text-white shadow-[0_28px_60px_-34px_rgba(15,39,71,0.85)] lg:col-span-5">
-            <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full border border-white/10 bg-white/5" aria-hidden="true" />
-            <div className="absolute bottom-6 right-6 h-20 w-20 rounded-full border border-blue-300/20 bg-blue-400/10" aria-hidden="true" />
-            <div className="flex h-full flex-col p-7 sm:p-8">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-blue-100">
+        <div className="mt-14 grid gap-6 lg:grid-cols-12 lg:items-stretch">
+          <article className="relative overflow-hidden rounded-[2rem] bg-[#0f2747] text-white shadow-[0_28px_60px_-36px_rgba(15,39,71,0.8)] lg:col-span-5">
+            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full border border-white/10 bg-white/5" aria-hidden="true" />
+            <div className="absolute bottom-6 right-6 h-24 w-24 rounded-full border border-blue-300/20 bg-blue-400/10" aria-hidden="true" />
+            <div className="flex h-full flex-col p-7 sm:p-8 lg:p-9">
+              <SectionEyebrow tone="primary" />
+
+              <div className="mt-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-sky-100 shadow-[0_16px_30px_-20px_rgba(255,255,255,0.35)]">
                 <SectionIcon keyName={primaryItem.key} />
               </div>
 
-              <div className="mt-6 max-w-xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200/80">Acceso prioritario</p>
-                <h3 className="mt-3 text-2xl font-semibold leading-tight sm:text-3xl">{primaryItem.title}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-slate-200 sm:text-base">{primaryItem.description}</p>
+              <div className="mt-7 max-w-xl">
+                <h3 className="text-2xl font-semibold leading-tight text-white sm:text-[2rem]">{primaryItem.title}</h3>
+                <p className="mt-4 text-sm leading-7 text-sky-100/90 sm:text-base">{primaryItem.description}</p>
               </div>
 
-              <ul className="mt-6 space-y-3">
+              <ul className="mt-7 space-y-3">
                 {primaryItem.items.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-100/95">
-                    <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-blue-100" aria-hidden="true">
-                      <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none">
-                        <path d="M4 10L8 14L16 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                  <li key={item} className="flex items-start gap-3 text-sm text-sky-50/90">
+                    <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-sky-100 ring-1 ring-white/15" aria-hidden="true">
+                      <CheckIcon tone="dark" />
                     </span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8">
+              <div className="mt-auto pt-8">
                 <PublicActionLink
-                  link={primaryItem.cta}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0f2747] transition hover:bg-blue-50"
+                  link={{
+                    ...primaryItem.cta,
+                    url: getSafePublicHref(primaryItem.cta.url, '/contacto') ?? '/contacto',
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-semibold text-[#0f2747] transition duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                 />
               </div>
             </div>
           </article>
 
           <div className="lg:col-span-7">
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className={`grid gap-6 ${secondaryGridClass}`}>
               {secondaryItems.map((section) => (
                 <article
                   key={section.key}
-                  className="group flex h-full flex-col rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                  className="group flex h-full min-h-[280px] flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.28)]"
                 >
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
                     <SectionIcon keyName={section.key} />
                   </div>
 
-                  <h3 className="mt-5 text-lg font-semibold text-slate-900">{section.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{section.description}</p>
+                  <div className="mt-5">
+                    <SectionEyebrow tone="secondary" />
+                    <h3 className="mt-4 text-lg font-semibold leading-tight text-slate-900 md:text-xl">{section.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">{section.description}</p>
+                  </div>
 
-                  <ul className="mt-5 flex flex-wrap gap-2">
+                  <ul className="mt-5 space-y-2.5">
                     {section.items.map((item) => (
-                      <li
-                        key={`${section.key}-${item}`}
-                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700"
-                      >
-                        {item}
+                      <li key={`${section.key}-${item}`} className="flex items-start gap-2.5 text-sm text-slate-700">
+                        <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100" aria-hidden="true">
+                          <CheckIcon />
+                        </span>
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <div className="mt-6 pt-4">
+                  <div className="mt-auto pt-6">
                     <PublicActionLink
-                      link={section.cta}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition group-hover:text-blue-800"
+                      link={{
+                        ...section.cta,
+                        url: getSafePublicHref(section.cta.url, section.key === 'data-tecnica' ? '/data-tecnica' : section.key === 'capacitaciones' ? '/capacitaciones' : '/contacto') ?? '/contacto',
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition duration-200 hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
                     />
+                    <span className="ml-2 inline-flex text-sky-700 transition duration-200 group-hover:translate-x-1" aria-hidden="true">
+                      →
+                    </span>
                   </div>
                 </article>
               ))}
@@ -226,20 +276,20 @@ export function FeaturedSectionsGrid({ sections }: FeaturedSectionsGridProps) {
           </div>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-[1.75rem] border border-blue-950/5 bg-[#0f2747] shadow-[0_24px_50px_-34px_rgba(15,39,71,0.75)]">
-          <div className="flex flex-col gap-5 px-6 py-7 sm:px-8 sm:py-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-10 overflow-hidden rounded-[1.75rem] border border-blue-950/5 bg-white shadow-[0_18px_40px_-30px_rgba(15,39,71,0.22)]">
+          <div className="flex flex-col gap-5 px-6 py-6 sm:px-8 sm:py-7 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">Atencion institucional</p>
-              <p className="mt-3 text-xl font-semibold text-white sm:text-2xl">Necesitas ayuda o mas informacion?</p>
-              <p className="mt-2 text-sm leading-relaxed text-blue-100 sm:text-base">
-                Nuestro equipo esta para acompanarte y orientarte segun tu necesidad.
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-700">Atención institucional</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 sm:text-xl">¿Necesitás ayuda o más información?</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Nuestro equipo está para acompañarte y orientarte según tu necesidad.
               </p>
             </div>
             <a
               href="#contacto"
-              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0f2747] transition hover:bg-blue-50"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
             >
-              Contactanos
+              Contactanos →
             </a>
           </div>
         </div>

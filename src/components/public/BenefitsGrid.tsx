@@ -1,157 +1,237 @@
-import type { ActionLink, LandingService } from '../../types/institutional'
-import { PublicActionLink } from './PublicActionLink'
-import { PublicSectionHeader } from './PublicSectionHeader'
+import type { LandingService } from '../../types/institutional';
+
+type ServiceIcon = 'representacion' | 'capacitacion' | 'data' | 'red';
+
+type ServiceCta = {
+  label?: string;
+  href?: string;
+  url?: string;
+};
 
 type ServiceWithAction = LandingService & {
-  cta?: ActionLink
-  icon?: 'representacion' | 'capacitacion' | 'data' | 'red'
-}
+  cta?: ServiceCta;
+  cta_label?: string;
+  cta_href?: string;
+  icon?: ServiceIcon | string;
+};
 
 type BenefitsGridProps = {
-  services: ServiceWithAction[]
+  services: ServiceWithAction[];
+};
+
+const PUBLIC_FALLBACK_LINKS = [
+  { label: 'Más información', href: '/institucional' },
+  { label: 'Ver capacitaciones', href: '/capacitaciones' },
+  { label: 'Explorar data técnica', href: '/data-tecnica' },
+  { label: 'Conocé los beneficios', href: '/contacto' },
+];
+
+const ICON_FALLBACKS: ServiceIcon[] = [
+  'representacion',
+  'capacitacion',
+  'data',
+  'red',
+];
+
+function isUnsafePublicHref(href?: string) {
+  if (!href) return true;
+
+  const normalized = href.toLowerCase().trim();
+
+  return (
+    normalized.includes('admin') ||
+    normalized.includes('/#/admin') ||
+    normalized.includes('/admin') ||
+    normalized.includes('login')
+  );
 }
 
-function Icon({ kind }: { kind: ServiceWithAction['icon'] }) {
-  if (kind === 'representacion') {
-    return (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
-        <path d="M4 9.5L12 5L20 9.5V18H4V9.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M8 18V13.5H16V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M8 9.5H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M10 9.5V13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M14 9.5V13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    )
+function getSafeCta(service: ServiceWithAction, index: number) {
+  const fallback = PUBLIC_FALLBACK_LINKS[index] ?? {
+    label: 'Ver más',
+    href: '/contacto',
+  };
+
+  const rawLabel = service.cta?.label || service.cta_label || fallback.label;
+  const rawHref =
+    service.cta?.href ||
+    service.cta?.url ||
+    service.cta_href ||
+    fallback.href;
+
+  return {
+    label: rawLabel,
+    href: isUnsafePublicHref(rawHref) ? fallback.href : rawHref,
+  };
+}
+
+function getSafeIcon(service: ServiceWithAction, index: number): ServiceIcon {
+  const icon = service.icon;
+
+  if (
+    icon === 'representacion' ||
+    icon === 'capacitacion' ||
+    icon === 'data' ||
+    icon === 'red'
+  ) {
+    return icon;
   }
+
+  return ICON_FALLBACKS[index] ?? 'representacion';
+}
+
+function getGridClass(count: number) {
+  if (count <= 1) {
+    return 'mx-auto max-w-sm grid-cols-1';
+  }
+
+  if (count === 2) {
+    return 'mx-auto max-w-3xl grid-cols-1 sm:grid-cols-2';
+  }
+
+  if (count === 3) {
+    return 'mx-auto max-w-5xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+  }
+
+  return 'mx-auto max-w-6xl grid-cols-1 sm:grid-cols-2 xl:grid-cols-4';
+}
+
+function ServiceIconSvg({ kind }: { kind: ServiceIcon }) {
+  const commonProps = {
+    className: 'h-6 w-6',
+    fill: 'none',
+    viewBox: '0 0 24 24',
+    strokeWidth: 1.8,
+    stroke: 'currentColor',
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
 
   if (kind === 'capacitacion') {
     return (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
-        <path d="M4 9.5L12 5L20 9.5L12 14L4 9.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M7 11V15.2C7 16.6 9.2 18 12 18C14.8 18 17 16.6 17 15.2V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <svg {...commonProps}>
+        <path d="M3.5 8.5 12 4l8.5 4.5L12 13 3.5 8.5Z" />
+        <path d="M6.5 10.2v4.2c0 1.8 2.5 3.1 5.5 3.1s5.5-1.3 5.5-3.1v-4.2" />
+        <path d="M20.5 8.5v5" />
       </svg>
-    )
+    );
   }
 
   if (kind === 'data') {
     return (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
-        <path d="M4 18V6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M4 18H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M7.5 14.5L10.5 11.5L13.2 13.8L17.5 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="17.5" cy="9.5" r="1" fill="currentColor" />
+      <svg {...commonProps}>
+        <path d="M7 3.8h7.2L19 8.6V20a1.2 1.2 0 0 1-1.2 1.2H7A1.2 1.2 0 0 1 5.8 20V5A1.2 1.2 0 0 1 7 3.8Z" />
+        <path d="M14 4v4.8h4.8" />
+        <path d="M8.8 16.8v-3.1" />
+        <path d="M12 16.8v-5.4" />
+        <path d="M15.2 16.8v-2.2" />
       </svg>
-    )
+    );
   }
 
   if (kind === 'red') {
     return (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
-        <circle cx="6" cy="12" r="1.6" fill="currentColor" />
-        <circle cx="12" cy="7" r="1.6" fill="currentColor" />
-        <circle cx="18" cy="12" r="1.6" fill="currentColor" />
-        <circle cx="12" cy="17" r="1.6" fill="currentColor" />
-        <path d="M7.2 11.2L10.8 8.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M13.2 8.3L16.8 11.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M7.2 12.8L10.8 15.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M13.2 15.7L16.8 12.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <svg {...commonProps}>
+        <path d="M7.5 8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+        <path d="M16.5 8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+        <path d="M12 20.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+        <path d="m9.4 8 4.2 7.8" />
+        <path d="m14.6 8-4.2 7.8" />
+        <path d="M10 6h4" />
       </svg>
-    )
+    );
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
-      <path d="M6 9.5L12 5.5L18 9.5V18H6V9.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M9 18V12.8H15V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg {...commonProps}>
+      <path d="M4.5 10.5 12 5l7.5 5.5" />
+      <path d="M6.2 10.2v8.3h11.6v-8.3" />
+      <path d="M9.2 18.5v-4.3h5.6v4.3" />
+      <path d="M8.4 12.1h1.8" />
+      <path d="M13.8 12.1h1.8" />
     </svg>
-  )
+  );
 }
 
 export function BenefitsGrid({ services }: BenefitsGridProps) {
-  const fallbackServices = [
-    { label: 'Ver institucional', href: '/institucional' },
-    { label: 'Ver capacitaciones', href: '/capacitaciones' },
-    { label: 'Explorar data tecnica', href: '/data-tecnica' },
-    { label: 'Contactar a CRABB', href: '/contacto' },
-  ]
+  if (!services.length) return null;
 
-  const isUnsafePublicHref = (href?: string | null) => {
-    if (!href) return true
-
-    const normalized = href.trim().toLowerCase()
-    return (
-      normalized.includes('admin') ||
-      normalized.includes('/#/admin') ||
-      normalized.includes('/admin') ||
-      normalized.includes('login')
-    )
-  }
-
-  const gridColumnsClass =
-    services.length === 1
-      ? 'mx-auto max-w-xl grid-cols-1'
-      : services.length === 2
-        ? 'mx-auto max-w-4xl grid-cols-1 sm:grid-cols-2'
-        : services.length === 3
-          ? 'mx-auto max-w-6xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-          : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'
+  const gridClass = getGridClass(services.length);
 
   return (
-    <section id="servicios" className="w-full bg-slate-50 px-6 py-24 sm:py-28 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <PublicSectionHeader
-          tone="dark"
-          eyebrow="SERVICIOS"
-          title="Representacion sectorial con enfoque operativo"
-          description="Acompanamos a concesionarias, agencias y pymes del ecosistema automotor con soporte institucional y herramientas concretas."
-          centered
-          className="mx-auto max-w-3xl"
-        />
+    <section
+      id="servicios"
+      className="relative w-full overflow-hidden bg-gradient-to-b from-white via-slate-50 to-white px-6 py-16 sm:py-20 lg:px-8"
+    >
+      <div className="pointer-events-none absolute left-1/2 top-8 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-200 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-        <div className={`mt-14 grid gap-7 ${gridColumnsClass}`}>
+      <div className="relative mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-4 flex items-center justify-center gap-4">
+            <span className="h-px w-9 bg-sky-500/40" />
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-sky-700">
+              Servicios
+            </p>
+            <span className="h-px w-9 bg-sky-500/40" />
+          </div>
+
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+            Representación sectorial con enfoque operativo
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+            Acompañamos a concesionarias, agencias y pymes del ecosistema
+            automotor con soporte institucional y herramientas concretas.
+          </p>
+        </div>
+
+        <div className={`relative mt-10 grid gap-5 ${gridClass}`}>
           {services.map((service, index) => {
-            const fallbackCta = fallbackServices[index] ?? fallbackServices[0]
-            const ctaHref = isUnsafePublicHref(service.cta?.url) ? fallbackCta.href : service.cta?.url
-            const cta = service.cta?.label || service.cta?.url
-              ? {
-                  label: service.cta?.label || fallbackCta.label,
-                  url: ctaHref || fallbackCta.href,
-                }
-              : { label: fallbackCta.label, url: fallbackCta.href }
+            const cta = getSafeCta(service, index);
+            const icon = getSafeIcon(service, index);
 
             return (
-            <article
-              key={service.title}
-              className="group flex min-h-[340px] h-full flex-col rounded-[2rem] border border-blue-100/80 bg-white p-9 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_28px_60px_-30px_rgba(15,23,42,0.3)]"
-            >
-              <div className="flex flex-1 flex-col">
-                <div className="flex flex-col items-start">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-[1.25rem] border border-sky-100 bg-sky-50 text-sky-700 shadow-[0_14px_28px_-18px_rgba(14,165,233,0.45)]">
-                    <Icon kind={service.icon} />
-                  </div>
-                  <h3 className="mt-7 text-[1.1rem] font-semibold leading-tight text-slate-900 sm:text-xl">
-                    {service.title}
-                  </h3>
-                  <p className="mt-3 max-w-[34ch] text-sm leading-7 text-slate-600">
-                    {service.description}
-                  </p>
+              <article
+                key={`${service.title}-${index}`}
+                className="group relative flex h-full min-h-[245px] flex-col items-center overflow-hidden rounded-[1.5rem] border border-sky-100/80 bg-white/95 p-6 text-center shadow-[0_14px_40px_rgba(15,23,42,0.07)] ring-1 ring-white/80 transition-all duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-[0_22px_60px_rgba(15,23,42,0.11)]"
+              >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-300/0 via-sky-400/50 to-sky-300/0 opacity-60" />
+                <div className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-sky-100/40 blur-2xl transition duration-300 group-hover:bg-sky-200/50" />
+
+                <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-100 transition duration-300 group-hover:scale-105 group-hover:bg-sky-100 group-hover:text-sky-800">
+                  <ServiceIconSvg kind={icon} />
                 </div>
 
-                <div className="mt-auto pt-7">
-                  <PublicActionLink
-                    link={cta}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 transition duration-200 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
-                  />
-                  <span className="ml-1 inline-flex text-sky-700 transition duration-200 group-hover:translate-x-1" aria-hidden="true">
-                    →
-                  </span>
+                <h3 className="relative mt-5 text-lg font-semibold leading-snug text-slate-950">
+                  {service.title}
+                </h3>
+
+                <p className="relative mt-3 max-w-[32ch] text-sm leading-7 text-slate-600">
+                  {service.description}
+                </p>
+
+                <div className="relative mt-auto flex justify-center pt-5">
+                  <a
+                    href={cta.href}
+                    className="inline-flex items-center rounded-full bg-sky-50 px-3.5 py-2 text-xs font-bold text-sky-800 ring-1 ring-sky-100 transition duration-300 hover:bg-sky-100 hover:text-sky-900 hover:ring-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
+                  >
+                    <span>{cta.label}</span>
+                    <span
+                      className="ml-2 inline-flex transition-transform duration-300 group-hover:translate-x-1"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </a>
                 </div>
-              </div>
-            </article>
-            )
+              </article>
+            );
           })}
         </div>
       </div>
     </section>
-  )
+  );
 }
