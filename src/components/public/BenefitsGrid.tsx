@@ -162,27 +162,23 @@ export function BenefitsGrid({ services }: BenefitsGridProps) {
   return (
     <section
       id="servicios"
-      className="relative w-full overflow-hidden bg-gradient-to-b from-white via-slate-50 to-white px-6 py-16 sm:py-20 lg:px-8"
+      className="relative w-full overflow-hidden bg-transparent px-6 py-16 text-white sm:py-20 lg:px-8"
     >
-      <div className="pointer-events-none absolute left-1/2 top-8 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-200/20 blur-3xl" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-200 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-
       <div className="relative mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-4 flex items-center justify-center gap-4">
-            <span className="h-px w-9 bg-sky-500/40" />
-            <p className="text-xs font-bold uppercase tracking-[0.34em] text-sky-700">
+            <span className="h-px w-9 bg-sky-300/45" />
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-sky-200">
               Servicios
             </p>
-            <span className="h-px w-9 bg-sky-500/40" />
+            <span className="h-px w-9 bg-sky-300/45" />
           </div>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
             Representación sectorial con enfoque operativo
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-sky-100/88 sm:text-base">
             Acompañamos a concesionarias, agencias y pymes del ecosistema
             automotor con soporte institucional y herramientas concretas.
           </p>
@@ -196,27 +192,34 @@ export function BenefitsGrid({ services }: BenefitsGridProps) {
             return (
               <article
                 key={`${service.title}-${index}`}
-                className="group relative flex h-full min-h-[245px] flex-col items-center overflow-hidden rounded-[1.5rem] border border-sky-100/80 bg-white/95 p-6 text-center shadow-[0_14px_40px_rgba(15,23,42,0.07)] ring-1 ring-white/80 transition-all duration-300 hover:-translate-y-1 hover:border-sky-200 hover:shadow-[0_22px_60px_rgba(15,23,42,0.11)]"
+                className="group relative flex h-full min-h-[245px] flex-col items-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 text-center shadow-[0_18px_46px_rgba(2,12,31,0.34)] ring-1 ring-sky-200/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-200/30 hover:bg-white/[0.09] hover:shadow-[0_26px_70px_rgba(2,12,31,0.42)]"
               >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-300/0 via-sky-400/50 to-sky-300/0 opacity-60" />
-                <div className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-sky-100/40 blur-2xl transition duration-300 group-hover:bg-sky-200/50" />
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-300/0 via-sky-300/40 to-sky-300/0 opacity-70"
+                  aria-hidden="true"
+                />
 
-                <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-100 transition duration-300 group-hover:scale-105 group-hover:bg-sky-100 group-hover:text-sky-800">
+                <div
+                  className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-sky-300/12 blur-2xl transition duration-300 group-hover:bg-sky-300/18"
+                  aria-hidden="true"
+                />
+
+                <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-300/12 text-sky-100 ring-1 ring-sky-200/22 transition duration-300 group-hover:scale-105 group-hover:bg-sky-300/18 group-hover:text-white">
                   <ServiceIconSvg kind={icon} />
                 </div>
 
-                <h3 className="relative mt-5 text-lg font-semibold leading-snug text-slate-950">
+                <h3 className="relative mt-5 text-lg font-semibold leading-snug text-white">
                   {service.title}
                 </h3>
 
-                <p className="relative mt-3 max-w-[32ch] text-sm leading-7 text-slate-600">
+                <p className="relative mt-3 max-w-[32ch] text-sm leading-7 text-sky-100/70">
                   {service.description}
                 </p>
 
                 <div className="relative mt-auto flex justify-center pt-5">
                   <a
                     href={cta.href}
-                    className="inline-flex items-center rounded-full bg-sky-50 px-3.5 py-2 text-xs font-bold text-sky-800 ring-1 ring-sky-100 transition duration-300 hover:bg-sky-100 hover:text-sky-900 hover:ring-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2"
+                    className="inline-flex items-center rounded-full border border-sky-200/20 bg-sky-300/10 px-3.5 py-2 text-xs font-bold text-sky-100 transition duration-300 hover:border-sky-200/45 hover:bg-sky-300/18 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06111f]"
                   >
                     <span>{cta.label}</span>
                     <span
