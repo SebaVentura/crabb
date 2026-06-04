@@ -72,16 +72,121 @@ function safeString(value: unknown, fallback = ''): string {
   return trimmed.length > 0 ? trimmed : fallback
 }
 
-function safeLabel(value: unknown, fallback = 'Ver más'): string {
-  return safeString(value, fallback)
+function hasNonEmptyString(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0
 }
 
-function safeHref(value: unknown, fallback = '/contacto'): string {
-  return safeString(value, fallback)
+function sectionHasContent(section: UnknownObject): boolean {
+  const items = section.items
+  const hasItems = Array.isArray(items) && items.some((item) => hasNonEmptyString(asString(item)))
+
+  return hasNonEmptyString(section.title) || hasNonEmptyString(section.description) || hasItems
 }
 
-function asOptionalLooseObject<T extends UnknownObject>(value: unknown): T {
-  return asObject(value) as T
+/** Backend gana si trae contenido real; si no, se usa el alias frontend ya presente. */
+function pickSectionByContent(frontendAlias: unknown, backendAlias: unknown): unknown {
+  const backend = asObject(backendAlias)
+  const frontend = asObject(frontendAlias)
+
+  if (sectionHasContent(backend)) return backendAlias
+  if (sectionHasContent(frontend)) return frontendAlias
+
+  if (Object.keys(backend).length > 0) return backendAlias
+  if (Object.keys(frontend).length > 0) return frontendAlias
+
+  return {}
+}
+
+function emptyLandingSection(): UnknownObject {
+  return { title: '', description: '', items: [] }
+}
+
+function mergeHeroFromBackend(heroRaw: unknown, introRaw: unknown): UnknownObject {
+  const hero = { ...asObject(heroRaw) }
+  const intro = asObject(introRaw)
+
+  if (!hasNonEmptyString(hero.title) && hasNonEmptyString(intro.title)) {
+    hero.title = intro.title
+  }
+
+  if (!hasNonEmptyString(hero.description) && hasNonEmptyString(intro.description)) {
+    hero.description = intro.description
+  }
+
+  if (!hasNonEmptyString(hero.badge) && hasNonEmptyString(intro.badge)) {
+    hero.badge = intro.badge
+  }
+
+  if (!hasNonEmptyString(hero.subtitle) && hasNonEmptyString(intro.subtitle)) {
+    hero.subtitle = intro.subtitle
+  }
+
+  const heroPrimary = asObject(hero.primary_cta)
+  const introPrimary = asObject(intro.primary_cta)
+  if (
+    !hasNonEmptyString(heroPrimary.label) &&
+    !hasNonEmptyString(heroPrimary.url) &&
+    (hasNonEmptyString(introPrimary.label) || hasNonEmptyString(introPrimary.url))
+  ) {
+    hero.primary_cta = intro.primary_cta
+  }
+
+  const heroSecondary = asObject(hero.secondary_cta)
+  const introSecondary = asObject(intro.secondary_cta)
+  if (
+    !hasNonEmptyString(heroSecondary.label) &&
+    !hasNonEmptyString(heroSecondary.url) &&
+    (hasNonEmptyString(introSecondary.label) || hasNonEmptyString(introSecondary.url))
+  ) {
+    hero.secondary_cta = intro.secondary_cta
+  }
+
+  return hero
+}
+
+/** Traduce claves backend → contrato frontend estable antes de normalizar. */
+function fromBackendLanding(raw: unknown): UnknownObject {
+  const source = asObject(raw)
+
+  const campaign = pickSectionByContent(source.campaign, source.membership_campaign)
+  const data_tecnica = pickSectionByContent(source.data_tecnica, source.technical_data)
+  const capacitaciones = pickSectionByContent(source.capacitaciones, source.training)
+  const crabb_auxilio = pickSectionByContent(source.crabb_auxilio, source.auxilio)
+
+  const opportunities = Object.prototype.hasOwnProperty.call(source, 'opportunities')
+    ? source.opportunities
+    : emptyLandingSection()
+
+  return {
+    ...source,
+    hero: mergeHeroFromBackend(source.hero, source.intro),
+    campaign,
+    data_tecnica,
+    capacitaciones,
+    crabb_auxilio,
+    opportunities,
+  }
+}
+
+function normalizeActionLinkWithFlatCta(
+  source: UnknownObject,
+  flatKeys: { label: string; url: string },
+): ActionLink {
+  const fromObject = normalizeActionLink(source.cta ?? source.primary_cta)
+  if (hasNonEmptyString(fromObject.label) || hasNonEmptyString(fromObject.url)) {
+    return fromObject
+  }
+
+  const fromFlat: ActionLink = {
+    label: asString(source[flatKeys.label]),
+    url: asString(source[flatKeys.url]),
+  }
+
+  if (hasNonEmptyString(fromFlat.label) || hasNonEmptyString(fromFlat.url)) {
+    return fromFlat
+  }
+
+  return fromObject
 }
 
 function toBackendLegalLinks(legalLinks: unknown): BackendLegalLink[] {
@@ -110,21 +215,62 @@ function toBackendLegalLinks(legalLinks: unknown): BackendLegalLink[] {
   ]
 }
 
-function toBackendInstitutionalPayload(content: InstitutionalContent): BackendInstitutionalPayload {
-  const campaignSource = asOptionalLooseObject<{
-    cta_label?: string
-    cta_url?: string
-  }>(content.landing.campaign)
+function toBackendLandingSection(section: LandingSection): UnknownObject {
+  return {
+    title: safeString(section.title),
+    description: safeString(section.description),
+    items: section.items,
+  }
+}
 
-  const finalCtaSource = asOptionalLooseObject<{
-    cta_label?: string
-    cta_url?: string
-  }>(content.landing.final_cta)
+function toBackendLandingCampaign(section: LandingCampaignSection): UnknownObject {
+  return {
+    ...toBackendLandingSection(section),
+    cta: {
+      label: safeString(section.cta.label),
+      url: safeString(section.cta.url),
+    },
+    cta_label: safeString(section.cta.label),
+    cta_url: safeString(section.cta.url),
+  }
+}
+
+function toBackendInstitutionalPayload(content: InstitutionalContent): BackendInstitutionalPayload {
+  const campaign = content.landing.campaign
+  const dataTecnica = content.landing.data_tecnica
+  const capacitaciones = content.landing.capacitaciones
+  const crabbAuxilio = content.landing.crabb_auxilio
+  const opportunities = content.landing.opportunities
+  const finalCta = content.landing.final_cta
+
+  const membershipCampaign = toBackendLandingCampaign(campaign)
+  const technicalData = toBackendLandingSection(dataTecnica)
+  const training = toBackendLandingSection(capacitaciones)
+  const auxilio = toBackendLandingSection(crabbAuxilio)
+  const opportunitiesPayload = toBackendLandingSection(opportunities)
 
   const serviceCards = content.landing.services.map((service) => ({
-    title: safeString(service.title, 'Servicio institucional'),
-    description: safeString(service.description, 'Descripción institucional.'),
+    title: safeString(service.title),
+    description: safeString(service.description),
   }))
+
+  const intro = {
+    title: safeString(content.landing.hero.title),
+    description: safeString(content.landing.hero.description),
+    badge: safeString(content.landing.hero.badge),
+    subtitle: safeString(content.landing.hero.subtitle),
+    primary_cta: content.landing.hero.primary_cta,
+    secondary_cta: content.landing.hero.secondary_cta,
+  }
+
+  const finalCtaPayload = {
+    title: safeString(finalCta.title),
+    description: safeString(finalCta.description),
+    cta_label: safeString(finalCta.primary_cta.label),
+    cta_url: safeString(finalCta.primary_cta.url),
+    primary_cta: { ...finalCta.primary_cta },
+    secondary_cta: { ...finalCta.secondary_cta },
+  }
 
   return {
     ...content,
@@ -133,53 +279,31 @@ function toBackendInstitutionalPayload(content: InstitutionalContent): BackendIn
     },
     landing: {
       ...content.landing,
-      intro: {
-        title: safeString(content.landing.hero.title, 'Información institucional'),
-        description: safeString(content.landing.hero.description, 'Contenido institucional de CRABB.'),
-      },
-      membership_campaign: {
-        title: safeString(content.landing.campaign.title, 'Campaña de membresía'),
-        description: safeString(content.landing.campaign.description, 'Contenido institucional de CRABB.'),
-        cta_label: safeLabel(campaignSource.cta_label, 'Asociarme'),
-        cta_url: safeHref(campaignSource.cta_url, '/contacto'),
-      },
-      technical_data: {
-        title: safeString(content.landing.data_tecnica.title, 'Datos técnicos'),
-        description: safeString(content.landing.data_tecnica.description, 'Información institucional de CRABB.'),
-      },
-      training: {
-        title: safeString(content.landing.capacitaciones.title, 'Capacitación'),
-        description: safeString(content.landing.capacitaciones.description, 'Información institucional de CRABB.'),
-      },
-      auxilio: {
-        title: safeString(content.landing.crabb_auxilio.title, 'Auxilio institucional'),
-        description: safeString(content.landing.crabb_auxilio.description, 'Información institucional de CRABB.'),
-      },
-      final_cta: {
-        title: safeString(content.landing.final_cta.title, 'Conectate con CRABB'),
-        description: safeString(content.landing.final_cta.description, 'Contenido institucional de CRABB.'),
-        cta_label: safeLabel(finalCtaSource.cta_label ?? content.landing.final_cta.primary_cta?.label, 'Contactar'),
-        cta_url: safeHref(finalCtaSource.cta_url ?? content.landing.final_cta.primary_cta?.url, '/contacto'),
-        primary_cta: {
-          ...content.landing.final_cta.primary_cta,
-        },
-        secondary_cta: {
-          ...content.landing.final_cta.secondary_cta,
-        },
-      },
+      hero: content.landing.hero,
+      intro,
+      membership_campaign: membershipCampaign,
+      campaign: membershipCampaign,
+      technical_data: technicalData,
+      data_tecnica: technicalData,
+      training,
+      capacitaciones: training,
+      auxilio,
+      crabb_auxilio: auxilio,
+      opportunities: opportunitiesPayload,
+      final_cta: finalCtaPayload,
       services: content.landing.services.map((service) => ({
         ...service,
-        title: safeString(service.title, 'Servicio institucional'),
-        description: safeString(service.description, 'Descripción institucional.'),
-        cta_label: safeLabel(service.cta_label, 'Ver más'),
-        cta_href: safeHref(service.cta_href, '/contacto'),
+        title: safeString(service.title),
+        description: safeString(service.description),
+        cta_label: safeString(service.cta_label),
+        cta_href: safeString(service.cta_href),
         visible: service.visible ?? true,
       })),
       service_cards: serviceCards,
     },
     footer: {
       ...content.footer,
-      legal_links: toBackendLegalLinks((content.footer as FooterContent & { legal_links?: unknown }).legal_links),
+      legal_links: toBackendLegalLinks(content.footer.legal_links),
     },
   }
 }
@@ -306,22 +430,25 @@ function normalizeLandingCampaign(value: unknown): LandingCampaignSection {
   const source = asObject(value)
   return {
     ...normalizeLandingSection(source),
-    cta: normalizeActionLink(source.cta),
+    cta: normalizeActionLinkWithFlatCta(source, { label: 'cta_label', url: 'cta_url' }),
   }
 }
 
 function normalizeLandingFinalCta(value: unknown): LandingFinalCta {
   const source = asObject(value)
+  const primary_cta = normalizeActionLinkWithFlatCta(source, { label: 'cta_label', url: 'cta_url' })
+  const secondary_cta = normalizeActionLink(source.secondary_cta)
+
   return {
     title: asString(source.title),
     description: asString(source.description),
-    primary_cta: normalizeActionLink(source.primary_cta),
-    secondary_cta: normalizeActionLink(source.secondary_cta),
+    primary_cta,
+    secondary_cta,
   }
 }
 
 function normalizeLanding(value: unknown): LandingContent {
-  const source = asObject(value)
+  const source = fromBackendLanding(value)
   const servicesRaw = source.services
   const legacyServiceCardsRaw = source.service_cards
 
@@ -374,9 +501,22 @@ function normalizeVisibility(value: unknown): InstitutionalVisibility {
 
 function normalizeFooter(value: unknown): FooterContent {
   const source = asObject(value)
+  const legalLinksRaw = source.legal_links
+
   return {
     copyright: asString(source.copyright),
     description: asString(source.description),
+    legal_links: Array.isArray(legalLinksRaw)
+      ? legalLinksRaw
+          .map((item) => {
+            const link = asObject(item)
+            return {
+              label: asString(link.label),
+              url: asString(link.url ?? link.href),
+            }
+          })
+          .filter((item) => hasNonEmptyString(item.label) && hasNonEmptyString(item.url))
+      : undefined,
   }
 }
 

@@ -111,6 +111,8 @@ export type SocialLink = {
 export type FooterContent = {
   copyright: string
   description: string
+  /** Alias opcional devuelto por backend (`legal_links`). */
+  legal_links?: ActionLink[]
 }
 
 export type InstitutionalContent = {
