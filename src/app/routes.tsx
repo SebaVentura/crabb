@@ -6,6 +6,8 @@ import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
 import { AdminGestionCobranzasPage } from '../pages/AdminGestionCobranzasPage'
 import { AdminInstitucionalPage } from '../pages/AdminInstitucionalPage'
+import { AdminSitioWebPage } from '../pages/AdminSitioWebPage'
+import { AdminSitioWebPortadaPage } from '../pages/AdminSitioWebPortadaPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
@@ -68,6 +70,22 @@ export const router = createHashRouter([
         element: (
           <AdminOnlyRoute>
             <AdminInstitucionalPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/sitio-web',
+        element: (
+          <AdminOnlyRoute>
+            <AdminSitioWebPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/sitio-web/portada',
+        element: (
+          <AdminOnlyRoute>
+            <AdminSitioWebPortadaPage />
           </AdminOnlyRoute>
         ),
       },
