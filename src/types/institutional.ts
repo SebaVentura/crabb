@@ -105,14 +105,24 @@ export type InstitutionalContact = {
 
 export type SocialLink = {
   platform: string
+  label?: string
   url: string
+  order?: number
+  visible?: boolean
+}
+
+export type FooterLegalLink = {
+  label: string
+  url: string
+  order?: number
+  visible?: boolean
 }
 
 export type FooterContent = {
   copyright: string
   description: string
   /** Alias opcional devuelto por backend (`legal_links`). */
-  legal_links?: ActionLink[]
+  legal_links?: FooterLegalLink[]
 }
 
 export type InstitutionalContent = {

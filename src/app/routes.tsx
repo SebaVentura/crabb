@@ -8,6 +8,9 @@ import { AdminGestionCobranzasPage } from '../pages/AdminGestionCobranzasPage'
 import { AdminInstitucionalPage } from '../pages/AdminInstitucionalPage'
 import { AdminSitioWebPage } from '../pages/AdminSitioWebPage'
 import { AdminSitioWebPortadaPage } from '../pages/AdminSitioWebPortadaPage'
+import { AdminSitioWebServiciosPage } from '../pages/AdminSitioWebServiciosPage'
+import { AdminSitioWebFooterPage } from '../pages/AdminSitioWebFooterPage'
+import { AdminSitioWebContactoRedesPage } from '../pages/AdminSitioWebContactoRedesPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
@@ -86,6 +89,30 @@ export const router = createHashRouter([
         element: (
           <AdminOnlyRoute>
             <AdminSitioWebPortadaPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/sitio-web/servicios',
+        element: (
+          <AdminOnlyRoute>
+            <AdminSitioWebServiciosPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/sitio-web/footer',
+        element: (
+          <AdminOnlyRoute>
+            <AdminSitioWebFooterPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin/sitio-web/contacto-redes',
+        element: (
+          <AdminOnlyRoute>
+            <AdminSitioWebContactoRedesPage />
           </AdminOnlyRoute>
         ),
       },

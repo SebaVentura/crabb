@@ -23,6 +23,8 @@ const sitioWebModules: SitioWebModule[] = [
     id: 'servicios',
     title: 'Servicios',
     description: 'Editar las tarjetas de servicios visibles en la landing pública.',
+    path: '/admin/sitio-web/servicios',
+    available: true,
   },
   {
     id: 'programas-destacados',
@@ -34,11 +36,15 @@ const sitioWebModules: SitioWebModule[] = [
     id: 'contacto-redes',
     title: 'Contacto y redes',
     description: 'Editar dirección, email, teléfono, horarios y redes sociales.',
+    path: '/admin/sitio-web/contacto-redes',
+    available: true,
   },
   {
     id: 'footer',
     title: 'Footer',
     description: 'Editar información del pie de página, navegación y derechos reservados.',
+    path: '/admin/sitio-web/footer',
+    available: true,
   },
   {
     id: 'visibilidad',

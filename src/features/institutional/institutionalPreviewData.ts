@@ -87,8 +87,8 @@ export const institutionalPreviewData: InstitutionalPreviewContract = {
     ],
   },
   landing: {
-    badge: 'Camara Regional Automotor',
-    title: 'Camara Regional Automotor de Bahia Blanca',
+    badge: 'CÁMARA DE REPARACIÓN DE AUTOMOTORES',
+    title: 'Cámara de Reparación de Automotores de Bahía Blanca',
     description:
       'Una institucion enfocada en representar, capacitar y potenciar al entramado automotor regional con una agenda profesional y sustentable.',
     primary_cta: { label: 'Conocer servicios', url: '#servicios' },

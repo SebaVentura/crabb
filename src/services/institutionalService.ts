@@ -24,6 +24,8 @@ type UnknownObject = Record<string, unknown>
 type BackendLegalLink = {
   label: string
   url: string
+  order?: number
+  visible?: boolean
 }
 
 type BackendInstitutionalPayload = UnknownObject & {
@@ -203,6 +205,10 @@ function toBackendLegalLinks(legalLinks: unknown): BackendLegalLink[] {
       return {
         label: safeString(source.label),
         url: safeString(source.url ?? source.href),
+        order: asOptionalNumber(source.order),
+        visible: Object.prototype.hasOwnProperty.call(source, 'visible')
+          ? asBoolean(source.visible, true)
+          : undefined,
       }
     })
     .filter((item) => item.label && item.url)
@@ -478,11 +484,19 @@ function normalizeContact(value: unknown): InstitutionalContact {
   }
 }
 
-function normalizeSocialLink(value: unknown): SocialLink {
+function normalizeSocialLink(value: unknown, index = 0): SocialLink {
   const source = asObject(value)
+  const platform = asString(source.platform) || asString(source.label)
+  const label = asString(source.label)
+
   return {
-    platform: asString(source.platform || source.label),
+    platform,
+    label: label || undefined,
     url: asString(source.url),
+    order: asOptionalNumber(source.order) ?? index + 1,
+    visible: Object.prototype.hasOwnProperty.call(source, 'visible')
+      ? asBoolean(source.visible, true)
+      : true,
   }
 }
 
@@ -513,6 +527,10 @@ function normalizeFooter(value: unknown): FooterContent {
             return {
               label: asString(link.label),
               url: asString(link.url ?? link.href),
+              order: asOptionalNumber(link.order),
+              visible: Object.prototype.hasOwnProperty.call(link, 'visible')
+                ? asBoolean(link.visible, true)
+                : undefined,
             }
           })
           .filter((item) => hasNonEmptyString(item.label) && hasNonEmptyString(item.url))
@@ -528,7 +546,9 @@ function normalizeInstitutionalContent(value: unknown): InstitutionalContent {
     institutional_page: normalizeInstitutionalPage(source.institutional_page),
     landing: normalizeLanding(source.landing),
     contact: normalizeContact(source.contact),
-    social_links: Array.isArray(socialLinksRaw) ? socialLinksRaw.map(normalizeSocialLink) : [],
+    social_links: Array.isArray(socialLinksRaw)
+      ? socialLinksRaw.map((item, index) => normalizeSocialLink(item, index))
+      : [],
     footer: normalizeFooter(source.footer),
     visibility: normalizeVisibility(source.visibility),
   }

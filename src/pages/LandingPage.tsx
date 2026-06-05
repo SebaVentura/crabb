@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import heroBlueprintCar from '../assets/hero-blueprint-car.png'
 import { BenefitsGrid } from '../components/public/BenefitsGrid'
 import { ContactCommunitySection } from '../components/public/ContactCommunitySection'
 import {
@@ -20,14 +21,12 @@ export function LandingPage() {
   const [content, setContent] = useState<InstitutionalContent>(() =>
     getInstitutionalContentWithFallback(null),
   )
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
 
     const loadContent = async () => {
-      setIsLoading(true)
       setError(null)
 
       try {
@@ -47,8 +46,6 @@ export function LandingPage() {
           setContent(getInstitutionalContentWithFallback(null))
           setError('No se pudo cargar el contenido de la landing.')
         }
-      } finally {
-        if (active) setIsLoading(false)
       }
     }
 
@@ -60,6 +57,12 @@ export function LandingPage() {
   }, [])
 
   const landing = content.landing
+  const configuredImageUrl = landing.hero.image_url?.trim() ?? ''
+  const shouldUseDefaultImage =
+    !configuredImageUrl || configuredImageUrl === '/media/hero-crabb.jpg'
+  const effectiveHeroImageUrl = shouldUseDefaultImage ? heroBlueprintCar : configuredImageUrl
+  const heroImageAlt =
+    landing.hero.image_alt?.trim() || 'Representación del ecosistema automotor de CRABB'
   const socialLinks = content.social_links.filter((link) => link.platform && link.url)
   const visibleContact = content.visibility.show_contact
   const visibleSocialLinks = content.visibility.show_social_links
@@ -197,30 +200,15 @@ export function LandingPage() {
             </section>
           ) : null}
 
-          {isLoading ? (
-            <section
-              className="mx-auto mb-5 mt-5 w-full max-w-7xl px-4 md:px-8"
-              aria-label="Cargando contenido institucional"
-            >
-              <div className="flex items-center gap-3 rounded-full border border-white/14 bg-white/10 px-4 py-3 shadow-sm backdrop-blur-sm">
-                <span
-                  className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-300/80"
-                  aria-hidden="true"
-                />
-                <span className="h-2.5 w-28 rounded-full bg-white/18" aria-hidden="true" />
-                <span className="h-2.5 w-16 rounded-full bg-white/10" aria-hidden="true" />
-              </div>
-            </section>
-          ) : null}
-
           <PublicHero
             badge={landing.hero.badge}
             title={landing.hero.title}
             description={landing.hero.description}
             primaryCta={landing.hero.primary_cta}
             secondaryCta={landing.hero.secondary_cta}
-            imageUrl={landing.hero.image_url ?? ''}
-            imageAlt={landing.hero.image_alt ?? 'Imagen institucional de CRABB'}
+            imageUrl={effectiveHeroImageUrl}
+            fallbackImageUrl={heroBlueprintCar}
+            imageAlt={heroImageAlt}
             values={landing.hero.values ?? []}
             visual={landing.hero.visual}
             kpis={heroKpis}
