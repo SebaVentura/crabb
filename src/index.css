@@ -37,12 +37,19 @@ body {
 @keyframes hero-image-reveal {
   from {
     opacity: 0;
-    transform: translateX(16px);
+    transform: translate3d(28px, 10px, 0);
+    filter: blur(6px);
+  }
+
+  60% {
+    opacity: 0.9;
+    filter: blur(1px);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
   }
 }
 
@@ -80,8 +87,9 @@ body {
 }
 
 .hero-animate-image-blueprint {
-  animation: hero-image-reveal 0.75s ease-out both;
-  animation-delay: 200ms;
+  opacity: 0;
+  will-change: opacity, transform, filter;
+  animation: hero-image-reveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
 }
 
 .hero-animate-image-admin {
@@ -100,5 +108,7 @@ body {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
+    will-change: auto !important;
   }
 }

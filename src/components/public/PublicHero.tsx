@@ -198,7 +198,7 @@ export function PublicHero({
                         src={displayedImageUrl}
                         alt={resolvedImageAlt}
                         loading="eager"
-                        decoding="async"
+                        decoding="sync"
                         className="mx-auto block h-auto w-full max-w-full object-contain max-h-[300px] sm:max-h-[380px] md:max-h-[440px] lg:ml-auto lg:mr-0 lg:max-h-[min(680px,78vh)]"
                         onError={handleImageError}
                       />
