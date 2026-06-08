@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { ApiError } from '../lib/apiClient'
 import { sociosService, type SocioPayload } from '../services/sociosService'
 import type { CategoriaSocio, CondicionSocio, EstadoCuotaSocio, EstadoSocio, Socio } from '../types/socios'
+import { exportSociosCsv } from '../utils/exportSociosCsv'
 import { formatPhone } from '../utils/formatPhone'
 
 function formatFecha(iso: string) {
@@ -39,10 +40,35 @@ function displaySocioName(socio: Socio) {
   return socio.nombreApellido || socio.denominacionTaller || socio.nombreRazonSocial || '-'
 }
 
+const CATEGORIA_LABELS: Record<CategoriaSocio, string> = {
+  socio: 'Socio',
+  adherente: 'Adherente',
+  aportante: 'Aportante',
+}
+
+const CONDICION_LABELS: Record<CondicionSocio, string> = {
+  socio: 'Socio',
+  adherente: 'Adherente',
+  aportante: 'Aportante',
+}
+
+const ESTADO_LABELS: Record<EstadoSocio, string> = {
+  activo: 'Activo',
+  inactivo: 'Inactivo',
+}
+
+const ESTADO_CUOTA_LABELS: Record<EstadoCuotaSocio, string> = {
+  'al-dia': 'Al día',
+  moroso: 'Moroso',
+  vencido: 'Vencido',
+  pendiente: 'Pendiente',
+  no_definido: 'No definido',
+}
+
 export function PerfilSocioPage() {
   const { user } = useAuth()
   const role = user?.role
-  const isAdmin = user?.role === 'admin'
+  const isAdminUser = role === 'admin' || role === 'superadmin'
 
   const [socios, setSocios] = useState<Socio[]>([])
   const [totalSocios, setTotalSocios] = useState(0)
@@ -53,6 +79,7 @@ export function PerfilSocioPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingSocio, setEditingSocio] = useState<Socio | null>(null)
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -72,6 +99,30 @@ export function PerfilSocioPage() {
     filtroEstado !== '' ||
     filtroEstadoCuota !== ''
 
+  const hasPendingSearch = searchInput.trim() !== search
+
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = []
+
+    if (search.trim()) {
+      labels.push(`Búsqueda: "${search.trim()}"`)
+    }
+    if (filtroCategoria) {
+      labels.push(`Categoría: ${CATEGORIA_LABELS[filtroCategoria]}`)
+    }
+    if (filtroCondicion) {
+      labels.push(`Condición: ${CONDICION_LABELS[filtroCondicion]}`)
+    }
+    if (filtroEstado) {
+      labels.push(`Estado: ${ESTADO_LABELS[filtroEstado]}`)
+    }
+    if (filtroEstadoCuota) {
+      labels.push(`Estado de cuota: ${ESTADO_CUOTA_LABELS[filtroEstadoCuota]}`)
+    }
+
+    return labels
+  }, [search, filtroCategoria, filtroCondicion, filtroEstado, filtroEstadoCuota])
+
   const loadSocios = useCallback(async (options?: { page?: number; perPage?: number }) => {
     const requestedPage = Math.max(1, options?.page ?? currentPage)
     const requestedPerPage = Math.max(1, options?.perPage ?? perPage)
@@ -87,7 +138,7 @@ export function PerfilSocioPage() {
         estado: filtroEstado || undefined,
         estado_cuota: filtroEstadoCuota || undefined,
         page: requestedPage,
-        perPage: requestedPerPage,
+        per_page: requestedPerPage,
       })
 
       if (response.pagination) {
@@ -153,10 +204,10 @@ export function PerfilSocioPage() {
       console.log('[SOCIOS][AUTH]', {
         email: user?.email ?? null,
         role: user?.role ?? null,
-        isAdmin,
+        isAdminUser,
       })
     }
-  }, [user?.email, user?.role, isAdmin])
+  }, [user?.email, user?.role, isAdminUser])
 
   const indicadores = useMemo(() => {
     const activos = socios.filter((s) => s.estado === 'activo').length
@@ -248,6 +299,38 @@ export function PerfilSocioPage() {
     setCurrentPage(1)
   }
 
+  const handleExport = useCallback(async () => {
+    setIsExporting(true)
+    setLoadError(null)
+    setSuccessMessage(null)
+
+    try {
+      const items = await sociosService.getAllSocios({
+        search: search.trim() || undefined,
+        categoria: filtroCategoria || undefined,
+        condicion: filtroCondicion || undefined,
+        estado: filtroEstado || undefined,
+        estado_cuota: filtroEstadoCuota || undefined,
+      })
+
+      if (items.length === 0) {
+        setLoadError('No hay socios para exportar con los filtros aplicados.')
+        return
+      }
+
+      exportSociosCsv(items)
+      setSuccessMessage(`Se exportaron ${items.length} socios en CSV.`)
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setLoadError(error.message)
+      } else {
+        setLoadError('No se pudo exportar el listado de socios.')
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }, [search, filtroCategoria, filtroCondicion, filtroEstado, filtroEstadoCuota])
+
   const goToPreviousPage = () => {
     setCurrentPage((prev) => Math.max(1, prev - 1))
   }
@@ -296,7 +379,7 @@ export function PerfilSocioPage() {
         ))}
       </div>
 
-      {isAdmin ? (
+      {isAdminUser ? (
         <Card className="border-slate-200 shadow-md" title="Acciones">
           <div className="flex flex-wrap gap-2">
             <button
@@ -305,6 +388,16 @@ export function PerfilSocioPage() {
               onClick={() => setShowImportPanel((prev) => !prev)}
             >
               Importar padrón Excel
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                void handleExport()
+              }}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exportando...' : 'Exportar socios'}
             </button>
             <button
               type="button"
@@ -445,13 +538,45 @@ export function PerfilSocioPage() {
             type="button"
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition duration-150 hover:bg-slate-50"
             onClick={clearFilters}
+            disabled={!hasFiltersApplied && !hasPendingSearch}
           >
-            Limpiar
+            Limpiar filtros
           </button>
           <p className="text-xs text-slate-500">
             Mostrando {socios.length} de {totalSocios} socios {isServerPagination ? '(paginación API)' : '(paginación local temporal)'}.
           </p>
         </div>
+
+        {hasPendingSearch ? (
+          <p className="mt-3 text-xs text-amber-700">
+            Hay texto en búsqueda que todavía no se aplicó. Presioná Buscar para filtrar.
+          </p>
+        ) : null}
+
+        {activeFilterLabels.length > 0 ? (
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Filtros activos</p>
+              <button
+                type="button"
+                className="text-xs font-semibold text-blue-700 hover:text-blue-800"
+                onClick={clearFilters}
+              >
+                Limpiar filtros
+              </button>
+            </div>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {activeFilterLabels.map((label) => (
+                <li
+                  key={label}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700"
+                >
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </Card>
 
       {isLoading ? (
@@ -499,7 +624,7 @@ export function PerfilSocioPage() {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">{badgeCuota(socio.estadoCuota)}</div>
                 <p className="mt-2 text-xs text-slate-600">Ultimo pago: {formatFecha(socio.fechaUltimoPago)}</p>
-                {isAdmin ? (
+                {isAdminUser ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -540,7 +665,7 @@ export function PerfilSocioPage() {
                     <th className="pb-2 pr-3 font-medium">Cuota</th>
                     <th className="pb-2 pr-3 font-medium">Ultimo pago</th>
                     <th className="pb-2 pr-3 font-medium">Email</th>
-                    {isAdmin ? <th className="pb-2 pr-3 font-medium">Acciones</th> : null}
+                    {isAdminUser ? <th className="pb-2 pr-3 font-medium">Acciones</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -556,7 +681,7 @@ export function PerfilSocioPage() {
                       <td className="py-3 pr-3">{badgeCuota(socio.estadoCuota)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(socio.fechaUltimoPago)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.email || '-'}</td>
-                      {isAdmin ? (
+                      {isAdminUser ? (
                         <td className="whitespace-nowrap py-3 pr-3">
                           <div className="flex gap-2">
                           <button

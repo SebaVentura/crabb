@@ -9,8 +9,9 @@ export type SocioFilters = {
   estado_cuota?: string
   page?: number
   per_page?: number
-  perPage?: number
 }
+
+export type SocioListFilters = Omit<SocioFilters, 'page' | 'per_page'>
 
 export type SocioPayload = Partial<{
   nro_socio: string
@@ -319,8 +320,7 @@ function buildQuery(params?: SocioFilters): string {
   if (params.estado?.trim()) query.set('estado', params.estado.trim())
   if (params.estado_cuota?.trim()) query.set('estado_cuota', params.estado_cuota.trim())
   if (params.page) query.set('page', String(params.page))
-  const perPage = params.perPage ?? params.per_page
-  if (perPage) query.set('per_page', String(perPage))
+  if (params.per_page) query.set('per_page', String(params.per_page))
 
   const encoded = query.toString()
   return encoded ? `?${encoded}` : ''
@@ -330,6 +330,32 @@ export const sociosService = {
   async getSocios(params?: SocioFilters): Promise<SociosListResponse> {
     const response = await apiRequest<unknown>(`/socios${buildQuery(params)}`)
     return mapListResponse(response)
+  },
+
+  async getAllSocios(filters?: SocioListFilters): Promise<Socio[]> {
+    const perPage = 100
+    const allItems: Socio[] = []
+    let page = 1
+    let lastPage = 1
+
+    do {
+      const response = await this.getSocios({
+        ...filters,
+        page,
+        per_page: perPage,
+      })
+
+      allItems.push(...response.items)
+
+      if (!response.pagination) {
+        return response.items
+      }
+
+      lastPage = Math.max(1, response.pagination.lastPage)
+      page += 1
+    } while (page <= lastPage)
+
+    return allItems
   },
 
   async getSocio(id: string): Promise<Socio> {
