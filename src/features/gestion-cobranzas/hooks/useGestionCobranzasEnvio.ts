@@ -58,69 +58,142 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const [busqueda, setBusqueda] = useState('')
   const [campaniaId, setCampaniaId] = useState<CampaniaCobranzaId>(CAMPANIA_DEFAULT_ID)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [selectedMembersById, setSelectedMembersById] = useState<Map<string, SocioCobranza>>(() => new Map())
 
   const isSendingRef = useRef(false)
   const cancelledRef = useRef(false)
   const countdownTimerRef = useRef<number | null>(null)
+  const skipSearchEffectRef = useRef(true)
 
   const appendLog = useCallback((mensaje: string) => {
     setSendLog((prev) => [...prev, crearLog(mensaje)])
   }, [])
 
+  const applyMembersFromApi = useCallback(
+    (candidatos: SocioCobranza[], selectedIdsSnapshot: Set<string>) => {
+      setMembers(
+        candidatos.map((member) => ({
+          ...member,
+          estadoEnvio: selectedIdsSnapshot.has(member.id)
+            ? estadoEnvioInicial(true, member.telefono)
+            : 'no_seleccionado',
+        })),
+      )
+
+      setSelectedMembersById((prev) => {
+        const next = new Map(prev)
+        for (const member of candidatos) {
+          if (selectedIdsSnapshot.has(member.id)) {
+            next.set(member.id, {
+              ...member,
+              estadoEnvio: estadoEnvioInicial(true, member.telefono),
+            })
+          }
+        }
+        return next
+      })
+    },
+    [],
+  )
+
+  const loadCandidatos = useCallback(
+    async (options?: { showTableLoading?: boolean }) => {
+      if (options?.showTableLoading) {
+        setIsSearching(true)
+        setSearchError(null)
+      } else {
+        setLoadError(null)
+      }
+
+      try {
+        const candidatos = await gestionCobranzasService.listarCandidatos({
+          search: busqueda,
+          estado_cuota: filtroDeuda || undefined,
+        })
+
+        setSelectedIds((currentSelectedIds) => {
+          applyMembersFromApi(candidatos, currentSelectedIds)
+          return currentSelectedIds
+        })
+      } catch {
+        if (options?.showTableLoading) {
+          setSearchError('No se pudieron buscar socios del padrón.')
+        } else {
+          setLoadError('No se pudieron cargar los socios del padrón.')
+          setMembers([])
+        }
+      } finally {
+        if (options?.showTableLoading) {
+          setIsSearching(false)
+        }
+      }
+    },
+    [applyMembersFromApi, busqueda, filtroDeuda],
+  )
+
   const loadInitial = useCallback(async () => {
     setIsLoading(true)
     setLoadError(null)
+
     try {
-      const [candidatos, hist] = await Promise.all([
-        gestionCobranzasService.listarCandidatos(),
-        gestionCobranzasService.obtenerHistorial(),
-      ])
-      setMembers(candidatos)
+      const hist = await gestionCobranzasService.obtenerHistorial()
       setHistorial(hist)
       setUltimoEnvio(hist[0] ?? null)
+      await loadCandidatos()
     } catch {
-      setLoadError('No se pudieron cargar los datos de cobranzas simulados.')
+      setLoadError('No se pudieron cargar los datos de cobranzas.')
     } finally {
       setIsLoading(false)
+      skipSearchEffectRef.current = false
     }
-  }, [])
+  }, [loadCandidatos])
 
   useEffect(() => {
     void loadInitial()
   }, [loadInitial])
 
-  const membersFiltrados = useMemo(() => {
-    return members.filter((m) => {
-      if (!m.activo) return false
-      if (filtroDeuda && m.estadoCuota !== filtroDeuda) return false
-      if (busqueda.trim() && !m.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())) return false
-      return true
-    })
-  }, [members, filtroDeuda, busqueda])
+  useEffect(() => {
+    if (skipSearchEffectRef.current) return
 
-  const sociosConDeuda = useMemo(() => members.filter((m) => m.activo).length, [members])
+    const timeoutId = window.setTimeout(() => {
+      void loadCandidatos({ showTableLoading: true })
+    }, 400)
 
-  const totalActivos = useMemo(() => members.filter((m) => m.activo).length, [members])
+    return () => window.clearTimeout(timeoutId)
+  }, [busqueda, filtroDeuda, loadCandidatos])
+
+  const sociosConDeuda = useMemo(() => members.length, [members])
+
+  const totalActivos = useMemo(() => members.length, [members])
+
+  const seleccionados = useMemo(
+    () =>
+      Array.from(selectedIds)
+        .map((id) => selectedMembersById.get(id))
+        .filter((item): item is SocioCobranza => item !== undefined),
+    [selectedIds, selectedMembersById],
+  )
 
   const seleccionStats = useMemo(() => {
-    const seleccionados = members.filter((m) => selectedIds.has(m.id))
     let validos = 0
     let invalidos = 0
-    for (const m of seleccionados) {
-      if (validatePhone(m.telefono).valido) validos += 1
+    for (const member of seleccionados) {
+      if (validatePhone(member.telefono).valido) validos += 1
       else invalidos += 1
     }
     return { seleccionados: seleccionados.length, validos, invalidos }
-  }, [members, selectedIds])
+  }, [seleccionados])
 
   const campaniaSeleccionada = useMemo(() => getCampaniaById(campaniaId), [campaniaId])
 
   const ejemploPreview = useMemo(() => {
-    const elegible = members.find((m) => selectedIds.has(m.id) && validatePhone(m.telefono).valido)
-    const socio = elegible ?? members.find((m) => m.activo && validatePhone(m.telefono).valido)
+    const elegible = seleccionados.find((member) => validatePhone(member.telefono).valido)
+    const socio = elegible ?? members.find((member) => validatePhone(member.telefono).valido)
     return socio ? formatReminderMessage(socio, campaniaSeleccionada.template) : null
-  }, [members, selectedIds, campaniaSeleccionada.template])
+  }, [members, seleccionados, campaniaSeleccionada.template])
 
   const setCampaniaSeleccionada = useCallback(
     (id: CampaniaCobranzaId) => {
@@ -130,42 +203,88 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     [fase, isPreparing, isSending],
   )
 
-  const syncEstadosEnvio = useCallback(
-    (ids: Set<string>) => {
-      setMembers((prev) =>
-        prev.map((m) => ({
-          ...m,
-          estadoEnvio: estadoEnvioInicial(ids.has(m.id), m.telefono),
-        })),
-      )
-    },
-    [],
-  )
+  const syncEstadosEnvio = useCallback((ids: Set<string>) => {
+    setMembers((prev) =>
+      prev.map((member) => ({
+        ...member,
+        estadoEnvio: estadoEnvioInicial(ids.has(member.id), member.telefono),
+      })),
+    )
+
+    setSelectedMembersById((prev) => {
+      const next = new Map(prev)
+
+      for (const id of Array.from(next.keys())) {
+        if (!ids.has(id)) {
+          next.delete(id)
+        }
+      }
+
+      for (const id of ids) {
+        const current = next.get(id)
+        if (!current) continue
+        next.set(id, {
+          ...current,
+          estadoEnvio: estadoEnvioInicial(true, current.telefono),
+        })
+      }
+
+      return next
+    })
+  }, [])
 
   const toggleSeleccion = useCallback(
     (id: string) => {
       if (isSending || isPreparing) return
+      const member = members.find((item) => item.id === id)
+
       setSelectedIds((prev) => {
         const next = new Set(prev)
-        if (next.has(id)) next.delete(id)
-        else next.add(id)
+        if (next.has(id)) {
+          next.delete(id)
+        } else {
+          next.add(id)
+          if (member) {
+            setSelectedMembersById((current) => {
+              const updated = new Map(current)
+              updated.set(id, {
+                ...member,
+                estadoEnvio: estadoEnvioInicial(true, member.telefono),
+              })
+              return updated
+            })
+          }
+        }
         syncEstadosEnvio(next)
         return next
       })
     },
-    [isSending, isPreparing, syncEstadosEnvio],
+    [isSending, isPreparing, members, syncEstadosEnvio],
   )
 
   const seleccionarTodos = useCallback(() => {
     if (isSending || isPreparing) return
-    const ids = new Set(membersFiltrados.map((m) => m.id))
+    const ids = new Set(members.map((member) => member.id))
+
+    setSelectedMembersById((prev) => {
+      const next = new Map(prev)
+      for (const member of members) {
+        next.set(member.id, {
+          ...member,
+          estadoEnvio: estadoEnvioInicial(true, member.telefono),
+        })
+      }
+      return next
+    })
+
     setSelectedIds(ids)
     syncEstadosEnvio(ids)
-  }, [isSending, isPreparing, membersFiltrados, syncEstadosEnvio])
+  }, [isSending, isPreparing, members, syncEstadosEnvio])
 
   const deseleccionarTodos = useCallback(() => {
     if (isSending || isPreparing) return
     setSelectedIds(new Set())
+    setSelectedMembersById(new Map())
     syncEstadosEnvio(new Set())
   }, [isSending, isPreparing, syncEstadosEnvio])
 
@@ -268,10 +387,10 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     setSendLog([])
     setResumenFinal(null)
 
-    const cola = members.filter(
-      (m) => selectedIds.has(m.id) && validatePhone(m.telefono).valido && m.estadoEnvio === 'pendiente_envio',
+    const cola = seleccionados.filter(
+      (member) => validatePhone(member.telefono).valido && member.estadoEnvio === 'pendiente_envio',
     )
-    const invalidosCount = members.filter((m) => selectedIds.has(m.id) && !validatePhone(m.telefono).valido).length
+    const invalidosCount = seleccionados.filter((member) => !validatePhone(member.telefono).valido).length
 
     const progreso: SendProgress = {
       total: selectedIds.size,
@@ -387,9 +506,9 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     fase,
     finalizarCampana,
     isSending,
-    members,
     runCountdown,
     selectedIds,
+    seleccionados,
     seleccionStats.validos,
     campaniaSeleccionada.template,
     campaniaSeleccionada.label,
@@ -405,6 +524,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const reiniciarParaNuevoEnvio = useCallback(() => {
     if (isSendingRef.current) return
     setSelectedIds(new Set())
+    setSelectedMembersById(new Map())
     setFase('inicial')
     setSendLog([])
     setResumenFinal(null)
@@ -436,7 +556,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   }, [cancelarCountdown])
 
   return {
-    members: membersFiltrados,
+    members,
     allMembers: members,
     selectedIds,
     fase,
@@ -455,6 +575,8 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     busqueda,
     setBusqueda,
     isLoading,
+    isSearching,
+    searchError,
     loadError,
     totalActivos,
     sociosConDeuda,

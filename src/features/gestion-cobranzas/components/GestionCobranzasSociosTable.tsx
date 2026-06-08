@@ -11,6 +11,8 @@ type Props = {
   busqueda: string
   filtroDeuda: string
   disabled: boolean
+  isSearching?: boolean
+  searchError?: string | null
   onBusquedaChange: (value: string) => void
   onFiltroDeudaChange: (value: string) => void
   onToggle: (id: string) => void
@@ -39,6 +41,8 @@ export function GestionCobranzasSociosTable({
   busqueda,
   filtroDeuda,
   disabled,
+  isSearching = false,
+  searchError = null,
   onBusquedaChange,
   onFiltroDeudaChange,
   onToggle,
@@ -79,7 +83,7 @@ export function GestionCobranzasSociosTable({
               value={busqueda}
               disabled={disabled}
               onChange={(e) => onBusquedaChange(e.target.value)}
-              placeholder="Nombre o apellido"
+              placeholder="Buscar por nombre, taller, DNI, CUIT, teléfono o email..."
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100"
             />
           </div>
@@ -103,7 +107,18 @@ export function GestionCobranzasSociosTable({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {searchError ? (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {searchError}
+        </div>
+      ) : null}
+
+      <div className="overflow-x-auto relative">
+        {isSearching ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70 text-sm text-slate-600">
+            Buscando socios…
+          </div>
+        ) : null}
         <table className="w-full min-w-[800px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

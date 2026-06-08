@@ -42,7 +42,7 @@ export function AdminGestionCobranzasPage() {
 
       {envio.isLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-md">
-          Cargando datos simulados de cobranzas…
+          Cargando socios reales del padrón…
         </div>
       ) : null}
 
@@ -112,6 +112,8 @@ export function AdminGestionCobranzasPage() {
                 busqueda={envio.busqueda}
                 filtroDeuda={envio.filtroDeuda}
                 disabled={uiLocked}
+                isSearching={envio.isSearching}
+                searchError={envio.searchError}
                 onBusquedaChange={envio.setBusqueda}
                 onFiltroDeudaChange={envio.setFiltroDeuda}
                 onToggle={envio.toggleSeleccion}

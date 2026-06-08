@@ -1,5 +1,6 @@
 import type { SocioCobranza } from '../types'
 
+/** Legacy mock usado solo como referencia/fallback de desarrollo. El Gestor de Cobranzas usa socios reales desde sociosService. */
 export function crearMockMembers(): SocioCobranza[] {
   return [
     {
