@@ -21,3 +21,84 @@ body {
   background: #f8fafc;
   color: #0f172a;
 }
+
+@keyframes hero-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-image-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-animate-badge {
+  animation: hero-fade-in-up 0.6s ease-out both;
+}
+
+.hero-animate-title {
+  animation: hero-fade-in-up 0.65s ease-out both;
+}
+
+.hero-animate-description {
+  animation: hero-fade-in-up 0.65s ease-out both;
+  animation-delay: 320ms;
+}
+
+.hero-animate-cta-primary {
+  animation: hero-fade-in-up 0.6s ease-out both;
+  animation-delay: 400ms;
+}
+
+.hero-animate-cta-secondary {
+  animation: hero-fade-in-up 0.6s ease-out both;
+  animation-delay: 480ms;
+}
+
+.hero-animate-image-blueprint {
+  animation: hero-image-reveal 0.75s ease-out both;
+  animation-delay: 200ms;
+}
+
+.hero-animate-image-admin {
+  animation: hero-fade-in 0.6s ease-out both;
+  animation-delay: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-animate-badge,
+  .hero-animate-title,
+  .hero-animate-description,
+  .hero-animate-cta-primary,
+  .hero-animate-cta-secondary,
+  .hero-animate-image-blueprint,
+  .hero-animate-image-admin {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

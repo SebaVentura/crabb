@@ -200,19 +200,27 @@ export function LandingPage() {
             </section>
           ) : null}
 
-          <PublicHero
-            badge={landing.hero.badge}
-            title={landing.hero.title}
-            description={landing.hero.description}
-            primaryCta={landing.hero.primary_cta}
-            secondaryCta={landing.hero.secondary_cta}
-            imageUrl={effectiveHeroImageUrl}
-            fallbackImageUrl={heroBlueprintCar}
-            imageAlt={heroImageAlt}
-            values={landing.hero.values ?? []}
-            visual={landing.hero.visual}
-            kpis={heroKpis}
-          />
+          <div className="relative">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[min(900px,100vh)] bg-[radial-gradient(ellipse_70%_50%_at_75%_40%,rgba(56,189,248,0.07),transparent_70%)]"
+              aria-hidden="true"
+            />
+
+            <PublicHero
+              badge={landing.hero.badge}
+              title={landing.hero.title}
+              description={landing.hero.description}
+              primaryCta={landing.hero.primary_cta}
+              secondaryCta={landing.hero.secondary_cta}
+              imageUrl={effectiveHeroImageUrl}
+              fallbackImageUrl={heroBlueprintCar}
+              imageAlt={heroImageAlt}
+              isDefaultBlueprintImage={shouldUseDefaultImage}
+              values={landing.hero.values ?? []}
+              visual={landing.hero.visual}
+              kpis={heroKpis}
+            />
+          </div>
 
           <BenefitsGrid services={benefitCards} />
 
