@@ -18,6 +18,7 @@ export function getNavItems(role?: string): NavItem[] {
     ...baseNavItems,
     { label: 'Sitio Web', path: '/admin/sitio-web' },
     { label: 'Contenido institucional', path: '/admin' },
+    { label: 'Cuotas de socios', path: '/admin/cuotas' },
     { label: 'Gestión de cobranzas', path: '/admin/gestion-cobranzas' },
   ]
 }
