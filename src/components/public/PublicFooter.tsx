@@ -1,5 +1,7 @@
 import type { ActionLink, FooterContent, SocialLink } from '../../types/institutional'
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
+
 type FooterLinkGroup = {
   title: string
   links: ActionLink[]
@@ -108,7 +110,7 @@ export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
       { label: 'Inicio', url: '#inicio' },
       { label: 'Institucional', url: '/institucional' },
       { label: 'Servicios', url: '#servicios' },
-      { label: 'Capacitaciones', url: '/capacitaciones' },
+      { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
       { label: 'Data Técnica', url: '/data-tecnica' },
       { label: 'Contacto', url: '#contacto' },
     ] satisfies ActionLink[],
@@ -219,6 +221,8 @@ export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
                 <li key={link.label}>
                   <a
                     href={link.url}
+                    target={link.url.startsWith('http') ? '_blank' : undefined}
+                    rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="text-sm text-blue-50/82 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061f3d]"
                   >
                     {link.label}

@@ -17,6 +17,8 @@ import { ApiError } from '../lib/apiClient'
 import { institutionalService } from '../services/institutionalService'
 import type { InstitutionalContent } from '../types/institutional'
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
+
 export function LandingPage() {
   const [content, setContent] = useState<InstitutionalContent>(() =>
     getInstitutionalContentWithFallback(null),
@@ -69,7 +71,7 @@ export function LandingPage() {
 
   const serviceFallbackByIndex = [
     { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
-    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '/capacitaciones' } },
+    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: TRAINING_EXTERNAL_URL } },
     { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '/data-tecnica' } },
     { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '/contacto' } },
   ]
@@ -87,6 +89,15 @@ export function LandingPage() {
     )
   }
 
+  const isTrainingService = (service: InstitutionalContent['landing']['services'][number]) => {
+    const trainingText = `${service.title} ${service.cta_label ?? ''} ${service.cta_href ?? ''} ${service.icon ?? ''}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+
+    return trainingText.includes('capacitacion') || trainingText.includes('capacitaciones')
+  }
+
   const sortedVisibleServices = [...landing.services]
     .filter((service) => service.visible !== false)
     .sort((a, b) => {
@@ -97,7 +108,9 @@ export function LandingPage() {
 
   const benefitCards = sortedVisibleServices.slice(0, 4).map((service, index) => {
     const fallbackConfig = serviceFallbackByIndex[index]
-    const safeHref = isUnsafePublicHref(service.cta_href)
+    const safeHref = isTrainingService(service)
+      ? TRAINING_EXTERNAL_URL
+      : isUnsafePublicHref(service.cta_href)
       ? fallbackConfig?.cta.url
       : service.cta_href
 
@@ -131,7 +144,7 @@ export function LandingPage() {
       title: landing.capacitaciones.title,
       description: landing.capacitaciones.description,
       items: landing.capacitaciones.items,
-      cta: { label: 'Capacitaciones', url: '#capacitaciones' },
+      cta: { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
     },
     {
       key: 'auxilio',
@@ -172,7 +185,7 @@ export function LandingPage() {
           { label: 'Inicio', href: '#inicio' },
           { label: 'Institucional', href: '/institucional' },
           { label: 'Servicios', href: '#servicios' },
-          { label: 'Capacitaciones', href: '/capacitaciones' },
+          { label: 'Capacitaciones', href: TRAINING_EXTERNAL_URL },
           { label: 'Data Técnica', href: '/data-tecnica' },
           { label: 'Contacto', href: '#contacto' },
         ]}

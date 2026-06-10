@@ -22,6 +22,8 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
   }
 
   const isActiveItem = (href: string) => {
+    if (/^https?:\/\//i.test(href)) return false
+
     if (href.startsWith('#')) {
       if (href === '#inicio') {
         return location.pathname === '/' && (!location.hash || location.hash === '#inicio')
@@ -58,6 +60,8 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
               <a
                 key={item.label}
                 href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className={`rounded-full px-2.5 py-1.5 text-[0.83rem] font-medium transition duration-200 ${
                   isActiveItem(item.href)
                     ? 'bg-white/8 text-white ring-1 ring-white/10'
@@ -95,6 +99,8 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
               <a
                 key={item.label}
                 href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="text-sm font-medium text-slate-200"
                 onClick={() => setMenuOpen(false)}
               >
