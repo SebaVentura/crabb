@@ -35,6 +35,26 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
     return location.pathname === href
   }
 
+  const handleNavItemClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    item: PublicNavItem,
+    shouldCloseMenu = false,
+  ) => {
+    if (!item.href.startsWith('#')) {
+      if (shouldCloseMenu) setMenuOpen(false)
+      return
+    }
+
+    event.preventDefault()
+
+    document.querySelector(item.href)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+
+    if (shouldCloseMenu) setMenuOpen(false)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#06111f]/95 backdrop-blur">
       <div className="mx-auto flex h-[4.5rem] w-full max-w-7xl items-center justify-between px-6 lg:h-[4.75rem] lg:px-8">
@@ -62,6 +82,7 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
                 href={item.href}
                 target={item.href.startsWith('http') ? '_blank' : undefined}
                 rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                onClick={(event) => handleNavItemClick(event, item)}
                 className={`rounded-full px-2.5 py-1.5 text-[0.83rem] font-medium transition duration-200 ${
                   isActiveItem(item.href)
                     ? 'bg-white/8 text-white ring-1 ring-white/10'
@@ -102,7 +123,7 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
                 target={item.href.startsWith('http') ? '_blank' : undefined}
                 rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="text-sm font-medium text-slate-200"
-                onClick={() => setMenuOpen(false)}
+                onClick={(event) => handleNavItemClick(event, item, true)}
               >
                 {displayLabel(item.label)}
               </a>

@@ -1,4 +1,9 @@
-import type { ActionLink, FooterContent, SocialLink } from '../../types/institutional'
+import type {
+  ActionLink,
+  FooterContent,
+  InstitutionalContact,
+  SocialLink,
+} from '../../types/institutional'
 
 const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
 
@@ -9,6 +14,7 @@ type FooterLinkGroup = {
 
 type PublicFooterProps = {
   footer: FooterContent
+  contact: InstitutionalContact
   socialLinks: SocialLink[]
   linkGroups: FooterLinkGroup[]
 }
@@ -94,7 +100,21 @@ const LinkedinIcon = () => (
   </svg>
 )
 
-export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
+export function PublicFooter({ footer, contact, socialLinks }: PublicFooterProps) {
+  const handleFooterNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (!href.startsWith('#')) return
+
+    event.preventDefault()
+
+    document.querySelector(href)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
+
   const footerConfig = {
     brand: 'CRABB',
     description: 'Cámara de Reparación de Automotores de Bahía Blanca',
@@ -102,9 +122,9 @@ export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
       footer.description?.trim() ||
       'Representación institucional del ecosistema automotor regional.',
     contact: {
-      email: 'info@crabb.com',
-      phone: '+54 291 400-0000',
-      location: 'Bahía Blanca, Buenos Aires',
+      email: contact.email || 'crabbiahblanca@gmail.com',
+      phone: contact.phone || '+54 291 402-7004',
+      location: contact.address || 'Bahía Blanca, Buenos Aires, Argentina',
     },
     navLinks: [
       { label: 'Inicio', url: '#inicio' },
@@ -223,6 +243,7 @@ export function PublicFooter({ footer, socialLinks }: PublicFooterProps) {
                     href={link.url}
                     target={link.url.startsWith('http') ? '_blank' : undefined}
                     rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    onClick={(event) => handleFooterNavClick(event, link.url)}
                     className="text-sm text-blue-50/82 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061f3d]"
                   >
                     {link.label}
