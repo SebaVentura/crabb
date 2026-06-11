@@ -14,6 +14,7 @@ const titles: Record<string, string> = {
   '/admin/institucional': 'Contenido institucional',
   '/admin/sitio-web': 'Sitio Web',
   '/admin/gestion-cobranzas': 'Gestión de cobranzas',
+  '/admin/cuotas': 'Cuotas de socios',
 }
 
 export function AppShell() {

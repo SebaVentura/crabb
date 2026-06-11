@@ -4,6 +4,7 @@ import { CapacitacionesPage } from '../pages/CapacitacionesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DataTecnicaPage } from '../pages/DataTecnicaPage'
 import { InstitucionalPage } from '../pages/InstitucionalPage'
+import { AdminCuotasPage } from '../pages/AdminCuotasPage'
 import { AdminGestionCobranzasPage } from '../pages/AdminGestionCobranzasPage'
 import { AdminInstitucionalPage } from '../pages/AdminInstitucionalPage'
 import { AdminSitioWebPage } from '../pages/AdminSitioWebPage'
@@ -53,10 +54,10 @@ export const router = createHashRouter([
       { path: 'perfil', element: <PerfilSocioPage /> },
       { path: 'colegas', element: <BuscarColegasPage /> },
       {
-        path: 'admin',
+        path: 'admin/cuotas',
         element: (
           <AdminOnlyRoute>
-            <Navigate to="/admin/institucional" replace />
+            <AdminCuotasPage />
           </AdminOnlyRoute>
         ),
       },
@@ -113,6 +114,14 @@ export const router = createHashRouter([
         element: (
           <AdminOnlyRoute>
             <AdminSitioWebContactoRedesPage />
+          </AdminOnlyRoute>
+        ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <AdminOnlyRoute>
+            <Navigate to="/admin/institucional" replace />
           </AdminOnlyRoute>
         ),
       },

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { isAdminRole } from '../utils/adminAccess'
 
 function FullScreenMessage({ message }: { message: string }) {
   return (
@@ -49,10 +50,7 @@ export function AdminOnlyRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />
   }
 
-  const role = (user?.role ?? '').toLowerCase()
-  const hasAdminAccess = role === 'admin' || role === 'superadmin'
-
-  if (!hasAdminAccess) {
+  if (!isAdminRole(user?.role)) {
     return <Navigate to="/dashboard" replace />
   }
 

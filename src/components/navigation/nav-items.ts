@@ -1,6 +1,7 @@
 import type { NavItem } from '../../types'
+import { isAdminRole } from '../../utils/adminAccess'
 
-const baseNavItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard' },
   { label: 'Institucional', path: '/institucional' },
   { label: 'Gestión de Socios', path: '/perfil' },
@@ -8,16 +9,21 @@ const baseNavItems: NavItem[] = [
   { label: 'Capacitaciones', path: '/capacitaciones' },
 ]
 
+const adminNavItems: NavItem[] = [
+  { label: 'Cuotas de socios', path: '/admin/cuotas' },
+  { label: 'Gestión de cobranzas', path: '/admin/gestion-cobranzas' },
+  { label: 'Sitio Web', path: '/admin/sitio-web' },
+  { label: 'Contenido institucional', path: '/admin/institucional' },
+]
+
+export function getMainNavItems(): NavItem[] {
+  return mainNavItems
+}
+
+export function getAdminNavItems(role?: string): NavItem[] {
+  return isAdminRole(role) ? adminNavItems : []
+}
+
 export function getNavItems(role?: string): NavItem[] {
-  const normalizedRole = (role ?? '').toLowerCase()
-  const isAdmin = normalizedRole === 'admin' || normalizedRole === 'superadmin'
-
-  if (!isAdmin) return baseNavItems
-
-  return [
-    ...baseNavItems,
-    { label: 'Sitio Web', path: '/admin/sitio-web' },
-    { label: 'Contenido institucional', path: '/admin' },
-    { label: 'Gestión de cobranzas', path: '/admin/gestion-cobranzas' },
-  ]
+  return [...getMainNavItems(), ...getAdminNavItems(role)]
 }
