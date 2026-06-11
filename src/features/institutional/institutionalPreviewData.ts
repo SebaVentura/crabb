@@ -191,9 +191,9 @@ export const institutionalPreviewData: InstitutionalPreviewContract = {
     copyright: 'CRABB - Camara Regional Automotor de Bahia Blanca',
     description: 'Representacion institucional automotor con alcance regional.',
     legal_links: [
-      { label: 'Aviso legal', url: '#legal' },
-      { label: 'Privacidad', url: '#legal' },
-      { label: 'Terminos', url: '#legal' },
+      { label: 'Privacidad', url: '/privacidad' },
+      { label: 'Términos', url: '/terminos' },
+      { label: 'Eliminación de datos', url: '/eliminacion-de-datos' },
     ],
   },
   visibility: {

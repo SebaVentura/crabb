@@ -1,4 +1,4 @@
-import { Navigate, createHashRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { CapacitacionesPage } from '../pages/CapacitacionesPage'
 import { DashboardPage } from '../pages/DashboardPage'
@@ -12,16 +12,31 @@ import { AdminSitioWebPortadaPage } from '../pages/AdminSitioWebPortadaPage'
 import { AdminSitioWebServiciosPage } from '../pages/AdminSitioWebServiciosPage'
 import { AdminSitioWebFooterPage } from '../pages/AdminSitioWebFooterPage'
 import { AdminSitioWebContactoRedesPage } from '../pages/AdminSitioWebContactoRedesPage'
+import { DataDeletionPage } from '../pages/DataDeletionPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
+import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage'
+import { TermsPage } from '../pages/TermsPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
 import { AdminOnlyRoute, ProtectedRoute, PublicOnlyRoute } from './routeGuards'
 
-export const router = createHashRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <LandingPage />,
+  },
+  {
+    path: '/privacidad',
+    element: <PrivacyPolicyPage />,
+  },
+  {
+    path: '/terminos',
+    element: <TermsPage />,
+  },
+  {
+    path: '/eliminacion-de-datos',
+    element: <DataDeletionPage />,
   },
   {
     path: '/login',

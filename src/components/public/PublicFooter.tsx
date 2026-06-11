@@ -8,6 +8,12 @@ import { useNavigate } from 'react-router-dom'
 
 const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
 
+const legalLinks = [
+  { label: 'Privacidad', url: '/privacidad' },
+  { label: 'Términos', url: '/terminos' },
+  { label: 'Eliminación de datos', url: '/eliminacion-de-datos' },
+] satisfies ActionLink[]
+
 type FooterLinkGroup = {
   title: string
   links: ActionLink[]
@@ -314,11 +320,24 @@ export function PublicFooter({ footer, contact, socialLinks }: PublicFooterProps
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6">
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-blue-100/68">
             {footer.copyright ||
               '© CRABB Bahía Blanca · Todos los derechos reservados.'}
           </p>
+
+          <nav aria-label="Enlaces legales" className="flex flex-wrap gap-x-5 gap-y-2">
+            {legalLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.url}
+                onClick={(event) => handleFooterNavClick(event, link.url)}
+                className="text-xs text-blue-50/82 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061f3d]"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
     </footer>
