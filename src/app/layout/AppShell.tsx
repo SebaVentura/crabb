@@ -21,11 +21,11 @@ export function AppShell() {
   const title = titles[location.pathname] ?? 'CRABB'
 
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-slate-50 md:flex">
       <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col pb-20 md:pb-0">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-20 md:pb-0">
         <TopHeader title={title} />
-        <main className="flex-1 p-4 md:p-6">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 md:p-6">
           <Outlet />
         </main>
       </div>

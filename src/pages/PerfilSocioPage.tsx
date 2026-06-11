@@ -355,14 +355,14 @@ export function PerfilSocioPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="min-w-0 max-w-full space-y-4 md:space-y-6">
       <header className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md md:p-6">
         <h1 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Gestión de Socios</h1>
         <p className="mt-1 text-sm text-slate-600 md:text-base">Administración del padrón y estado de socios</p>
         <p className="mt-2 text-xs text-slate-500">Datos reales · API CRABB</p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {(
           [
             ['Total socios', indicadores.total],
@@ -422,8 +422,8 @@ export function PerfilSocioPage() {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{successMessage}</div>
       ) : null}
 
-      <Card className="border-slate-200 shadow-md" title="Filtros y búsqueda">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <Card className="max-w-full border-slate-200 shadow-md" title="Filtros y búsqueda">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="buscar-socio">
               Buscar
@@ -650,9 +650,9 @@ export function PerfilSocioPage() {
             ))}
           </div>
 
-          <Card className="hidden border-slate-200 shadow-md md:block" title={`Socios (${socios.length})`}>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
+          <Card className="hidden w-full min-w-0 max-w-full border-slate-200 shadow-md md:block" title={`Socios (${socios.length})`}>
+            <div className="w-full min-w-0 max-w-full overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch]">
+              <table className="w-max min-w-[1240px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                     <th className="pb-2 pr-3 font-medium">Nro socio</th>
@@ -665,7 +665,11 @@ export function PerfilSocioPage() {
                     <th className="pb-2 pr-3 font-medium">Cuota</th>
                     <th className="pb-2 pr-3 font-medium">Ultimo pago</th>
                     <th className="pb-2 pr-3 font-medium">Email</th>
-                    {isAdminUser ? <th className="pb-2 pr-3 font-medium">Acciones</th> : null}
+                    {isAdminUser ? (
+                      <th className="sticky right-0 z-30 bg-white pb-2 pr-3 text-right font-medium shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.35)]">
+                        Acciones
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -682,7 +686,7 @@ export function PerfilSocioPage() {
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(socio.fechaUltimoPago)}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{socio.email || '-'}</td>
                       {isAdminUser ? (
-                        <td className="whitespace-nowrap py-3 pr-3">
+                        <td className="sticky right-0 z-20 whitespace-nowrap bg-white py-3 pr-3 text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.35)]">
                           <div className="flex gap-2">
                           <button
                             type="button"

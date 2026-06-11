@@ -4,6 +4,7 @@ import type {
   InstitutionalContact,
   SocialLink,
 } from '../../types/institutional'
+import { useNavigate } from 'react-router-dom'
 
 const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
 
@@ -101,11 +102,19 @@ const LinkedinIcon = () => (
 )
 
 export function PublicFooter({ footer, contact, socialLinks }: PublicFooterProps) {
+  const navigate = useNavigate()
+
   const handleFooterNavClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
     href: string,
   ) => {
-    if (!href.startsWith('#')) return
+    if (/^https?:\/\//i.test(href)) return
+
+    if (!href.startsWith('#')) {
+      event.preventDefault()
+      navigate(href)
+      return
+    }
 
     event.preventDefault()
 

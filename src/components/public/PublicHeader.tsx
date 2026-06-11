@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 export type PublicNavItem = {
   label: string
@@ -15,6 +15,7 @@ const CRABB_LOGO_SRC = '/logo-crabb.jpg'
 export function PublicHeader({ navItems }: PublicHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   const displayLabel = (label: string) => {
     if (label.toLowerCase() === 'data tecnica') return 'Data Técnica'
@@ -40,7 +41,14 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
     item: PublicNavItem,
     shouldCloseMenu = false,
   ) => {
+    if (/^https?:\/\//i.test(item.href)) {
+      if (shouldCloseMenu) setMenuOpen(false)
+      return
+    }
+
     if (!item.href.startsWith('#')) {
+      event.preventDefault()
+      navigate(item.href)
       if (shouldCloseMenu) setMenuOpen(false)
       return
     }
@@ -95,10 +103,16 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
           </nav>
         </div>
 
-        <div className="hidden flex-shrink-0 items-center justify-end lg:flex lg:basis-[24%]">
+        <div className="hidden flex-shrink-0 items-center justify-end gap-2 lg:flex lg:basis-[24%]">
           <Link
             to="/login"
-            className="rounded-full border border-white/18 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-200 transition hover:bg-white/10 hover:text-white"
+            className="whitespace-nowrap rounded-full bg-cyan-400 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-950 shadow-sm transition hover:bg-cyan-300"
+          >
+            Ingreso Socios
+          </Link>
+          <Link
+            to="/login"
+            className="whitespace-nowrap rounded-full border border-white/18 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-200 transition hover:bg-white/10 hover:text-white"
           >
             Admin
           </Link>
@@ -130,7 +144,14 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
             ))}
             <Link
               to="/login"
-              className="mt-2 inline-flex w-fit rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:bg-white/10"
+              className="mt-2 inline-flex w-fit rounded-full bg-cyan-400 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-300"
+              onClick={() => setMenuOpen(false)}
+            >
+              Ingreso Socios
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex w-fit rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:bg-white/10"
               onClick={() => setMenuOpen(false)}
             >
               Admin

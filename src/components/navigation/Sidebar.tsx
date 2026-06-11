@@ -9,8 +9,8 @@ export function Sidebar() {
   const logoCrabbUrl = `${import.meta.env.BASE_URL}logo-crabb.jpg`
 
   return (
-    <aside className="hidden w-72 border-r border-slate-200 bg-white p-4 md:block">
-      <div className="mb-6 flex items-center gap-3">
+    <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white p-4 md:flex md:min-h-screen md:flex-col">
+      <div className="mb-6 flex shrink-0 items-center gap-3">
         <img src={logoCrabbUrl} alt="CRABB" className="h-10 w-10 rounded-md object-contain" />
         <div>
           <p className="text-xs text-slate-500">Cámara de Reparación</p>
@@ -22,7 +22,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="space-y-1">
+      <nav className="shrink-0 space-y-1">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -38,7 +38,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <DateTimeWidget className="hidden lg:block" />
+      <DateTimeWidget className="mt-6 hidden lg:block" />
     </aside>
   )
 }
