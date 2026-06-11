@@ -19,9 +19,11 @@ type BenefitsGridProps = {
   services: ServiceWithAction[];
 };
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit';
+
 const PUBLIC_FALLBACK_LINKS = [
   { label: 'Más información', href: '/institucional' },
-  { label: 'Ver capacitaciones', href: '/capacitaciones' },
+  { label: 'Ver capacitaciones', href: TRAINING_EXTERNAL_URL },
   { label: 'Explorar data técnica', href: '/data-tecnica' },
   { label: 'Conocé los beneficios', href: '/contacto' },
 ];
@@ -58,10 +60,19 @@ function getSafeCta(service: ServiceWithAction, index: number) {
     service.cta?.url ||
     service.cta_href ||
     fallback.href;
+  const trainingText = `${service.title} ${rawLabel} ${rawHref} ${service.icon ?? ''}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
   return {
     label: rawLabel,
-    href: isUnsafePublicHref(rawHref) ? fallback.href : rawHref,
+    href:
+      trainingText.includes('capacitacion') || trainingText.includes('capacitaciones')
+        ? TRAINING_EXTERNAL_URL
+        : isUnsafePublicHref(rawHref)
+          ? fallback.href
+          : rawHref,
   };
 }
 
@@ -219,6 +230,8 @@ export function BenefitsGrid({ services }: BenefitsGridProps) {
                 <div className="relative mt-auto flex justify-center pt-5">
                   <a
                     href={cta.href}
+                    target={cta.href.startsWith('http') ? '_blank' : undefined}
+                    rel={cta.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="inline-flex items-center rounded-full border border-sky-200/20 bg-sky-300/10 px-3.5 py-2 text-xs font-bold text-sky-100 transition duration-300 hover:border-sky-200/45 hover:bg-sky-300/18 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06111f]"
                   >
                     <span>{cta.label}</span>

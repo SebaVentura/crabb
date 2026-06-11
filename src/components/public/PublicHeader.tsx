@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 export type PublicNavItem = {
   label: string
@@ -15,6 +15,7 @@ const CRABB_LOGO_SRC = '/logo-crabb.jpg'
 export function PublicHeader({ navItems }: PublicHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   const displayLabel = (label: string) => {
     if (label.toLowerCase() === 'data tecnica') return 'Data Técnica'
@@ -22,6 +23,8 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
   }
 
   const isActiveItem = (href: string) => {
+    if (/^https?:\/\//i.test(href)) return false
+
     if (href.startsWith('#')) {
       if (href === '#inicio') {
         return location.pathname === '/' && (!location.hash || location.hash === '#inicio')
@@ -31,6 +34,33 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
     }
 
     return location.pathname === href
+  }
+
+  const handleNavItemClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    item: PublicNavItem,
+    shouldCloseMenu = false,
+  ) => {
+    if (/^https?:\/\//i.test(item.href)) {
+      if (shouldCloseMenu) setMenuOpen(false)
+      return
+    }
+
+    if (!item.href.startsWith('#')) {
+      event.preventDefault()
+      navigate(item.href)
+      if (shouldCloseMenu) setMenuOpen(false)
+      return
+    }
+
+    event.preventDefault()
+
+    document.querySelector(item.href)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+
+    if (shouldCloseMenu) setMenuOpen(false)
   }
 
   return (
@@ -58,6 +88,9 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
               <a
                 key={item.label}
                 href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                onClick={(event) => handleNavItemClick(event, item)}
                 className={`rounded-full px-2.5 py-1.5 text-[0.83rem] font-medium transition duration-200 ${
                   isActiveItem(item.href)
                     ? 'bg-white/8 text-white ring-1 ring-white/10'
@@ -70,10 +103,16 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
           </nav>
         </div>
 
-        <div className="hidden flex-shrink-0 items-center justify-end lg:flex lg:basis-[24%]">
+        <div className="hidden flex-shrink-0 items-center justify-end gap-2 lg:flex lg:basis-[24%]">
           <Link
             to="/login"
-            className="rounded-full border border-white/18 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-200 transition hover:bg-white/10 hover:text-white"
+            className="whitespace-nowrap rounded-full bg-cyan-400 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-950 shadow-sm transition hover:bg-cyan-300"
+          >
+            Ingreso Socios
+          </Link>
+          <Link
+            to="/login"
+            className="whitespace-nowrap rounded-full border border-white/18 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-200 transition hover:bg-white/10 hover:text-white"
           >
             Admin
           </Link>
@@ -95,15 +134,24 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
               <a
                 key={item.label}
                 href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="text-sm font-medium text-slate-200"
-                onClick={() => setMenuOpen(false)}
+                onClick={(event) => handleNavItemClick(event, item, true)}
               >
                 {displayLabel(item.label)}
               </a>
             ))}
             <Link
               to="/login"
-              className="mt-2 inline-flex w-fit rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:bg-white/10"
+              className="mt-2 inline-flex w-fit rounded-full bg-cyan-400 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-300"
+              onClick={() => setMenuOpen(false)}
+            >
+              Ingreso Socios
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex w-fit rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:bg-white/10"
               onClick={() => setMenuOpen(false)}
             >
               Admin

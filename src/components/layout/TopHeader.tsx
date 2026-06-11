@@ -13,8 +13,8 @@ export function TopHeader({ title }: TopHeaderProps) {
     if (import.meta.env.DEV) {
       console.log('[AUTH][LOGOUT] Iniciando cierre de sesión desde TopHeader.')
     }
+    navigate('/', { replace: true })
     await logout()
-    navigate('/login', { replace: true })
   }
 
   return (

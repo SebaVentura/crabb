@@ -17,16 +17,18 @@ import { ApiError } from '../lib/apiClient'
 import { institutionalService } from '../services/institutionalService'
 import type { InstitutionalContent } from '../types/institutional'
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
+
 export function LandingPage() {
-  const [content, setContent] = useState<InstitutionalContent>(() =>
-    getInstitutionalContentWithFallback(null),
-  )
+  const [content, setContent] = useState<InstitutionalContent | null>(null)
+  const [isLoadingInstitutionalContent, setIsLoadingInstitutionalContent] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
 
     const loadContent = async () => {
+      setIsLoadingInstitutionalContent(true)
       setError(null)
 
       try {
@@ -46,6 +48,10 @@ export function LandingPage() {
           setContent(getInstitutionalContentWithFallback(null))
           setError('No se pudo cargar el contenido de la landing.')
         }
+      } finally {
+        if (active) {
+          setIsLoadingInstitutionalContent(false)
+        }
       }
     }
 
@@ -55,6 +61,40 @@ export function LandingPage() {
       active = false
     }
   }, [])
+
+  const publicNavItems = [
+    { label: 'Inicio', href: '#inicio' },
+    { label: 'Institucional', href: '/institucional' },
+    { label: 'Servicios', href: '#servicios' },
+    { label: 'Capacitaciones', href: TRAINING_EXTERNAL_URL },
+    { label: 'Data Técnica', href: '/data-tecnica' },
+    { label: 'Contacto', href: '#contacto' },
+  ]
+
+  if (!content) {
+    return (
+      <main className="min-h-screen w-full overflow-x-hidden bg-[#06111f]">
+        <PublicHeader navItems={publicNavItems} />
+
+        <div className="relative isolate overflow-hidden bg-[#06111f] text-white">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(56,189,248,0.12),transparent_34%),radial-gradient(circle_at_84%_16%,rgba(59,130,246,0.1),transparent_34%),radial-gradient(circle_at_50%_74%,rgba(14,165,233,0.08),transparent_40%),linear-gradient(180deg,#06111f_0%,#071527_34%,#071b33_62%,#06111f_100%)]"
+            aria-hidden="true"
+          />
+
+          <section
+            id="servicios"
+            aria-busy={isLoadingInstitutionalContent}
+            className="relative z-10 mx-auto min-h-[360px] w-full max-w-7xl px-6 py-16 sm:py-20 lg:px-8"
+          >
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-6 text-sm text-sky-100/78">
+              Cargando servicios...
+            </div>
+          </section>
+        </div>
+      </main>
+    )
+  }
 
   const landing = content.landing
   const configuredImageUrl = landing.hero.image_url?.trim() ?? ''
@@ -69,7 +109,7 @@ export function LandingPage() {
 
   const serviceFallbackByIndex = [
     { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
-    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: '/capacitaciones' } },
+    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: TRAINING_EXTERNAL_URL } },
     { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '/data-tecnica' } },
     { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '/contacto' } },
   ]
@@ -87,6 +127,15 @@ export function LandingPage() {
     )
   }
 
+  const isTrainingService = (service: InstitutionalContent['landing']['services'][number]) => {
+    const trainingText = `${service.title} ${service.cta_label ?? ''} ${service.cta_href ?? ''} ${service.icon ?? ''}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+
+    return trainingText.includes('capacitacion') || trainingText.includes('capacitaciones')
+  }
+
   const sortedVisibleServices = [...landing.services]
     .filter((service) => service.visible !== false)
     .sort((a, b) => {
@@ -97,7 +146,9 @@ export function LandingPage() {
 
   const benefitCards = sortedVisibleServices.slice(0, 4).map((service, index) => {
     const fallbackConfig = serviceFallbackByIndex[index]
-    const safeHref = isUnsafePublicHref(service.cta_href)
+    const safeHref = isTrainingService(service)
+      ? TRAINING_EXTERNAL_URL
+      : isUnsafePublicHref(service.cta_href)
       ? fallbackConfig?.cta.url
       : service.cta_href
 
@@ -131,7 +182,7 @@ export function LandingPage() {
       title: landing.capacitaciones.title,
       description: landing.capacitaciones.description,
       items: landing.capacitaciones.items,
-      cta: { label: 'Capacitaciones', url: '#capacitaciones' },
+      cta: { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
     },
     {
       key: 'auxilio',
@@ -168,14 +219,7 @@ export function LandingPage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-[#06111f]">
       <PublicHeader
-        navItems={[
-          { label: 'Inicio', href: '#inicio' },
-          { label: 'Institucional', href: '/institucional' },
-          { label: 'Servicios', href: '#servicios' },
-          { label: 'Capacitaciones', href: '/capacitaciones' },
-          { label: 'Data Técnica', href: '/data-tecnica' },
-          { label: 'Contacto', href: '#contacto' },
-        ]}
+        navItems={publicNavItems}
       />
 
       <div className="relative isolate overflow-hidden bg-[#06111f] text-white">
@@ -238,6 +282,7 @@ export function LandingPage() {
 
       <PublicFooter
         footer={content.footer}
+        contact={content.contact}
         socialLinks={socialLinks}
         linkGroups={institutionalPreviewFooterLinkGroups}
       />

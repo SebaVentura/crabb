@@ -7,6 +7,8 @@ import type {
   LandingService,
 } from '../../types/institutional'
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
+
 type PreviewLandingSection = {
   title: string
   description: string
@@ -116,7 +118,7 @@ export const institutionalPreviewData: InstitutionalPreviewContract = {
         title: 'Capacitacion Continua',
         description: 'Formacion profesional de calidad para potenciar personas y empresas.',
         cta_label: 'Ver capacitaciones',
-        cta_href: '/capacitaciones',
+        cta_href: TRAINING_EXTERNAL_URL,
         icon: 'capacitacion',
         order: 2,
         visible: true,
@@ -339,7 +341,7 @@ export const institutionalPreviewFooterLinkGroups = [
     title: 'Servicios',
     links: [
       { label: 'Representacion', url: '#servicios' },
-      { label: 'Capacitaciones', url: '#capacitaciones' },
+      { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
       { label: 'Data tecnica', url: '#data-tecnica' },
     ],
   },

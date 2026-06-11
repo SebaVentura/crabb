@@ -1,6 +1,8 @@
 import type { ActionLink } from '../../types/institutional'
 import { PublicActionLink } from './PublicActionLink'
 
+const TRAINING_EXTERNAL_URL = 'https://faatra.org.ar/capacitaciones/snit'
+
 export type FeaturedSection = {
   key: string
   title: string
@@ -61,7 +63,7 @@ const featuredItemDefinitions = [
       'Formación legal y tributaria',
       'Entrenamientos operativos',
     ],
-    cta: { label: 'Capacitaciones', url: '#capacitaciones' },
+    cta: { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
     tone: 'secondary' as const,
   },
   {
