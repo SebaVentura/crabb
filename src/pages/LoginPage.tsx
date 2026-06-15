@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../lib/apiClient'
 import { useAuth } from '../hooks/useAuth'
 
@@ -83,6 +83,21 @@ export function LoginPage() {
             {submitting ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
+
+        <div className="mt-6 space-y-3 border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
+          <p>
+            ¿Ya sos socio y no tenés cuenta?{' '}
+            <Link to="/registro-socio" className="font-medium text-blue-700 hover:text-blue-900">
+              Activar cuenta de socio
+            </Link>
+          </p>
+          <p>
+            ¿Querés asociarte a CRABB?{' '}
+            <Link to="/asociarme" className="font-medium text-blue-700 hover:text-blue-900">
+              Solicitar asociación
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

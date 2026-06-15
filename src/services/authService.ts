@@ -1,19 +1,8 @@
 import { env } from '../config/env'
 import { apiRequest } from '../lib/apiClient'
+import type { AuthUser, LinkedSocio, LoginPayload } from '../types/auth'
 
-export type UserRole = 'admin' | 'socio' | (string & {})
-
-export type AuthUser = {
-  id: number | string
-  name: string
-  email: string
-  role: UserRole
-}
-
-export type LoginPayload = {
-  email: string
-  password: string
-}
+export type { AuthUser, LinkedSocio, LoginPayload, UserRole } from '../types/auth'
 
 type LoginResponse = {
   token?: string
@@ -50,6 +39,32 @@ function extractUserCandidate(value: unknown): unknown {
   return value
 }
 
+function normalizeLinkedSocio(raw: unknown): LinkedSocio | null {
+  if (!isRecord(raw)) return null
+
+  const id = raw.id
+  if (typeof id !== 'string' && typeof id !== 'number') return null
+
+  return {
+    id,
+    nroSocio: toStringOrEmpty(firstDefined(raw.nroSocio, raw.nro_socio)),
+    nombreApellido: toStringOrEmpty(firstDefined(raw.nombreApellido, raw.nombre_apellido)),
+    denominacionTaller:
+      toStringOrEmpty(firstDefined(raw.denominacionTaller, raw.denominacion_taller)) || null,
+    rubro: toStringOrEmpty(raw.rubro) || null,
+    categoria: toStringOrEmpty(raw.categoria) || null,
+    condicion: toStringOrEmpty(raw.condicion) || null,
+    estado: toStringOrEmpty(raw.estado) || null,
+    dniCuit: toStringOrEmpty(firstDefined(raw.dniCuit, raw.dni_cuit)) || null,
+    emails: toStringOrEmpty(raw.emails) || null,
+    celular: toStringOrEmpty(raw.celular) || null,
+  }
+}
+
+function firstDefined<T>(...values: T[]): T | undefined {
+  return values.find((value) => value !== undefined)
+}
+
 export function normalizeUser(raw: unknown): AuthUser | null {
   const candidate = extractUserCandidate(raw)
   if (!isRecord(candidate)) return null
@@ -60,12 +75,14 @@ export function normalizeUser(raw: unknown): AuthUser | null {
   const name = toStringOrEmpty(candidate.name)
   const email = toStringOrEmpty(candidate.email)
   const roleRaw = toStringOrEmpty(candidate.role).trim().toLowerCase()
+  const socio = normalizeLinkedSocio(candidate.socio)
 
   return {
     id,
     name,
     email,
-    role: (roleRaw || 'socio') as UserRole,
+    role: (roleRaw || 'socio') as AuthUser['role'],
+    socio,
   }
 }
 

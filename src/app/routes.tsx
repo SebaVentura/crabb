@@ -16,6 +16,8 @@ import { DataDeletionPage } from '../pages/DataDeletionPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage'
+import { SocioAccountRegistrationPage } from '../pages/SocioAccountRegistrationPage'
+import { SocioJoinPage } from '../pages/SocioJoinPage'
 import { TermsPage } from '../pages/TermsPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
@@ -47,6 +49,22 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/asociarme',
+    element: (
+      <PublicOnlyRoute>
+        <SocioJoinPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  {
+    path: '/registro-socio',
+    element: (
+      <PublicOnlyRoute>
+        <SocioAccountRegistrationPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  {
     path: '/dashboard',
     element: (
       <ProtectedRoute>
@@ -66,7 +84,11 @@ export const router = createBrowserRouter([
       { path: 'institucional', element: <InstitucionalPage /> },
       { path: 'capacitaciones', element: <CapacitacionesPage /> },
       { path: 'data-tecnica', element: <DataTecnicaPage /> },
-      { path: 'perfil', element: <PerfilSocioPage /> },
+      { path: 'perfil', element: (
+          <AdminOnlyRoute>
+            <PerfilSocioPage />
+          </AdminOnlyRoute>
+        ) },
       { path: 'colegas', element: <BuscarColegasPage /> },
       {
         path: 'admin/cuotas',

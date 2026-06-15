@@ -105,6 +105,12 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
 
         <div className="hidden flex-shrink-0 items-center justify-end gap-2 lg:flex lg:basis-[24%]">
           <Link
+            to="/asociarme"
+            className="whitespace-nowrap rounded-full border border-sky-300/35 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-sky-100 transition hover:border-sky-200 hover:bg-white/8 hover:text-white"
+          >
+            Asociarme
+          </Link>
+          <Link
             to="/login"
             className="whitespace-nowrap rounded-full bg-cyan-400 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-950 shadow-sm transition hover:bg-cyan-300"
           >
@@ -142,6 +148,20 @@ export function PublicHeader({ navItems }: PublicHeaderProps) {
                 {displayLabel(item.label)}
               </a>
             ))}
+            <Link
+              to="/asociarme"
+              className="inline-flex w-fit rounded-full border border-sky-300/35 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-sky-100 transition hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Asociarme
+            </Link>
+            <Link
+              to="/registro-socio"
+              className="inline-flex w-fit rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Activar cuenta
+            </Link>
             <Link
               to="/login"
               className="mt-2 inline-flex w-fit rounded-full bg-cyan-400 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-300"

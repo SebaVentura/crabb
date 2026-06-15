@@ -1,20 +1,20 @@
 import { useState, type ReactNode } from 'react'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
-import type { SocioParaRecomendar } from '../../types/colegas'
+import type { Colega } from '../../types/colegas'
 import { enlaceWhatsAppColega } from '../../utils/whatsappColega'
 
 type Props = {
-  resultados: SocioParaRecomendar[]
+  resultados: Colega[]
   cargando?: boolean
 }
 
-function localidadBreve(colega: SocioParaRecomendar) {
+function localidadBreve(colega: Colega) {
   const partes = [colega.localidad, colega.direccion].filter(Boolean)
   return partes.join(' · ') || '—'
 }
 
-function ModalDetalleColega({ colega, onClose }: { colega: SocioParaRecomendar; onClose: () => void }) {
+function ModalDetalleColega({ colega, onClose }: { colega: Colega; onClose: () => void }) {
   const rows: [string, string][] = [
     ['Nombre / Razón social', colega.nombreRazonSocial],
     ['Rubro', colega.rubro],
@@ -70,7 +70,7 @@ function AccionesFila({
   colega,
   onVer,
 }: {
-  colega: SocioParaRecomendar
+  colega: Colega
   onVer: () => void
 }) {
   const waUrl = colega.telefono
@@ -104,7 +104,7 @@ function AccionesFila({
 }
 
 export function TablaColegas({ resultados, cargando = false }: Props) {
-  const [detalle, setDetalle] = useState<SocioParaRecomendar | null>(null)
+  const [detalle, setDetalle] = useState<Colega | null>(null)
 
   let contenido: ReactNode
 

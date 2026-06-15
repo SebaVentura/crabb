@@ -12,6 +12,7 @@ import {
 } from '../features/gestion-cobranzas/components/GestionCobranzasProgresoPanel'
 import { GestionCobranzasResumenCards } from '../features/gestion-cobranzas/components/GestionCobranzasResumenCards'
 import { GestionCobranzasSociosTable } from '../features/gestion-cobranzas/components/GestionCobranzasSociosTable'
+import { GestionCobranzasWhatsAppTemplates } from '../features/gestion-cobranzas/components/GestionCobranzasWhatsAppTemplates'
 import { useGestionCobranzasEnvio } from '../features/gestion-cobranzas/hooks/useGestionCobranzasEnvio'
 
 export function AdminGestionCobranzasPage() {
@@ -35,6 +36,8 @@ export function AdminGestionCobranzasPage() {
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
         {BANNER_SIMULACION}
       </div>
+
+      <GestionCobranzasWhatsAppTemplates />
 
       {envio.loadError ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{envio.loadError}</div>

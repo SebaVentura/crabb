@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { collectionsService } from '../../../services/collectionsService'
 import { CAMPANIA_DEFAULT_ID, CAMPANIAS_COBRANZA, getCampaniaById, INTERVALO_ENVIO_MS, COUNTDOWN_TICK_MS } from '../constants'
 import { gestionCobranzasService } from '../services/gestionCobranzasService'
 import type {
@@ -57,6 +58,10 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const [filtroDeuda, setFiltroDeuda] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [campaniaId, setCampaniaId] = useState<CampaniaCobranzaId>(CAMPANIA_DEFAULT_ID)
+  const [campanias, setCampanias] = useState(CAMPANIAS_COBRANZA)
+  const [totalActivosCount, setTotalActivosCount] = useState(0)
+  const [sociosConDeudaCount, setSociosConDeudaCount] = useState(0)
+  const [backendPreview, setBackendPreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -139,7 +144,26 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     setLoadError(null)
 
     try {
-      const hist = await gestionCobranzasService.obtenerHistorial()
+      const [summary, hist] = await Promise.all([
+        collectionsService.getSummary(),
+        gestionCobranzasService.obtenerHistorial(),
+      ])
+
+      setTotalActivosCount(summary.totalActivos)
+      setSociosConDeudaCount(summary.sociosConDeuda)
+
+      if (summary.campaigns.length > 0) {
+        setCampanias(
+          summary.campaigns.map((campaign) => ({
+            id: campaign.id as CampaniaCobranzaId,
+            label: campaign.label,
+            descripcion: campaign.descripcion,
+            tono: campaign.tono,
+            template: campaign.template,
+          })),
+        )
+      }
+
       setHistorial(hist)
       setUltimoEnvio(hist[0] ?? null)
       await loadCandidatos()
@@ -165,9 +189,20 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     return () => window.clearTimeout(timeoutId)
   }, [busqueda, filtroDeuda, loadCandidatos])
 
-  const sociosConDeuda = useMemo(() => members.length, [members])
+  const sociosConDeuda = useMemo(
+    () => (sociosConDeudaCount > 0 ? sociosConDeudaCount : members.length),
+    [members.length, sociosConDeudaCount],
+  )
 
-  const totalActivos = useMemo(() => members.length, [members])
+  const totalActivos = useMemo(
+    () => (totalActivosCount > 0 ? totalActivosCount : members.length),
+    [members.length, totalActivosCount],
+  )
+
+  const campaniaSeleccionada = useMemo(
+    () => campanias.find((item) => item.id === campaniaId) ?? getCampaniaById(campaniaId),
+    [campaniaId, campanias],
+  )
 
   const seleccionados = useMemo(
     () =>
@@ -176,6 +211,40 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
         .filter((item): item is SocioCobranza => item !== undefined),
     [selectedIds, selectedMembersById],
   )
+
+  useEffect(() => {
+    let active = true
+
+    const socio = seleccionados.find((member) => validatePhone(member.telefono).valido)
+      ?? members.find((member) => validatePhone(member.telefono).valido)
+
+    collectionsService
+      .previewMessage(campaniaId, socio?.id)
+      .then((result) => {
+        if (active) setBackendPreview(result.renderedMessage || null)
+      })
+      .catch(() => {
+        if (!active) return
+        const fallbackSocio = socio ?? members[0]
+        setBackendPreview(
+          fallbackSocio
+            ? formatReminderMessage(fallbackSocio, campaniaSeleccionada.template)
+            : null,
+        )
+      })
+
+    return () => {
+      active = false
+    }
+  }, [campaniaId, campaniaSeleccionada.template, members, seleccionados])
+
+  const ejemploPreview = useMemo(() => {
+    if (backendPreview) return backendPreview
+
+    const elegible = seleccionados.find((member) => validatePhone(member.telefono).valido)
+    const socio = elegible ?? members.find((member) => validatePhone(member.telefono).valido)
+    return socio ? formatReminderMessage(socio, campaniaSeleccionada.template) : null
+  }, [backendPreview, members, seleccionados, campaniaSeleccionada.template])
 
   const seleccionStats = useMemo(() => {
     let validos = 0
@@ -186,14 +255,6 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     }
     return { seleccionados: seleccionados.length, validos, invalidos }
   }, [seleccionados])
-
-  const campaniaSeleccionada = useMemo(() => getCampaniaById(campaniaId), [campaniaId])
-
-  const ejemploPreview = useMemo(() => {
-    const elegible = seleccionados.find((member) => validatePhone(member.telefono).valido)
-    const socio = elegible ?? members.find((member) => validatePhone(member.telefono).valido)
-    return socio ? formatReminderMessage(socio, campaniaSeleccionada.template) : null
-  }, [members, seleccionados, campaniaSeleccionada.template])
 
   const setCampaniaSeleccionada = useCallback(
     (id: CampaniaCobranzaId) => {
@@ -583,7 +644,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     seleccionStats,
     ejemploPreview,
     campaniaSeleccionada,
-    campanias: CAMPANIAS_COBRANZA,
+    campanias,
     setCampaniaSeleccionada,
     intervalMs: INTERVALO_ENVIO_MS,
     toggleSeleccion,

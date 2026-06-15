@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import heroBlueprintCar from '../assets/hero-blueprint-car.png'
 import { BenefitsGrid } from '../components/public/BenefitsGrid'
 import { ContactCommunitySection } from '../components/public/ContactCommunitySection'
@@ -264,6 +265,28 @@ export function LandingPage() {
               visual={landing.hero.visual}
               kpis={heroKpis}
             />
+
+            <div className="relative z-10 mx-auto -mt-2 w-full max-w-7xl px-6 pb-8 lg:px-8">
+              <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-200">
+                  ¿Querés formar parte de CRABB o acceder como socio?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/asociarme"
+                    className="inline-flex rounded-full bg-sky-400/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#06213c] transition hover:bg-sky-300"
+                  >
+                    Asociarme
+                  </Link>
+                  <Link
+                    to="/registro-socio"
+                    className="inline-flex rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-100 transition hover:bg-white/10"
+                  >
+                    Activar cuenta de socio
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
 
           <BenefitsGrid services={benefitCards} />

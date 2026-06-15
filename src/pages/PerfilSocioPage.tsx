@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card'
 import { useAuth } from '../hooks/useAuth'
 import { ApiError } from '../lib/apiClient'
 import { sociosService, type SocioPayload } from '../services/sociosService'
+import { isAdminRole } from '../utils/adminAccess'
 import type { CategoriaSocio, CondicionSocio, EstadoCuotaSocio, EstadoSocio, Socio } from '../types/socios'
 import { exportSociosCsv } from '../utils/exportSociosCsv'
 import { formatPhone } from '../utils/formatPhone'
@@ -67,8 +68,7 @@ const ESTADO_CUOTA_LABELS: Record<EstadoCuotaSocio, string> = {
 
 export function PerfilSocioPage() {
   const { user } = useAuth()
-  const role = user?.role
-  const isAdminUser = role === 'admin' || role === 'superadmin'
+  const isAdminUser = isAdminRole(user?.role)
 
   const [socios, setSocios] = useState<Socio[]>([])
   const [totalSocios, setTotalSocios] = useState(0)
@@ -412,7 +412,7 @@ export function PerfilSocioPage() {
         </Card>
       ) : null}
 
-      {import.meta.env.DEV && user && !role ? (
+      {import.meta.env.DEV && user && !user.role ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           Usuario autenticado sin role. La acción de importar se oculta por seguridad.
         </div>
