@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import heroBlueprintCar from '../assets/hero-blueprint-car.png'
-import { BenefitsGrid } from '../components/public/BenefitsGrid'
+import { AssociationSection } from '../components/public/AssociationSection'
 import { ContactCommunitySection } from '../components/public/ContactCommunitySection'
-import {
-  FeaturedSectionsGrid,
-  type FeaturedSection,
-} from '../components/public/FeaturedSectionsGrid'
+import { InstitutionalServicesSection } from '../components/public/InstitutionalServicesSection'
 import { PublicFooter } from '../components/public/PublicFooter'
 import { PublicHeader } from '../components/public/PublicHeader'
 import { PublicHero } from '../components/public/PublicHero'
@@ -108,99 +104,6 @@ export function LandingPage() {
   const visibleContact = content.visibility.show_contact
   const visibleSocialLinks = content.visibility.show_social_links
 
-  const serviceFallbackByIndex = [
-    { icon: 'representacion' as const, cta: { label: 'Ver institucional', url: '/institucional' } },
-    { icon: 'capacitacion' as const, cta: { label: 'Ver capacitaciones', url: TRAINING_EXTERNAL_URL } },
-    { icon: 'data' as const, cta: { label: 'Explorar data tecnica', url: '/data-tecnica' } },
-    { icon: 'red' as const, cta: { label: 'Contactar a CRABB', url: '/contacto' } },
-  ]
-
-  const isUnsafePublicHref = (href?: string | null) => {
-    if (!href) return true
-
-    const normalized = href.trim().toLowerCase()
-
-    return (
-      normalized.includes('admin') ||
-      normalized.includes('/#/admin') ||
-      normalized.includes('/admin') ||
-      normalized.includes('login')
-    )
-  }
-
-  const isTrainingService = (service: InstitutionalContent['landing']['services'][number]) => {
-    const trainingText = `${service.title} ${service.cta_label ?? ''} ${service.cta_href ?? ''} ${service.icon ?? ''}`
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-
-    return trainingText.includes('capacitacion') || trainingText.includes('capacitaciones')
-  }
-
-  const sortedVisibleServices = [...landing.services]
-    .filter((service) => service.visible !== false)
-    .sort((a, b) => {
-      const aOrder = a.order ?? Number.MAX_SAFE_INTEGER
-      const bOrder = b.order ?? Number.MAX_SAFE_INTEGER
-      return aOrder - bOrder
-    })
-
-  const benefitCards = sortedVisibleServices.slice(0, 4).map((service, index) => {
-    const fallbackConfig = serviceFallbackByIndex[index]
-    const safeHref = isTrainingService(service)
-      ? TRAINING_EXTERNAL_URL
-      : isUnsafePublicHref(service.cta_href)
-      ? fallbackConfig?.cta.url
-      : service.cta_href
-
-    return {
-      ...service,
-      icon: service.icon ?? fallbackConfig?.icon ?? 'representacion',
-      cta: {
-        label: service.cta_label || fallbackConfig?.cta.label || 'Ver mas',
-        url: safeHref || fallbackConfig?.cta.url || '/institucional',
-      },
-    }
-  })
-
-  const featuredSections: FeaturedSection[] = [
-    {
-      key: 'campana',
-      title: landing.campaign.title,
-      description: landing.campaign.description,
-      items: landing.campaign.items,
-      cta: landing.campaign.cta,
-    },
-    {
-      key: 'data-tecnica',
-      title: landing.data_tecnica.title,
-      description: landing.data_tecnica.description,
-      items: landing.data_tecnica.items,
-      cta: { label: 'Data tecnica', url: '#data-tecnica' },
-    },
-    {
-      key: 'capacitaciones',
-      title: landing.capacitaciones.title,
-      description: landing.capacitaciones.description,
-      items: landing.capacitaciones.items,
-      cta: { label: 'Capacitaciones', url: TRAINING_EXTERNAL_URL },
-    },
-    {
-      key: 'auxilio',
-      title: landing.crabb_auxilio.title,
-      description: landing.crabb_auxilio.description,
-      items: landing.crabb_auxilio.items,
-      cta: { label: 'CRABB Auxilio', url: '#contacto' },
-    },
-    {
-      key: 'opportunities',
-      title: landing.opportunities.title,
-      description: landing.opportunities.description,
-      items: landing.opportunities.items,
-      cta: { label: 'Oportunidades', url: '#contacto' },
-    },
-  ]
-
   const heroKpis = []
 
   if (content.visibility.show_members_summary && content.institutional_page.members_summary) {
@@ -230,7 +133,7 @@ export function LandingPage() {
           aria-hidden="true"
         />
 
-        {/* Grilla técnica única. No repetir esta grilla dentro de PublicHero, BenefitsGrid ni FeaturedSectionsGrid. */}
+        {/* Grilla técnica única. No repetir dentro de secciones hijas. */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.18)_1px,transparent_1px)] [background-size:48px_48px]"
           aria-hidden="true"
@@ -265,33 +168,11 @@ export function LandingPage() {
               visual={landing.hero.visual}
               kpis={heroKpis}
             />
-
-            <div className="relative z-10 mx-auto -mt-2 w-full max-w-7xl px-6 pb-8 lg:px-8">
-              <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-200">
-                  ¿Querés formar parte de CRABB o acceder como socio?
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    to="/asociarme"
-                    className="inline-flex rounded-full bg-sky-400/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#06213c] transition hover:bg-sky-300"
-                  >
-                    Asociarme
-                  </Link>
-                  <Link
-                    to="/registro-socio"
-                    className="inline-flex rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-100 transition hover:bg-white/10"
-                  >
-                    Activar cuenta de socio
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <BenefitsGrid services={benefitCards} />
+          <InstitutionalServicesSection />
 
-          <FeaturedSectionsGrid sections={featuredSections} />
+          <AssociationSection />
         </div>
       </div>
 

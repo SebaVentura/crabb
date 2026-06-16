@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import type { InstitutionalContact, LandingFinalCta, SocialLink } from '../../types/institutional'
 import { PublicActionLink } from './PublicActionLink'
 
@@ -230,29 +229,6 @@ export function ContactCommunitySection({
                   link={finalCta.secondary_cta}
                   className="inline-flex items-center justify-center rounded-full border border-white/24 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2747]"
                 />
-              </div>
-
-              <div className="rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">
-                  Asociación y acceso
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-blue-50/90">
-                  Sumate a CRABB o activá tu cuenta si ya figurás en el padrón de socios.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    to="/asociarme"
-                    className="rounded-full border border-white/18 bg-white/[0.06] px-3.5 py-1.5 text-xs font-medium text-blue-50 transition hover:border-white/34 hover:bg-white/[0.14]"
-                  >
-                    Asociarme
-                  </Link>
-                  <Link
-                    to="/registro-socio"
-                    className="rounded-full border border-white/18 bg-white/[0.06] px-3.5 py-1.5 text-xs font-medium text-blue-50 transition hover:border-white/34 hover:bg-white/[0.14]"
-                  >
-                    Activar cuenta de socio
-                  </Link>
-                </div>
               </div>
 
               {showSocialLinks ? (

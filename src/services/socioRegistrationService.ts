@@ -8,8 +8,8 @@ import type {
   SocioJoinRequestResponse,
 } from '../types/socioRegistration'
 
-const JOIN_REQUEST_ENDPOINT = '/api/public/socios/solicitudes'
-const ACCOUNT_ACTIVATION_ENDPOINT = '/api/auth/register-socio'
+const JOIN_REQUEST_ENDPOINT = '/public/socios/solicitudes'
+const ACCOUNT_ACTIVATION_ENDPOINT = '/auth/register-socio'
 
 const RATE_LIMIT_MESSAGE =
   'Se realizaron demasiados intentos. Probá nuevamente en unos minutos.'
