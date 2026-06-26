@@ -172,6 +172,10 @@ export function GestionCobranzasWhatsAppTemplates() {
               {saveState === 'saved' ? <span className="text-sm text-emerald-700">Guardado</span> : null}
               {saveState === 'error' && saveError ? <span className="text-sm text-rose-700">{saveError}</span> : null}
             </div>
+            <p className="text-xs text-slate-500">
+              Este editor guarda borradores locales de simulación. El envío real por WhatsApp usa templates aprobadas por el
+              proveedor (Zavu), configuradas en cada campaña de cobranza.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">

@@ -7,6 +7,47 @@ type Props = {
   onSelect: (id: CampaniaCobranzaId) => void
 }
 
+function CampaignBadges({ campania }: { campania: CampaniaCobranza }) {
+  const badges: Array<{ key: string; label: string; className: string }> = []
+
+  if (campania.realSendEnabled) {
+    badges.push({
+      key: 'approved',
+      label: 'Template aprobada',
+      className: 'bg-emerald-100 text-emerald-800',
+    })
+  } else {
+    badges.push({
+      key: 'simulation',
+      label: 'Solo simulación',
+      className: 'bg-amber-100 text-amber-800',
+    })
+  }
+
+  if (campania.provider) {
+    badges.push({
+      key: 'provider',
+      label: `Provider: ${campania.provider}`,
+      className: 'bg-slate-100 text-slate-700',
+    })
+  }
+
+  if (badges.length === 0) return null
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {badges.map((badge) => (
+        <span
+          key={badge.key}
+          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export function GestionCobranzasCampaniaSelector({ campanias, selectedId, disabled, onSelect }: Props) {
   return (
     <section aria-labelledby="campania-cobranza-title">
@@ -38,6 +79,13 @@ export function GestionCobranzasCampaniaSelector({ campanias, selectedId, disabl
               </div>
               <p className="mt-2 text-sm text-slate-600">{campania.descripcion}</p>
               <p className="mt-2 text-xs text-slate-500">Tono: {campania.tono}</p>
+              <CampaignBadges campania={campania} />
+              {campania.templateId ? (
+                <p className="mt-2 text-xs text-slate-500">Template ID: {campania.templateId}</p>
+              ) : null}
+              {campania.disabledReason ? (
+                <p className="mt-2 text-xs text-rose-700">{campania.disabledReason}</p>
+              ) : null}
             </button>
           )
         })}

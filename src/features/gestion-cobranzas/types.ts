@@ -1,4 +1,4 @@
-export type CampaniaCobranzaId = 'inicio_mes' | 'cuota_pendiente' | 'socio_moroso' | 'ultimo_aviso'
+export type CampaniaCobranzaId = string
 
 export type CampaniaCobranza = {
   id: CampaniaCobranzaId
@@ -6,6 +6,11 @@ export type CampaniaCobranza = {
   descripcion: string
   tono: string
   template: string
+  realSendEnabled?: boolean
+  provider?: string | null
+  templateId?: string | null
+  requiredVariables?: string[]
+  disabledReason?: string | null
 }
 
 export type EstadoCuotaCobranza = 'moroso' | 'vencido' | 'pendiente'

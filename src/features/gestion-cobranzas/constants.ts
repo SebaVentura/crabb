@@ -44,7 +44,7 @@ export const CAMPANIAS_COBRANZA: CampaniaCobranza[] = [
 ]
 
 export function getCampaniaById(id: CampaniaCobranzaId): CampaniaCobranza {
-  return CAMPANIAS_COBRANZA.find((c) => c.id === id) ?? CAMPANIAS_COBRANZA[1]
+  return CAMPANIAS_COBRANZA.find((c) => c.id === id) ?? CAMPANIAS_COBRANZA[1] ?? CAMPANIAS_COBRANZA[0]
 }
 
 export const BANNER_SIMULACION = 'Modo simulación · no se enviarán mensajes reales'

@@ -170,7 +170,7 @@ export const cuotasService = {
     return mapResumen(response)
   },
 
-  async getDeudores(params?: Pick<CuotasFilters, 'search' | 'periodo' | 'page' | 'per_page'>): Promise<CuotasListResponse> {
+  async getDeudores(params?: Pick<CuotasFilters, 'search' | 'periodo' | 'estado' | 'page' | 'per_page'>): Promise<CuotasListResponse> {
     const response = await apiRequest<unknown>(`/admin/cuotas/deudores${buildQuery(params)}`)
     return mapListResponse(response)
   },

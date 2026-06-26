@@ -11,6 +11,7 @@ import {
   GestionCobranzasResumenFinal,
 } from '../features/gestion-cobranzas/components/GestionCobranzasProgresoPanel'
 import { GestionCobranzasResumenCards } from '../features/gestion-cobranzas/components/GestionCobranzasResumenCards'
+import { GestionCobranzasSendTestPanel } from '../features/gestion-cobranzas/components/GestionCobranzasSendTestPanel'
 import { GestionCobranzasSociosTable } from '../features/gestion-cobranzas/components/GestionCobranzasSociosTable'
 import { GestionCobranzasWhatsAppTemplates } from '../features/gestion-cobranzas/components/GestionCobranzasWhatsAppTemplates'
 import { useGestionCobranzasEnvio } from '../features/gestion-cobranzas/hooks/useGestionCobranzasEnvio'
@@ -45,7 +46,7 @@ export function AdminGestionCobranzasPage() {
 
       {envio.isLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-md">
-          Cargando socios reales del padrón…
+          Cargando socios con deuda…
         </div>
       ) : null}
 
@@ -77,8 +78,14 @@ export function AdminGestionCobranzasPage() {
               invalidos={envio.seleccionStats.invalidos}
               intervalMs={envio.intervalMs}
               ejemploPreview={envio.ejemploPreview}
+              messagePreview={envio.messagePreview}
               puedeConfirmar={envio.seleccionStats.validos > 0}
+              realSendEnabled={envio.realSendEnabled}
               isSending={envio.isSending}
+              isDryRunLoading={envio.isDryRunLoading}
+              dryRunError={envio.dryRunError}
+              dryRunResult={envio.dryRunResult}
+              onValidarDryRun={() => void envio.validarEnvioSeleccionadosDryRun()}
               onConfirmar={() => void envio.confirmarYComenzarEnvio()}
               onVolver={envio.volverDesdeConfirmacion}
             />
@@ -126,6 +133,19 @@ export function AdminGestionCobranzasPage() {
               <GestionCobranzasMensajePreview
                 campania={envio.campaniaSeleccionada}
                 ejemploRenderizado={envio.ejemploPreview}
+                messagePreview={envio.messagePreview}
+                isPreviewLoading={envio.isPreviewLoading}
+                previewError={envio.previewError}
+              />
+              <GestionCobranzasSendTestPanel
+                testPhone={envio.testPhone}
+                onTestPhoneChange={envio.setTestPhone}
+                socioReferencia={envio.socioParaPreview}
+                isLoading={envio.isSendTestLoading}
+                error={envio.sendTestError}
+                result={envio.sendTestResult}
+                disabled={uiLocked}
+                onEnviarPrueba={() => void envio.enviarPruebaDryRun()}
               />
               <div>
                 <button

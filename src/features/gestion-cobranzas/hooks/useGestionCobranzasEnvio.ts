@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { collectionsMessagesService } from '../../../services/collectionsMessagesService'
 import { collectionsService } from '../../../services/collectionsService'
-import { CAMPANIA_DEFAULT_ID, CAMPANIAS_COBRANZA, getCampaniaById, INTERVALO_ENVIO_MS, COUNTDOWN_TICK_MS } from '../constants'
+import type {
+  CollectionMessagePreviewResult,
+  CollectionSendSelectedResult,
+  CollectionSendTestResult,
+} from '../../../types/collectionsMessages'
+import {
+  CAMPANIA_DEFAULT_ID,
+  CAMPANIAS_COBRANZA,
+  COUNTDOWN_TICK_MS,
+  getCampaniaById,
+  INTERVALO_ENVIO_MS,
+} from '../constants'
 import { gestionCobranzasService } from '../services/gestionCobranzasService'
 import type {
   CampaniaCobranzaId,
@@ -12,6 +24,7 @@ import type {
   SendProgress,
   SocioCobranza,
 } from '../types'
+import { mapApiCampaignToCampania } from '../utils/mapApiCampaignToCampania'
 import { formatReminderMessage } from '../utils/formatReminderMessage'
 import { validatePhone } from '../utils/validatePhone'
 
@@ -32,6 +45,11 @@ function estadoEnvioInicial(seleccionado: boolean, telefono: string): EstadoEnvi
   if (!seleccionado) return 'no_seleccionado'
   if (!validatePhone(telefono).valido) return 'numero_invalido'
   return 'pendiente_envio'
+}
+
+function toSocioId(value: string): number | string {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : value
 }
 
 export function useGestionCobranzasEnvio(admin: AdminInfo) {
@@ -60,8 +78,16 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const [campaniaId, setCampaniaId] = useState<CampaniaCobranzaId>(CAMPANIA_DEFAULT_ID)
   const [campanias, setCampanias] = useState(CAMPANIAS_COBRANZA)
   const [totalActivosCount, setTotalActivosCount] = useState(0)
-  const [sociosConDeudaCount, setSociosConDeudaCount] = useState(0)
-  const [backendPreview, setBackendPreview] = useState<string | null>(null)
+  const [messagePreview, setMessagePreview] = useState<CollectionMessagePreviewResult | null>(null)
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [testPhone, setTestPhone] = useState('')
+  const [sendTestResult, setSendTestResult] = useState<CollectionSendTestResult | null>(null)
+  const [isSendTestLoading, setIsSendTestLoading] = useState(false)
+  const [sendTestError, setSendTestError] = useState<string | null>(null)
+  const [dryRunResult, setDryRunResult] = useState<CollectionSendSelectedResult | null>(null)
+  const [isDryRunLoading, setIsDryRunLoading] = useState(false)
+  const [dryRunError, setDryRunError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -125,9 +151,9 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
         })
       } catch {
         if (options?.showTableLoading) {
-          setSearchError('No se pudieron buscar socios del padrón.')
+          setSearchError('No se pudieron buscar socios con deuda.')
         } else {
-          setLoadError('No se pudieron cargar los socios del padrón.')
+          setLoadError('No se pudieron cargar los socios con deuda.')
           setMembers([])
         }
       } finally {
@@ -144,18 +170,22 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     setLoadError(null)
 
     try {
-      const [summary, hist] = await Promise.all([
+      const [summary, hist, apiCampaigns] = await Promise.all([
         collectionsService.getSummary(),
         gestionCobranzasService.obtenerHistorial(),
+        collectionsMessagesService.getCampaigns().catch(() => []),
       ])
 
       setTotalActivosCount(summary.totalActivos)
-      setSociosConDeudaCount(summary.sociosConDeuda)
 
-      if (summary.campaigns.length > 0) {
+      if (apiCampaigns.length > 0) {
+        const mapped = apiCampaigns.map(mapApiCampaignToCampania)
+        setCampanias(mapped)
+        setCampaniaId((current) => (mapped.some((item) => item.id === current) ? current : mapped[0].id))
+      } else if (summary.campaigns.length > 0) {
         setCampanias(
           summary.campaigns.map((campaign) => ({
-            id: campaign.id as CampaniaCobranzaId,
+            id: campaign.id,
             label: campaign.label,
             descripcion: campaign.descripcion,
             tono: campaign.tono,
@@ -189,10 +219,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     return () => window.clearTimeout(timeoutId)
   }, [busqueda, filtroDeuda, loadCandidatos])
 
-  const sociosConDeuda = useMemo(
-    () => (sociosConDeudaCount > 0 ? sociosConDeudaCount : members.length),
-    [members.length, sociosConDeudaCount],
-  )
+  const sociosConDeuda = members.length
 
   const totalActivos = useMemo(
     () => (totalActivosCount > 0 ? totalActivosCount : members.length),
@@ -212,39 +239,55 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     [selectedIds, selectedMembersById],
   )
 
+  const socioParaPreview = useMemo(() => {
+    const seleccionado = seleccionados[0] ?? members[0]
+    return seleccionado ?? null
+  }, [members, seleccionados])
+
   useEffect(() => {
     let active = true
 
-    const socio = seleccionados.find((member) => validatePhone(member.telefono).valido)
-      ?? members.find((member) => validatePhone(member.telefono).valido)
+    if (!socioParaPreview) {
+      setMessagePreview(null)
+      setPreviewError(null)
+      return () => {
+        active = false
+      }
+    }
 
-    collectionsService
-      .previewMessage(campaniaId, socio?.id)
+    setIsPreviewLoading(true)
+    setPreviewError(null)
+
+    collectionsMessagesService
+      .previewMessage({
+        campaign_key: campaniaId,
+        socio_id: toSocioId(socioParaPreview.id),
+      })
       .then((result) => {
-        if (active) setBackendPreview(result.renderedMessage || null)
+        if (!active) return
+        setMessagePreview(result)
       })
       .catch(() => {
         if (!active) return
-        const fallbackSocio = socio ?? members[0]
-        setBackendPreview(
-          fallbackSocio
-            ? formatReminderMessage(fallbackSocio, campaniaSeleccionada.template)
-            : null,
-        )
+        setMessagePreview(null)
+        setPreviewError('No se pudo obtener la vista previa desde el servidor.')
+      })
+      .finally(() => {
+        if (active) setIsPreviewLoading(false)
       })
 
     return () => {
       active = false
     }
-  }, [campaniaId, campaniaSeleccionada.template, members, seleccionados])
+  }, [campaniaId, socioParaPreview])
 
   const ejemploPreview = useMemo(() => {
-    if (backendPreview) return backendPreview
+    if (messagePreview?.simulationMessage) return messagePreview.simulationMessage
 
     const elegible = seleccionados.find((member) => validatePhone(member.telefono).valido)
     const socio = elegible ?? members.find((member) => validatePhone(member.telefono).valido)
     return socio ? formatReminderMessage(socio, campaniaSeleccionada.template) : null
-  }, [backendPreview, members, seleccionados, campaniaSeleccionada.template])
+  }, [messagePreview, members, seleccionados, campaniaSeleccionada.template])
 
   const seleccionStats = useMemo(() => {
     let validos = 0
@@ -256,10 +299,14 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     return { seleccionados: seleccionados.length, validos, invalidos }
   }, [seleccionados])
 
+  const realSendEnabled = campaniaSeleccionada.realSendEnabled === true
+
   const setCampaniaSeleccionada = useCallback(
     (id: CampaniaCobranzaId) => {
       if (isSending || isPreparing || fase !== 'inicial') return
       setCampaniaId(id)
+      setSendTestResult(null)
+      setDryRunResult(null)
     },
     [fase, isPreparing, isSending],
   )
@@ -354,11 +401,62 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     if (fase === 'enviando') return
     if (selectedIds.size === 0) return
 
+    setDryRunResult(null)
+    setDryRunError(null)
     setIsPreparing(true)
     syncEstadosEnvio(selectedIds)
     setFase('confirmacion')
     setIsPreparing(false)
   }, [fase, isPreparing, isSending, selectedIds, syncEstadosEnvio])
+
+  const enviarPruebaDryRun = useCallback(async () => {
+    const phone = testPhone.trim() || socioParaPreview?.telefono?.trim() || ''
+    if (!phone) {
+      setSendTestError('Ingresá un teléfono para la prueba.')
+      return
+    }
+
+    setIsSendTestLoading(true)
+    setSendTestError(null)
+    setSendTestResult(null)
+
+    try {
+      const nombre = socioParaPreview?.nombre?.split(' ')[0] ?? 'Socio'
+      const result = await collectionsMessagesService.sendTest({
+        phone,
+        campaign_key: campaniaId,
+        params: { nombre },
+        dry_run: true,
+      })
+      setSendTestResult(result)
+    } catch {
+      setSendTestError('No se pudo ejecutar la prueba (dry run).')
+    } finally {
+      setIsSendTestLoading(false)
+    }
+  }, [campaniaId, socioParaPreview, testPhone])
+
+  const validarEnvioSeleccionadosDryRun = useCallback(async () => {
+    if (selectedIds.size === 0) return
+
+    setIsDryRunLoading(true)
+    setDryRunError(null)
+    setDryRunResult(null)
+
+    try {
+      const result = await collectionsMessagesService.sendSelected({
+        campaign_key: campaniaId,
+        socio_ids: Array.from(selectedIds).map(toSocioId),
+        dry_run: true,
+      })
+      setDryRunResult(result)
+      appendLog(`Validación dry run completada · ${result.results.length} socios`)
+    } catch {
+      setDryRunError('No se pudo validar el envío seleccionado (dry run).')
+    } finally {
+      setIsDryRunLoading(false)
+    }
+  }, [appendLog, campaniaId, selectedIds])
 
   const cancelarCountdown = useCallback(() => {
     if (countdownTimerRef.current !== null) {
@@ -500,7 +598,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
             restantes.some((r) => r.id === m.id) ? { ...m, estadoEnvio: 'cancelado' as const } : m,
           ),
         )
-        progreso.cancelados += restantes.length + (result.ok ? 0 : 0)
+        progreso.cancelados += restantes.length
         if (!result.ok) {
           progreso.errores += 1
           setMembers((prev) =>
@@ -591,6 +689,8 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     setResumenFinal(null)
     setCurrentMember(null)
     setIsCancelled(false)
+    setDryRunResult(null)
+    setSendTestResult(null)
     cancelledRef.current = false
     setSendProgress({ total: 0, enviados: 0, pendientes: 0, errores: 0, cancelados: 0, invalidos: 0 })
     setCampaniaId(CAMPANIA_DEFAULT_ID)
@@ -643,10 +743,25 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     sociosConDeuda,
     seleccionStats,
     ejemploPreview,
+    messagePreview,
+    isPreviewLoading,
+    previewError,
     campaniaSeleccionada,
     campanias,
+    realSendEnabled,
     setCampaniaSeleccionada,
     intervalMs: INTERVALO_ENVIO_MS,
+    testPhone,
+    setTestPhone,
+    sendTestResult,
+    isSendTestLoading,
+    sendTestError,
+    enviarPruebaDryRun,
+    dryRunResult,
+    isDryRunLoading,
+    dryRunError,
+    validarEnvioSeleccionadosDryRun,
+    socioParaPreview,
     toggleSeleccion,
     seleccionarTodos,
     deseleccionarTodos,
