@@ -21,11 +21,12 @@ export function mapCollectionsDebtorToSocioCobranza(debtor: CollectionDebtor): S
   return {
     id: debtor.socioId,
     nombre: debtor.nombre || debtor.taller || 'Socio sin nombre',
+    taller: debtor.taller || undefined,
     telefono: debtor.telefono,
     estadoCuota: mapEstadoCuota(debtor.estadoCuota),
     mesAdeudado: debtor.mesAdeudado || debtor.periodo,
     importeAdeudado: debtor.importe,
     activo: true,
-    estadoEnvio: 'no_seleccionado',
+    estadoEnvio: 'sin_enviar',
   }
 }

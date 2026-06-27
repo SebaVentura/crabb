@@ -59,10 +59,10 @@ export const LABEL_ESTADO_CUOTA: Record<string, string> = {
 }
 
 export const LABEL_ESTADO_ENVIO: Record<string, string> = {
-  no_seleccionado: 'No seleccionado',
-  pendiente_envio: 'Pendiente de envío',
+  sin_enviar: 'Sin enviar',
+  seleccionado: 'Seleccionado',
+  enviando: 'Enviando',
   enviado: 'Enviado',
   error: 'Error',
-  numero_invalido: 'Número inválido',
-  cancelado: 'Cancelado',
+  sin_telefono_valido: 'Sin teléfono válido',
 }

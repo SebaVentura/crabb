@@ -5,11 +5,21 @@ type Props = {
   result: CollectionSendSelectedResult | null
   isLoading: boolean
   error: string | null
+  realSendEnabled: boolean
   disabled?: boolean
   onValidar: () => void
 }
 
-export function GestionCobranzasDryRunPanel({ result, isLoading, error, disabled, onValidar }: Props) {
+export function GestionCobranzasDryRunPanel({
+  result,
+  isLoading,
+  error,
+  realSendEnabled,
+  disabled,
+  onValidar,
+}: Props) {
+  const canValidate = realSendEnabled
+
   return (
     <Card className="border-slate-200 shadow-md" title="Validar envío a seleccionados (dry run)">
       <p className="mb-3 text-sm text-slate-600">
@@ -17,9 +27,15 @@ export function GestionCobranzasDryRunPanel({ result, isLoading, error, disabled
         <code className="rounded bg-slate-100 px-1">dry_run=true</code>.
       </p>
 
+      {!canValidate ? (
+        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Esta campaña todavía no tiene template aprobada para envío real.
+        </p>
+      ) : null}
+
       <button
         type="button"
-        disabled={disabled || isLoading}
+        disabled={disabled || isLoading || !canValidate}
         onClick={onValidar}
         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >

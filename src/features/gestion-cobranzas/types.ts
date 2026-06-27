@@ -16,26 +16,31 @@ export type CampaniaCobranza = {
 export type EstadoCuotaCobranza = 'moroso' | 'vencido' | 'pendiente'
 
 export type EstadoEnvioFila =
-  | 'no_seleccionado'
-  | 'pendiente_envio'
+  | 'sin_enviar'
+  | 'seleccionado'
+  | 'enviando'
   | 'enviado'
   | 'error'
-  | 'numero_invalido'
-  | 'cancelado'
+  | 'sin_telefono_valido'
 
-export type FaseCobranzas = 'inicial' | 'confirmacion' | 'enviando' | 'finalizado' | 'historial'
+/** Alias operativo para estado de envío por socio */
+export type DebtorSendStatus = EstadoEnvioFila
+
+export type FaseCobranzas = 'inicial' | 'enviando' | 'resumen' | 'historial'
 
 export type EstadoFinalCampana = 'Finalizado' | 'Cancelado' | 'Con errores'
 
 export type SocioCobranza = {
   id: string
   nombre: string
+  taller?: string
   telefono: string
   estadoCuota: EstadoCuotaCobranza
   mesAdeudado: string
   importeAdeudado: number
   activo: boolean
   estadoEnvio: EstadoEnvioFila
+  errorEnvio?: string | null
 }
 
 export type LogEntry = {
@@ -58,8 +63,7 @@ export type ResumenCampana = {
   seleccionados: number
   enviados: number
   errores: number
-  cancelados: number
-  invalidos: number
+  omitidos: number
   fechaFin: string
 }
 

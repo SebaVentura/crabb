@@ -50,6 +50,6 @@ export function mapSocioToSocioCobranza(socio: Socio): SocioCobranza | null {
     mesAdeudado: formatMesAdeudado(socio.ultimoPago ?? socio.fechaUltimoPago),
     importeAdeudado: socio.montoCuota > 0 ? socio.montoCuota : 0,
     activo: true,
-    estadoEnvio: 'no_seleccionado',
+    estadoEnvio: 'sin_enviar',
   }
 }

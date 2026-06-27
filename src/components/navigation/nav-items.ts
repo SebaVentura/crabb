@@ -11,6 +11,7 @@ const mainNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { label: 'Gestión de socios', path: '/perfil' },
+  { label: 'Solicitudes de socios', path: '/admin/solicitudes-socios' },
   { label: 'Cuotas de socios', path: '/admin/cuotas' },
   { label: 'Gestión de cobranzas', path: '/admin/gestion-cobranzas' },
   { label: 'Sitio Web', path: '/admin/sitio-web' },

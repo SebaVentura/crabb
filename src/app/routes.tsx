@@ -21,6 +21,7 @@ import { SocioJoinPage } from '../pages/SocioJoinPage'
 import { TermsPage } from '../pages/TermsPage'
 import { BuscarColegasPage } from '../pages/BuscarColegasPage'
 import { PerfilSocioPage } from '../pages/PerfilSocioPage'
+import { SocioSolicitudesPage } from '../pages/SocioSolicitudesPage'
 import { AdminOnlyRoute, ProtectedRoute, PublicOnlyRoute } from './routeGuards'
 
 export const router = createBrowserRouter([
@@ -90,6 +91,14 @@ export const router = createBrowserRouter([
           </AdminOnlyRoute>
         ) },
       { path: 'colegas', element: <BuscarColegasPage /> },
+      {
+        path: 'admin/solicitudes-socios',
+        element: (
+          <AdminOnlyRoute>
+            <SocioSolicitudesPage />
+          </AdminOnlyRoute>
+        ),
+      },
       {
         path: 'admin/cuotas',
         element: (

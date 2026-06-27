@@ -6,6 +6,7 @@ type Props = {
   testPhone: string
   onTestPhoneChange: (value: string) => void
   socioReferencia: SocioCobranza | null
+  realSendEnabled: boolean
   isLoading: boolean
   error: string | null
   result: CollectionSendTestResult | null
@@ -17,18 +18,27 @@ export function GestionCobranzasSendTestPanel({
   testPhone,
   onTestPhoneChange,
   socioReferencia,
+  realSendEnabled,
   isLoading,
   error,
   result,
   disabled,
   onEnviarPrueba,
 }: Props) {
+  const canSendTest = realSendEnabled
+
   return (
     <Card className="border-slate-200 shadow-md" title="Enviar prueba (dry run)">
       <p className="mb-3 text-sm text-slate-600">
         Valida el envío contra la API sin disparar mensajes reales. Siempre se ejecuta con{' '}
         <code className="rounded bg-slate-100 px-1">dry_run=true</code>.
       </p>
+
+      {!canSendTest ? (
+        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Esta campaña todavía no tiene template aprobada para envío real.
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         <label className="block text-sm text-slate-700">
@@ -49,7 +59,7 @@ export function GestionCobranzasSendTestPanel({
 
         <button
           type="button"
-          disabled={disabled || isLoading}
+          disabled={disabled || isLoading || !canSendTest}
           onClick={onEnviarPrueba}
           className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >

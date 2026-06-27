@@ -80,6 +80,26 @@ function normalizeTemplateVariables(value: unknown): Record<string, string> {
   return {}
 }
 
+function extractCampaignRows(response: unknown): unknown[] {
+  const root = asObject(response)
+  const data = extractDataRoot(response)
+
+  const candidates = [
+    root.data,
+    root.campaigns,
+    data,
+    asObject(data).campaigns,
+    asObject(data).items,
+    response,
+  ]
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate
+  }
+
+  return []
+}
+
 function normalizeCampaign(row: unknown): CollectionCampaign | null {
   const source = asObject(row)
   const key = asString(firstDefined(source.key, source.id, source.campaign_key))
@@ -234,13 +254,7 @@ async function fetchAllDebtors(params?: {
 export const collectionsMessagesService = {
   async getCampaigns(): Promise<CollectionCampaign[]> {
     const response = await apiRequest<unknown>('/admin/collections/messages/campaigns')
-    const root = asObject(response)
-    const data = firstDefined(root.data, response)
-    const rows = Array.isArray(data)
-      ? data
-      : Array.isArray(asObject(data).campaigns)
-        ? (asObject(data).campaigns as unknown[])
-        : []
+    const rows = extractCampaignRows(response)
     return rows.map(normalizeCampaign).filter((item): item is CollectionCampaign => item !== null)
   },
 
@@ -259,7 +273,7 @@ export const collectionsMessagesService = {
   },
 
   async sendTest(payload: CollectionSendTestPayload): Promise<CollectionSendTestResult> {
-    const dryRun = payload.dry_run !== false
+    const dryRun = payload.dry_run === true
     const response = await apiRequest<unknown>('/admin/collections/messages/send-test', {
       method: 'POST',
       body: { ...payload, dry_run: dryRun },
@@ -268,7 +282,7 @@ export const collectionsMessagesService = {
   },
 
   async sendSelected(payload: CollectionSendSelectedPayload): Promise<CollectionSendSelectedResult> {
-    const dryRun = payload.dry_run !== false
+    const dryRun = payload.dry_run === true
     const response = await apiRequest<unknown>('/admin/collections/messages/send-selected', {
       method: 'POST',
       body: { ...payload, dry_run: dryRun },

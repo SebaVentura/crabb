@@ -1,17 +1,11 @@
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { useAuth } from '../hooks/useAuth'
-import { BANNER_SIMULACION } from '../features/gestion-cobranzas/constants'
-import { GestionCobranzasCampaniaSelector } from '../features/gestion-cobranzas/components/GestionCobranzasCampaniaSelector'
-import { GestionCobranzasConfirmacionPanel } from '../features/gestion-cobranzas/components/GestionCobranzasConfirmacionPanel'
+import { CobranzasEnvioPanel } from '../features/gestion-cobranzas/components/CobranzasEnvioPanel'
+import { CobranzasPreviewSection } from '../features/gestion-cobranzas/components/CobranzasPreviewSection'
+import { CobranzasTemplateSelect } from '../features/gestion-cobranzas/components/CobranzasTemplateSelect'
+import { CobranzasValidarEnvioPanel } from '../features/gestion-cobranzas/components/CobranzasValidarEnvioPanel'
 import { GestionCobranzasHistorialSection } from '../features/gestion-cobranzas/components/GestionCobranzasHistorialSection'
-import { GestionCobranzasLogPanel } from '../features/gestion-cobranzas/components/GestionCobranzasLogPanel'
-import { GestionCobranzasMensajePreview } from '../features/gestion-cobranzas/components/GestionCobranzasMensajePreview'
-import {
-  GestionCobranzasProgresoPanel,
-  GestionCobranzasResumenFinal,
-} from '../features/gestion-cobranzas/components/GestionCobranzasProgresoPanel'
 import { GestionCobranzasResumenCards } from '../features/gestion-cobranzas/components/GestionCobranzasResumenCards'
-import { GestionCobranzasSendTestPanel } from '../features/gestion-cobranzas/components/GestionCobranzasSendTestPanel'
 import { GestionCobranzasSociosTable } from '../features/gestion-cobranzas/components/GestionCobranzasSociosTable'
 import { GestionCobranzasWhatsAppTemplates } from '../features/gestion-cobranzas/components/GestionCobranzasWhatsAppTemplates'
 import { useGestionCobranzasEnvio } from '../features/gestion-cobranzas/hooks/useGestionCobranzasEnvio'
@@ -24,21 +18,14 @@ export function AdminGestionCobranzasPage() {
   }
 
   const envio = useGestionCobranzasEnvio(admin)
-  const uiLocked = envio.isSending || envio.isPreparing
-  const campaniaLocked = uiLocked || envio.fase !== 'inicial'
+  const uiLocked = envio.isSending
 
   return (
     <div className="space-y-4 md:space-y-6">
       <SectionHeader
-        title="Gestión de cobranzas"
-        subtitle="Desde este módulo podés preparar y enviar recordatorios de pago a socios con cuotas pendientes."
+        title="Cobranzas por WhatsApp"
+        subtitle="Elegí un template, seleccioná socios con deuda y enviá recordatorios por WhatsApp."
       />
-
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
-        {BANNER_SIMULACION}
-      </div>
-
-      <GestionCobranzasWhatsAppTemplates />
 
       {envio.loadError ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{envio.loadError}</div>
@@ -46,7 +33,7 @@ export function AdminGestionCobranzasPage() {
 
       {envio.isLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-md">
-          Cargando socios con deuda…
+          Cargando…
         </div>
       ) : null}
 
@@ -60,121 +47,91 @@ export function AdminGestionCobranzasPage() {
             totalActivos={envio.totalActivos}
             sociosConDeuda={envio.sociosConDeuda}
             seleccionados={envio.seleccionStats.seleccionados}
-            ultimoEnvio={envio.ultimoEnvio}
+            ultimoEnvio={envio.historial[0] ?? null}
           />
 
-          <GestionCobranzasCampaniaSelector
+          <CobranzasTemplateSelect
             campanias={envio.campanias}
             selectedId={envio.campaniaSeleccionada.id}
-            disabled={campaniaLocked}
+            disabled={uiLocked}
             onSelect={envio.setCampaniaSeleccionada}
           />
 
-          {envio.fase === 'confirmacion' ? (
-            <GestionCobranzasConfirmacionPanel
-              campania={envio.campaniaSeleccionada}
-              seleccionados={envio.seleccionStats.seleccionados}
-              validos={envio.seleccionStats.validos}
-              invalidos={envio.seleccionStats.invalidos}
-              intervalMs={envio.intervalMs}
-              ejemploPreview={envio.ejemploPreview}
-              messagePreview={envio.messagePreview}
-              puedeConfirmar={envio.seleccionStats.validos > 0}
-              realSendEnabled={envio.realSendEnabled}
-              isSending={envio.isSending}
-              isDryRunLoading={envio.isDryRunLoading}
-              dryRunError={envio.dryRunError}
-              dryRunResult={envio.dryRunResult}
-              onValidarDryRun={() => void envio.validarEnvioSeleccionadosDryRun()}
-              onConfirmar={() => void envio.confirmarYComenzarEnvio()}
-              onVolver={envio.volverDesdeConfirmacion}
-            />
-          ) : null}
+          <GestionCobranzasSociosTable
+            members={envio.members}
+            selectedIds={envio.selectedIds}
+            busqueda={envio.busqueda}
+            filtroDeuda={envio.filtroDeuda}
+            filtroDestinatarios={envio.filtroDestinatarios}
+            disabled={uiLocked}
+            isSearching={envio.isSearching}
+            searchError={envio.searchError}
+            onBusquedaChange={envio.setBusqueda}
+            onFiltroDeudaChange={envio.setFiltroDeuda}
+            onFiltroDestinatariosChange={envio.setFiltroDestinatarios}
+            onToggle={envio.toggleSeleccion}
+            onSeleccionarPagina={envio.seleccionarPagina}
+            onDeseleccionarPagina={envio.deseleccionarPagina}
+            onSeleccionarTodosFiltrados={envio.seleccionarMiembros}
+            onDeseleccionarTodos={envio.deseleccionarTodos}
+          />
 
-          {envio.fase === 'enviando' ? (
-            <>
-              <GestionCobranzasProgresoPanel
-                campaniaLabel={envio.campaniaSeleccionada.label}
-                progress={envio.sendProgress}
-                currentMember={envio.currentMember}
-                nextSendInMs={envio.nextSendInMs}
-                isCancelled={envio.isCancelled}
-                onCancelar={envio.cancelarEnvio}
-              />
-              <GestionCobranzasLogPanel entries={envio.sendLog} />
-            </>
-          ) : null}
+          <CobranzasPreviewSection
+            campania={envio.campaniaSeleccionada}
+            socio={envio.socioParaPreview}
+            previewText={envio.previewText}
+            messagePreview={envio.messagePreview}
+            isLoading={envio.isPreviewLoading}
+            error={envio.previewError}
+            esSimulacion={envio.previewEsSimulacion}
+          />
 
-          {envio.fase === 'finalizado' && envio.resumenFinal ? (
-            <GestionCobranzasResumenFinal
-              resumen={envio.resumenFinal}
-              isSending={envio.isSending}
-              onVerHistorial={envio.verHistorial}
-              onNuevoEnvio={envio.reiniciarParaNuevoEnvio}
-            />
-          ) : null}
+          <CobranzasValidarEnvioPanel
+            campania={envio.campaniaSeleccionada}
+            socio={envio.socioParaPreview}
+            realSendEnabled={envio.realSendEnabled}
+            isLoading={envio.isSendTestLoading}
+            error={envio.sendTestError}
+            result={envio.sendTestResult}
+            testPhoneOverride={envio.testPhoneOverride}
+            onTestPhoneOverrideChange={envio.setTestPhoneOverride}
+            disabled={uiLocked}
+            onValidar={() => void envio.validarEnvio()}
+          />
 
-          {envio.fase === 'inicial' ? (
-            <>
-              <GestionCobranzasSociosTable
-                members={envio.members}
-                selectedIds={envio.selectedIds}
-                busqueda={envio.busqueda}
-                filtroDeuda={envio.filtroDeuda}
-                disabled={uiLocked}
-                isSearching={envio.isSearching}
-                searchError={envio.searchError}
-                onBusquedaChange={envio.setBusqueda}
-                onFiltroDeudaChange={envio.setFiltroDeuda}
-                onToggle={envio.toggleSeleccion}
-                onSeleccionarTodos={envio.seleccionarTodos}
-                onDeseleccionarTodos={envio.deseleccionarTodos}
-              />
-              <GestionCobranzasMensajePreview
-                campania={envio.campaniaSeleccionada}
-                ejemploRenderizado={envio.ejemploPreview}
-                messagePreview={envio.messagePreview}
-                isPreviewLoading={envio.isPreviewLoading}
-                previewError={envio.previewError}
-              />
-              <GestionCobranzasSendTestPanel
-                testPhone={envio.testPhone}
-                onTestPhoneChange={envio.setTestPhone}
-                socioReferencia={envio.socioParaPreview}
-                isLoading={envio.isSendTestLoading}
-                error={envio.sendTestError}
-                result={envio.sendTestResult}
-                disabled={uiLocked}
-                onEnviarPrueba={() => void envio.enviarPruebaDryRun()}
-              />
-              <div>
-                <button
-                  type="button"
-                  disabled={uiLocked || envio.seleccionStats.seleccionados === 0}
-                  onClick={envio.prepararEnvio}
-                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  Preparar envío
-                </button>
-                {envio.seleccionStats.seleccionados === 0 ? (
-                  <p className="mt-2 text-sm text-slate-500">Seleccioná al menos un socio para preparar un envío simulado.</p>
-                ) : null}
-              </div>
-            </>
-          ) : null}
+          <CobranzasEnvioPanel
+            campania={envio.campaniaSeleccionada}
+            seleccionados={envio.seleccionStats.seleccionados}
+            validos={envio.seleccionStats.validos}
+            invalidos={envio.seleccionStats.invalidos}
+            realSendEnabled={envio.realSendEnabled}
+            isSending={envio.isSending}
+            sendError={envio.sendError}
+            resumen={envio.resumenFinal}
+            onEnviar={() => void envio.enviarASeleccionados()}
+            onNuevoEnvio={envio.reiniciarEnvio}
+          />
 
-          {envio.fase === 'confirmacion' ? <GestionCobranzasLogPanel entries={envio.sendLog} /> : null}
-
-          {envio.fase === 'inicial' && envio.historial.length > 0 ? (
-            <div>
-              <button
-                type="button"
-                onClick={envio.verHistorial}
-                className="text-sm font-semibold text-blue-700 hover:underline"
-              >
-                Ver historial de recordatorios
-              </button>
+          <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+              Editor de plantillas de simulación (avanzado)
+            </summary>
+            <p className="mt-2 text-xs text-slate-500">
+              No modifica templates aprobados en Zavu. Solo sirve para borradores locales de simulación.
+            </p>
+            <div className="mt-4">
+              <GestionCobranzasWhatsAppTemplates />
             </div>
+          </details>
+
+          {envio.historial.length > 0 ? (
+            <button
+              type="button"
+              onClick={envio.verHistorial}
+              className="text-sm font-semibold text-blue-700 hover:underline"
+            >
+              Ver historial de envíos
+            </button>
           ) : null}
         </>
       ) : null}

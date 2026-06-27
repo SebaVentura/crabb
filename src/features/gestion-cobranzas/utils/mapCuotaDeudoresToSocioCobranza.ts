@@ -50,7 +50,7 @@ export function aggregateCuotasToSociosCobranza(cuotas: CuotaSocio[]): SocioCobr
           : formatMesAdeudado(primary.periodo),
       importeAdeudado,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     }
   })
 }

@@ -1,4 +1,5 @@
 import type { CampaniaCobranza, CampaniaCobranzaId } from '../types'
+import { campaniaIdsMatch } from '../utils/resolveCampaniaById'
 
 type Props = {
   campanias: CampaniaCobranza[]
@@ -56,7 +57,7 @@ export function GestionCobranzasCampaniaSelector({ campanias, selectedId, disabl
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {campanias.map((campania) => {
-          const selected = campania.id === selectedId
+          const selected = campaniaIdsMatch(campania.id, selectedId)
           return (
             <button
               key={campania.id}

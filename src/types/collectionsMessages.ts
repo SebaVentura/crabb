@@ -41,6 +41,9 @@ export type CollectionMessagePreviewResult = {
   enabled: boolean
 }
 
+/** Alias para respuesta de preview */
+export type MessagePreviewResponse = CollectionMessagePreviewResult
+
 export type CollectionSendTestPayload = {
   phone: string
   campaign_key: string
@@ -79,3 +82,6 @@ export type CollectionSendSelectedResult = {
   results: CollectionSendSelectedItemResult[]
   raw?: unknown
 }
+
+/** Resultado de envío por socio (alias operativo) */
+export type SendResult = CollectionSendSelectedItemResult

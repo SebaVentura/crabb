@@ -93,6 +93,7 @@ export function GestionCobranzasConfirmacionPanel({
         result={dryRunResult}
         isLoading={isDryRunLoading}
         error={dryRunError}
+        realSendEnabled={realSendEnabled}
         disabled={seleccionados === 0 || isSending}
         onValidar={onValidarDryRun}
       />
@@ -101,6 +102,7 @@ export function GestionCobranzasConfirmacionPanel({
         campania={campania}
         ejemploRenderizado={ejemploPreview}
         messagePreview={messagePreview}
+        previewEsLocal={!realSendEnabled}
       />
     </div>
   )

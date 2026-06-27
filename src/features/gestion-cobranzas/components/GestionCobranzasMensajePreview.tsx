@@ -8,6 +8,7 @@ type Props = {
   messagePreview?: CollectionMessagePreviewResult | null
   isPreviewLoading?: boolean
   previewError?: string | null
+  previewEsLocal?: boolean
 }
 
 export function GestionCobranzasMensajePreview({
@@ -16,6 +17,7 @@ export function GestionCobranzasMensajePreview({
   messagePreview,
   isPreviewLoading,
   previewError,
+  previewEsLocal = false,
 }: Props) {
   const templateVariables = messagePreview?.realTemplate.templateVariables ?? {}
   const variableEntries = Object.entries(templateVariables)
@@ -45,6 +47,23 @@ export function GestionCobranzasMensajePreview({
             <p className="text-sm text-slate-500">Cargando vista previa…</p>
           ) : previewError ? (
             <p className="text-sm text-rose-700">{previewError}</p>
+          ) : previewEsLocal ? (
+            <div className="space-y-2">
+              {campania.disabledReason ? (
+                <p className="text-sm text-amber-800">{campania.disabledReason}</p>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  Vista previa local (simulación). Esta campaña no tiene template aprobada para envío real.
+                </p>
+              )}
+              {ejemploRenderizado ? (
+                <p className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-sm text-slate-800">
+                  {ejemploRenderizado}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-500">Seleccioná al menos un socio para ver un ejemplo.</p>
+              )}
+            </div>
           ) : ejemploRenderizado ? (
             <p className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-sm text-slate-800">{ejemploRenderizado}</p>
           ) : (

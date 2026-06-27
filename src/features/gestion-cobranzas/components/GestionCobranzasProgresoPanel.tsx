@@ -64,14 +64,13 @@ export function GestionCobranzasResumenFinal({
   const fecha = new Date(resumen.fechaFin).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })
 
   return (
-    <Card className="border-emerald-200 bg-emerald-50/40 shadow-md" title="Resumen del envío simulado">
+    <Card className="border-emerald-200 bg-emerald-50/40 shadow-md" title="Resumen del envío">
       <ul className="space-y-1 text-sm text-slate-700">
         <li>Campaña ejecutada: {resumen.campaniaLabel}</li>
         <li>Total seleccionados: {resumen.seleccionados}</li>
         <li>Enviados correctamente: {resumen.enviados}</li>
         <li>Con error: {resumen.errores}</li>
-        <li>Cancelados: {resumen.cancelados}</li>
-        <li>Teléfonos inválidos: {resumen.invalidos}</li>
+        <li>Omitidos: {resumen.omitidos}</li>
         <li>Finalizado: {fecha}</li>
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">

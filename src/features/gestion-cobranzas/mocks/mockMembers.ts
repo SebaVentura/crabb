@@ -11,7 +11,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Abril 2026',
       importeAdeudado: 12000,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c02',
@@ -21,7 +21,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Marzo 2026',
       importeAdeudado: 11800,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c03',
@@ -31,7 +31,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Abril 2026',
       importeAdeudado: 13200,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c04',
@@ -41,7 +41,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Mayo 2026',
       importeAdeudado: 12200,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c05',
@@ -51,7 +51,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Febrero 2026',
       importeAdeudado: 11500,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c06',
@@ -61,7 +61,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Abril 2026',
       importeAdeudado: 12100,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c07',
@@ -71,7 +71,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Marzo 2026',
       importeAdeudado: 11900,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c08',
@@ -81,7 +81,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Mayo 2026',
       importeAdeudado: 13000,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c09',
@@ -91,7 +91,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Abril 2026',
       importeAdeudado: 11600,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c10',
@@ -101,7 +101,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Enero 2026',
       importeAdeudado: 15000,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c11',
@@ -111,7 +111,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Mayo 2026',
       importeAdeudado: 11000,
       activo: false,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
     {
       id: 'c12',
@@ -121,7 +121,7 @@ export function crearMockMembers(): SocioCobranza[] {
       mesAdeudado: 'Abril 2026',
       importeAdeudado: 12500,
       activo: true,
-      estadoEnvio: 'no_seleccionado',
+      estadoEnvio: 'sin_enviar',
     },
   ]
 }
