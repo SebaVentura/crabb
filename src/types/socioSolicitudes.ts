@@ -21,6 +21,9 @@ export type SocioSolicitudSummary = {
   observadas: number
   aprobadas: number
   rechazadas: number
+  initialFeeAmount?: number | null
+  initialFeesCount?: number | null
+  initialFeesTotal?: number | null
 }
 
 export type SocioSolicitudDuplicado = {
@@ -72,6 +75,22 @@ export type RejectSocioSolicitudPayload = {
 
 export type ObserveSocioSolicitudPayload = {
   admin_notes: string
+}
+
+export type ApproveSocioSolicitudResult = {
+  message: string
+  detail: SocioSolicitudDetail
+  initialFeesGenerated: number | null
+  initialFeeAmount: number | null
+  initialFeesTotal: number | null
+  initialFeesTotalExpected: number | null
+  initialFeesAlreadyExisted: boolean
+}
+
+export type InitialFeePreview = {
+  initialFeeAmount: number | null
+  initialFeesCount: number | null
+  initialFeesTotal: number | null
 }
 
 export const ESTADO_SOLICITUD_LABELS: Record<SocioSolicitudEstado, string> = {

@@ -4,6 +4,7 @@ import type { CampaniaCobranza, SocioCobranza } from '../types'
 type Props = {
   campania: CampaniaCobranza
   socio: SocioCobranza | null
+  socioFueraDeFiltro?: boolean
   previewText: string | null
   messagePreview: CollectionMessagePreviewResult | null
   isLoading: boolean
@@ -14,6 +15,7 @@ type Props = {
 export function CobranzasPreviewSection({
   campania,
   socio,
+  socioFueraDeFiltro = false,
   previewText,
   messagePreview,
   isLoading,
@@ -36,6 +38,12 @@ export function CobranzasPreviewSection({
             <span className="font-medium">Socio:</span> {socio.nombre}
             {socio.taller ? ` · ${socio.taller}` : ''}
           </p>
+          {socioFueraDeFiltro ? (
+            <p className="text-xs text-amber-800">
+              Este socio sigue seleccionado para el envío aunque no coincida con el filtro de búsqueda
+              actual.
+            </p>
+          ) : null}
 
           {isLoading ? (
             <p className="text-sm text-slate-500">Cargando vista previa…</p>

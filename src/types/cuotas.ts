@@ -8,6 +8,7 @@ export type CuotaSocio = {
   telefono: string
   periodo: string
   concepto: string
+  tipo?: string | null
   importe: number
   fechaVencimiento: string
   estado: EstadoCuota
@@ -35,6 +36,7 @@ export type CuotasFilters = {
   search?: string
   periodo?: string
   estado?: EstadoCuota | ''
+  tipo?: 'inicial' | 'mensual' | ''
   page?: number
   per_page?: number
 }

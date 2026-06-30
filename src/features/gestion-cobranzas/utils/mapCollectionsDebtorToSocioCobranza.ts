@@ -18,14 +18,19 @@ export function mapFiltroDeudaToEstadoCuotaApi(filtro?: string): string | undefi
 }
 
 export function mapCollectionsDebtorToSocioCobranza(debtor: CollectionDebtor): SocioCobranza {
+  const importeAdeudado =
+    debtor.totalAdeudado && debtor.totalAdeudado > 0 ? debtor.totalAdeudado : debtor.importe
+
   return {
     id: debtor.socioId,
     nombre: debtor.nombre || debtor.taller || 'Socio sin nombre',
     taller: debtor.taller || undefined,
     telefono: debtor.telefono,
     estadoCuota: mapEstadoCuota(debtor.estadoCuota),
-    mesAdeudado: debtor.mesAdeudado || debtor.periodo,
-    importeAdeudado: debtor.importe,
+    mesAdeudado: debtor.mesAdeudado || debtor.periodo || debtor.conceptos || '—',
+    importeAdeudado,
+    cuotasPendientes: debtor.cuotasPendientes,
+    conceptosDeuda: debtor.conceptos,
     activo: true,
     estadoEnvio: 'sin_enviar',
   }

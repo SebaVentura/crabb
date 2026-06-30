@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { ApiError } from '../../../lib/apiClient'
-import type { SocioSolicitud } from '../../../types/socioSolicitudes'
+import type { InitialFeePreview, SocioSolicitud } from '../../../types/socioSolicitudes'
 import { REJECT_REASON_OPTIONS } from '../../../types/socioSolicitudes'
+import { formatInitialFeePreviewLines } from '../utils/approveMessages'
 
 export type ActionModalMode = 'approve' | 'reject' | 'observe' | null
 
 type Props = {
   mode: ActionModalMode
   solicitud: SocioSolicitud | null
+  initialFeePreview?: InitialFeePreview | null
   isSaving: boolean
   onClose: () => void
   onApprove: (adminNotes: string) => Promise<boolean>
@@ -16,11 +18,12 @@ type Props = {
 }
 
 const APPROVE_MESSAGE =
-  'Esta acción incorporará la solicitud al padrón de socios o la vinculará con un socio existente. No se creará una cuenta de usuario automáticamente.'
+  'Al aprobar esta solicitud, el socio quedará activo y se generarán 8 cuotas iniciales pendientes para su cobro.'
 
 export function SocioSolicitudActionModal({
   mode,
   solicitud,
+  initialFeePreview = null,
   isSaving,
   onClose,
   onApprove,
@@ -64,6 +67,8 @@ export function SocioSolicitudActionModal({
 
   const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900'
 
+  const feePreviewLines = mode === 'approve' ? formatInitialFeePreviewLines(initialFeePreview) : []
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:max-w-lg sm:rounded-2xl">
@@ -86,9 +91,18 @@ export function SocioSolicitudActionModal({
           </p>
 
           {mode === 'approve' ? (
-            <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900">
-              {APPROVE_MESSAGE}
-            </p>
+            <div className="mt-3 space-y-2">
+              <p className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                {APPROVE_MESSAGE}
+              </p>
+              {feePreviewLines.length > 0 ? (
+                <ul className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800">
+                  {feePreviewLines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           ) : null}
 
           {mode === 'reject' ? (

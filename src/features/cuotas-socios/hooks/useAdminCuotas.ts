@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError } from '../../../lib/apiClient'
 import { cuotasService } from '../../../services/cuotasService'
 import type { CuotaSocio, CuotasResumen, EstadoCuota, GenerarCuotasPayload } from '../../../types/cuotas'
+import { resolveCuotasApiFilters } from '../utils/resolveCuotasApiFilters'
 
 const PER_PAGE = 50
 
@@ -22,6 +23,7 @@ export function useAdminCuotas() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [periodo, setPeriodo] = useState('')
   const [estado, setEstado] = useState<'' | EstadoCuota>('')
+  const [tipo, setTipo] = useState<'' | 'inicial' | 'mensual'>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [lastPage, setLastPage] = useState(1)
@@ -44,7 +46,20 @@ export function useAdminCuotas() {
       return
     }
     setCurrentPage(1)
-  }, [debouncedSearch, periodo, estado])
+  }, [debouncedSearch, periodo, estado, tipo])
+
+  const apiFilters = useMemo(
+    () =>
+      resolveCuotasApiFilters({
+        search: debouncedSearch,
+        periodo,
+        estado,
+        tipo,
+        page: currentPage,
+        per_page: PER_PAGE,
+      }),
+    [currentPage, debouncedSearch, estado, periodo, tipo],
+  )
 
   const loadData = useCallback(
     async (options?: { showTableLoading?: boolean }) => {
@@ -57,13 +72,7 @@ export function useAdminCuotas() {
 
       try {
         const [listResponse, resumenResponse] = await Promise.all([
-          cuotasService.getCuotas({
-            search: debouncedSearch || undefined,
-            periodo: periodo || undefined,
-            estado: estado || undefined,
-            page: currentPage,
-            per_page: PER_PAGE,
-          }),
+          cuotasService.getCuotas(apiFilters),
           cuotasService.getResumen(),
         ])
 
@@ -88,7 +97,7 @@ export function useAdminCuotas() {
         setIsRefreshing(false)
       }
     },
-    [currentPage, debouncedSearch, estado, periodo],
+    [apiFilters],
   )
 
   useEffect(() => {
@@ -157,6 +166,9 @@ export function useAdminCuotas() {
     setPeriodo,
     estado,
     setEstado,
+    tipo,
+    setTipo,
+    apiFilters,
     currentPage,
     setCurrentPage,
     totalItems,

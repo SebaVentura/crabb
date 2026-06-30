@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Badge } from '../../../components/ui/Badge'
 import { Card } from '../../../components/ui/Card'
 import { LABEL_ESTADO_CUOTA, LABEL_ESTADO_ENVIO } from '../constants'
@@ -54,6 +54,19 @@ function filterMembers(members: SocioCobranza[], filtro: FiltroDestinatarios, se
   })
 }
 
+function matchesBusqueda(member: SocioCobranza, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+
+  return (
+    member.nombre.toLowerCase().includes(normalized) ||
+    (member.taller?.toLowerCase().includes(normalized) ?? false) ||
+    member.telefono.toLowerCase().includes(normalized) ||
+    member.mesAdeudado.toLowerCase().includes(normalized) ||
+    (member.conceptosDeuda?.toLowerCase().includes(normalized) ?? false)
+  )
+}
+
 export function GestionCobranzasSociosTable({
   members,
   selectedIds,
@@ -74,17 +87,33 @@ export function GestionCobranzasSociosTable({
 }: Props) {
   const [page, setPage] = useState(1)
 
-  const filteredMembers = useMemo(
-    () => filterMembers(members, filtroDestinatarios, selectedIds),
-    [members, filtroDestinatarios, selectedIds],
+  const busquedaFiltered = useMemo(
+    () => members.filter((member) => matchesBusqueda(member, busqueda)),
+    [members, busqueda],
   )
 
-  useEffect(() => {
-    setPage(1)
-  }, [busqueda, filtroDeuda, filtroDestinatarios, members.length])
+  const filteredMembers = useMemo(
+    () => filterMembers(busquedaFiltered, filtroDestinatarios, selectedIds),
+    [busquedaFiltered, filtroDestinatarios, selectedIds],
+  )
 
   const totalPages = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
+
+  const handleBusquedaChange = (value: string) => {
+    setPage(1)
+    onBusquedaChange(value)
+  }
+
+  const handleFiltroDeudaChange = (value: string) => {
+    setPage(1)
+    onFiltroDeudaChange(value)
+  }
+
+  const handleFiltroDestinatariosChange = (value: FiltroDestinatarios) => {
+    setPage(1)
+    onFiltroDestinatariosChange(value)
+  }
 
   const pageMembers = useMemo(() => {
     const start = (safePage - 1) * PAGE_SIZE
@@ -101,6 +130,12 @@ export function GestionCobranzasSociosTable({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <Card className="border-0 shadow-none" title={`2. Destinatarios (${members.length} con deuda)`}>
+        {selectedIds.size > 0 ? (
+          <p className="mb-3 text-xs text-slate-600">
+            {selectedIds.size} seleccionado(s) en total
+            {busqueda.trim() ? ' · la búsqueda solo filtra la tabla, no limpia la selección' : ''}
+          </p>
+        ) : null}
         <div className="mb-4 flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <button
@@ -147,7 +182,7 @@ export function GestionCobranzasSociosTable({
                 type="search"
                 value={busqueda}
                 disabled={disabled}
-                onChange={(e) => onBusquedaChange(e.target.value)}
+                onChange={(e) => handleBusquedaChange(e.target.value)}
                 placeholder="Nombre, taller, teléfono…"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
               />
@@ -160,7 +195,7 @@ export function GestionCobranzasSociosTable({
                 id="filtro-deuda"
                 value={filtroDeuda}
                 disabled={disabled}
-                onChange={(e) => onFiltroDeudaChange(e.target.value)}
+                onChange={(e) => handleFiltroDeudaChange(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
               >
                 <option value="">Todos</option>
@@ -177,7 +212,7 @@ export function GestionCobranzasSociosTable({
                 id="filtro-destinatarios"
                 value={filtroDestinatarios}
                 disabled={disabled}
-                onChange={(e) => onFiltroDestinatariosChange(e.target.value as FiltroDestinatarios)}
+                onChange={(e) => handleFiltroDestinatariosChange(e.target.value as FiltroDestinatarios)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
               >
                 <option value="todos">Todos</option>
@@ -198,7 +233,7 @@ export function GestionCobranzasSociosTable({
         <div className="relative overflow-x-auto">
           {isSearching ? (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70 text-sm text-slate-600">
-              Buscando…
+              Cargando socios…
             </div>
           ) : null}
           <table className="w-full min-w-[800px] border-collapse text-left text-sm">
@@ -247,7 +282,17 @@ export function GestionCobranzasSociosTable({
                         ) : null}
                       </td>
                       <td className="py-3 pr-3">{badgeCuota(m.estadoCuota)}</td>
-                      <td className="py-3 pr-3 text-slate-700">{m.mesAdeudado}</td>
+                      <td className="py-3 pr-3 text-slate-700">
+                        <p>{m.mesAdeudado}</p>
+                        {m.cuotasPendientes && m.cuotasPendientes > 0 ? (
+                          <p className="text-xs text-slate-500">
+                            {m.cuotasPendientes} cuota(s) pendiente(s)
+                          </p>
+                        ) : null}
+                        {m.conceptosDeuda ? (
+                          <p className="text-xs text-slate-500">{m.conceptosDeuda}</p>
+                        ) : null}
+                      </td>
                       <td className="whitespace-nowrap py-3 pr-3 text-slate-700">
                         {formatMoneyArs(m.importeAdeudado)}
                       </td>

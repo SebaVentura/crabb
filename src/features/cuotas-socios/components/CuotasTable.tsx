@@ -7,6 +7,7 @@ import { formatPhone } from '../../../utils/formatPhone'
 
 type Props = {
   cuotas: CuotaSocio[]
+  totalCount?: number
   isRefreshing: boolean
   actionLoadingId: string | null
   onMarcarPagada: (id: string) => void
@@ -27,8 +28,9 @@ function formatFecha(value: string) {
   return date.toLocaleDateString('es-AR')
 }
 
-function formatPeriodo(periodo: string) {
-  if (!periodo) return '-'
+function formatPeriodo(periodo: string, esInicial: boolean) {
+  if (!periodo) return '—'
+  if (esInicial || /^inicial-\d{2}$/i.test(periodo)) return periodo
   const match = periodo.match(/^(\d{4})-(\d{2})$/)
   if (!match) return periodo
   const date = new Date(Number(match[1]), Number(match[2]) - 1, 1)
@@ -36,15 +38,23 @@ function formatPeriodo(periodo: string) {
   return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
 }
 
+function isCuotaInicial(cuota: CuotaSocio): boolean {
+  const tipo = cuota.tipo?.trim().toLowerCase() ?? ''
+  return tipo === 'inicial'
+}
+
 export function CuotasTable({
   cuotas,
+  totalCount,
   isRefreshing,
   actionLoadingId,
   onMarcarPagada,
   onAnular,
 }: Props) {
+  const countLabel = totalCount && totalCount > cuotas.length ? totalCount : cuotas.length
+
   return (
-    <Card className="border-slate-200 shadow-md" title={`Cuotas (${cuotas.length})`}>
+    <Card className="border-slate-200 shadow-md" title={`Cuotas (${countLabel})`}>
       <div className="relative overflow-x-auto">
         {isRefreshing ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70 text-sm text-slate-600">
@@ -75,6 +85,7 @@ export function CuotasTable({
               </tr>
             ) : (
               cuotas.map((cuota) => {
+                const esInicial = isCuotaInicial(cuota)
                 const isRowLoading = actionLoadingId === cuota.id
                 const canAct = cuota.estado === 'pendiente' || cuota.estado === 'vencida'
 
@@ -83,8 +94,17 @@ export function CuotasTable({
                     <td className="py-3 pr-3 font-medium text-slate-900">{cuota.nombreSocio || '-'}</td>
                     <td className="py-3 pr-3 text-slate-700">{cuota.denominacionTaller || '-'}</td>
                     <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatPhone(cuota.telefono)}</td>
-                    <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatPeriodo(cuota.periodo)}</td>
-                    <td className="py-3 pr-3 text-slate-700">{cuota.concepto || '-'}</td>
+                    <td className="whitespace-nowrap py-3 pr-3 text-slate-700">
+                      {formatPeriodo(cuota.periodo, esInicial)}
+                    </td>
+                    <td className="py-3 pr-3 text-slate-700">
+                      <span>{cuota.concepto || '—'}</span>
+                      {esInicial ? (
+                        <span className="ml-2 inline-flex">
+                          <Badge tone="blue">Inicial</Badge>
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatMoneyArs(cuota.importe)}</td>
                     <td className="whitespace-nowrap py-3 pr-3 text-slate-700">{formatFecha(cuota.fechaVencimiento)}</td>
                     <td className="py-3 pr-3">{badgeEstado(cuota.estado)}</td>

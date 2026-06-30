@@ -79,6 +79,7 @@ export function AdminGestionCobranzasPage() {
           <CobranzasPreviewSection
             campania={envio.campaniaSeleccionada}
             socio={envio.socioParaPreview}
+            socioFueraDeFiltro={envio.socioParaPreviewFueraDeFiltro}
             previewText={envio.previewText}
             messagePreview={envio.messagePreview}
             isLoading={envio.isPreviewLoading}
@@ -112,9 +113,9 @@ export function AdminGestionCobranzasPage() {
             onNuevoEnvio={envio.reiniciarEnvio}
           />
 
-          <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <summary className="cursor-pointer text-sm font-semibold text-slate-700">
-              Editor de plantillas de simulación (avanzado)
+          <details className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-600">
+              Opciones avanzadas · Editor de plantillas de simulación
             </summary>
             <p className="mt-2 text-xs text-slate-500">
               No modifica templates aprobados en Zavu. Solo sirve para borradores locales de simulación.

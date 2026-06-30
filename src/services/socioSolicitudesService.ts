@@ -1,6 +1,7 @@
 import { apiRequest } from '../lib/apiClient'
 import type {
   ApproveSocioSolicitudPayload,
+  ApproveSocioSolicitudResult,
   ObserveSocioSolicitudPayload,
   RejectSocioSolicitudPayload,
   SocioSolicitud,
@@ -43,6 +44,12 @@ function asBoolean(value: unknown, fallback = false): boolean {
 
 function firstDefined<T>(...values: T[]): T | undefined {
   return values.find((value) => value !== undefined)
+}
+
+function asNumberOrNull(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function normalizeEstado(value: unknown): SocioSolicitudEstado {
@@ -124,6 +131,15 @@ function normalizeSummary(response: unknown): SocioSolicitudSummary {
     observadas: asNumber(firstDefined(data.observadas, data.observed, root.observadas)),
     aprobadas: asNumber(firstDefined(data.aprobadas, data.approved, root.aprobadas)),
     rechazadas: asNumber(firstDefined(data.rechazadas, data.rejected, root.rechazadas)),
+    initialFeeAmount: asNumberOrNull(
+      firstDefined(data.initialFeeAmount, data.initial_fee_amount, root.initialFeeAmount),
+    ),
+    initialFeesCount: asNumberOrNull(
+      firstDefined(data.initialFeesCount, data.initial_fees_count, root.initialFeesCount),
+    ),
+    initialFeesTotal: asNumberOrNull(
+      firstDefined(data.initialFeesTotal, data.initial_fees_total, root.initialFeesTotal),
+    ),
   }
 }
 
@@ -200,6 +216,69 @@ function extractDetail(response: unknown): SocioSolicitudDetail {
   return normalizeDetail(root)
 }
 
+function extractApproveDetail(response: unknown): SocioSolicitudDetail {
+  const root = asObject(response)
+  const data = asObject(firstDefined(root.data, response))
+  const solicitudRaw = firstDefined(data.solicitud, data)
+  const detail = normalizeDetail(solicitudRaw)
+
+  const socioRaw = firstDefined(data.socio, asObject(solicitudRaw).socio)
+  if (socioRaw && typeof socioRaw === 'object' && !detail.socio) {
+    return { ...detail, socio: socioRaw as Record<string, unknown> }
+  }
+
+  return detail
+}
+
+function pickApproveNumber(
+  data: UnknownObject,
+  root: UnknownObject,
+  camel: string,
+  snake: string,
+): number | null {
+  return asNumberOrNull(firstDefined(data[camel], data[snake], root[camel], root[snake]))
+}
+
+function pickApproveBoolean(
+  data: UnknownObject,
+  root: UnknownObject,
+  camel: string,
+  snake: string,
+  fallback = false,
+): boolean {
+  return asBoolean(firstDefined(data[camel], data[snake], root[camel], root[snake]), fallback)
+}
+
+function extractApproveResult(response: unknown): ApproveSocioSolicitudResult {
+  const root = asObject(response)
+  const data = asObject(firstDefined(root.data, response))
+
+  return {
+    message: asString(root.message, 'Solicitud aprobada.'),
+    detail: extractApproveDetail(response),
+    initialFeesGenerated: pickApproveNumber(data, root, 'initialFeesGenerated', 'initial_fees_generated'),
+    initialFeeAmount: pickApproveNumber(data, root, 'initialFeeAmount', 'initial_fee_amount'),
+    initialFeesTotal: pickApproveNumber(
+      data,
+      root,
+      'initialFeesTotal',
+      'initial_fees_total',
+    ),
+    initialFeesTotalExpected: pickApproveNumber(
+      data,
+      root,
+      'initialFeesTotalExpected',
+      'initial_fees_total_expected',
+    ),
+    initialFeesAlreadyExisted: pickApproveBoolean(
+      data,
+      root,
+      'initialFeesAlreadyExisted',
+      'initial_fees_already_existed',
+    ),
+  }
+}
+
 export const socioSolicitudesService = {
   async getSocioSolicitudes(filters?: SocioSolicitudesFilters): Promise<SocioSolicitudesListResponse> {
     const response = await apiRequest<unknown>(`/admin/socio-solicitudes${buildQuery(filters)}`)
@@ -219,16 +298,12 @@ export const socioSolicitudesService = {
   async approveSocioSolicitud(
     id: number,
     payload?: ApproveSocioSolicitudPayload,
-  ): Promise<{ message: string; detail: SocioSolicitudDetail }> {
+  ): Promise<ApproveSocioSolicitudResult> {
     const response = await apiRequest<unknown>(`/admin/socio-solicitudes/${id}/approve`, {
       method: 'POST',
       body: payload ?? {},
     })
-    const root = asObject(response)
-    return {
-      message: asString(root.message, 'Solicitud aprobada.'),
-      detail: extractDetail(response),
-    }
+    return extractApproveResult(response)
   },
 
   async rejectSocioSolicitud(

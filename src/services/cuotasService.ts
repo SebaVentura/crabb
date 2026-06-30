@@ -75,6 +75,7 @@ function normalizeCuota(row: unknown): CuotaSocio {
     telefono,
     periodo: asString(firstDefined(source.periodo, source.period)),
     concepto: asString(source.concepto),
+    tipo: asString(firstDefined(source.tipo, source.tipo_cuota, source.fee_type)) || null,
     importe: asNumber(firstDefined(source.importe, source.monto, source.amount), 0),
     fechaVencimiento: asString(
       firstDefined(source.fechaVencimiento, source.fecha_vencimiento, source.vencimiento),
@@ -152,6 +153,7 @@ function buildQuery(params?: CuotasFilters): string {
   if (params.search?.trim()) query.set('search', params.search.trim())
   if (params.periodo?.trim()) query.set('periodo', params.periodo.trim())
   if (params.estado?.trim()) query.set('estado', params.estado.trim())
+  if (params.tipo?.trim()) query.set('tipo', params.tipo.trim())
   if (params.page) query.set('page', String(params.page))
   if (params.per_page) query.set('per_page', String(params.per_page))
 

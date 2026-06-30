@@ -240,17 +240,12 @@ export function SocioSolicitudesPage() {
         key={`${actionMode ?? 'none'}-${actionTarget?.id ?? 'none'}`}
         mode={actionMode}
         solicitud={actionTarget}
+        initialFeePreview={admin.initialFeePreview}
         isSaving={actionSaving}
         onClose={closeAction}
         onApprove={async (notes) => {
           if (!actionTarget) return false
-          const ok = await admin.approve(actionTarget.id, notes)
-          if (ok) {
-            admin.setSuccessMessage(
-              'Solicitud aprobada. El socio ya puede activar su cuenta desde Registro de socio.',
-            )
-          }
-          return ok
+          return admin.approve(actionTarget.id, notes)
         }}
         onReject={async ({ reason, adminNotes }) => {
           if (!actionTarget) return false

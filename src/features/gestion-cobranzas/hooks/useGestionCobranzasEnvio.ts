@@ -40,6 +40,18 @@ function resolveEstado(member: SocioCobranza, selected: boolean): EstadoEnvioFil
   return 'sin_enviar'
 }
 
+function memberMatchesBusqueda(member: SocioCobranza, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+  return (
+    member.nombre.toLowerCase().includes(normalized) ||
+    (member.taller?.toLowerCase().includes(normalized) ?? false) ||
+    member.telefono.toLowerCase().includes(normalized) ||
+    member.mesAdeudado.toLowerCase().includes(normalized) ||
+    (member.conceptosDeuda?.toLowerCase().includes(normalized) ?? false)
+  )
+}
+
 export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const [members, setMembers] = useState<SocioCobranza[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
@@ -66,7 +78,14 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [selectedMembersById, setSelectedMembersById] = useState<Map<string, SocioCobranza>>(() => new Map())
+  const [previewSocioId, setPreviewSocioId] = useState<string | null>(null)
   const skipSearchEffectRef = useRef(true)
+
+  const resolveSocioById = useCallback(
+    (id: string): SocioCobranza | null =>
+      selectedMembersById.get(id) ?? members.find((member) => member.id === id) ?? null,
+    [members, selectedMembersById],
+  )
 
   const syncMemberStates = useCallback((ids: Set<string>, source?: SocioCobranza[]) => {
     setMembers((prev) => {
@@ -108,16 +127,16 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
 
       try {
         const candidatos = await gestionCobranzasService.listarCandidatos({
-          search: busqueda,
           estado_cuota: filtroDeuda || undefined,
         })
         setSelectedIds((current) => {
           applyMembersFromApi(candidatos, current)
+          syncMemberStates(current, candidatos)
           return current
         })
       } catch {
         if (options?.showTableLoading) {
-          setSearchError('No se pudieron buscar socios con deuda.')
+          setSearchError('No se pudieron cargar los socios con deuda.')
         } else {
           setLoadError('No se pudieron cargar los socios con deuda.')
           setMembers([])
@@ -126,7 +145,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
         if (options?.showTableLoading) setIsSearching(false)
       }
     },
-    [applyMembersFromApi, busqueda, filtroDeuda],
+    [applyMembersFromApi, filtroDeuda, syncMemberStates],
   )
 
   const loadInitial = useCallback(async () => {
@@ -160,9 +179,9 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
 
   useEffect(() => {
     if (skipSearchEffectRef.current) return
-    const t = window.setTimeout(() => void loadCandidatos({ showTableLoading: true }), 400)
+    const t = window.setTimeout(() => void loadCandidatos({ showTableLoading: true }), 300)
     return () => window.clearTimeout(t)
-  }, [busqueda, filtroDeuda, loadCandidatos])
+  }, [filtroDeuda, loadCandidatos])
 
   const campaniaSeleccionada = useMemo(
     () => resolveCampaniaById(campanias, campaniaId),
@@ -174,26 +193,40 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const seleccionados = useMemo(
     () =>
       Array.from(selectedIds)
-        .map((id) => selectedMembersById.get(id) ?? members.find((m) => m.id === id))
-        .filter((item): item is SocioCobranza => item !== undefined),
-    [members, selectedIds, selectedMembersById],
+        .map((id) => resolveSocioById(id))
+        .filter((item): item is SocioCobranza => item !== null),
+    [resolveSocioById, selectedIds],
   )
 
-  const socioParaPreview = seleccionados[0] ?? null
+  const socioParaPreview = useMemo(() => {
+    if (previewSocioId) return resolveSocioById(previewSocioId)
+    const firstId = Array.from(selectedIds)[0]
+    return firstId ? resolveSocioById(firstId) : null
+  }, [previewSocioId, resolveSocioById, selectedIds])
+
+  const socioParaPreviewFueraDeFiltro = useMemo(() => {
+    if (!socioParaPreview || !busqueda.trim()) return false
+    return !memberMatchesBusqueda(socioParaPreview, busqueda)
+  }, [busqueda, socioParaPreview])
 
   const seleccionStats = useMemo(() => {
     let validos = 0
     let invalidos = 0
-    for (const member of seleccionados) {
+    for (const id of selectedIds) {
+      const member = resolveSocioById(id)
+      if (!member) continue
       if (hasValidWhatsappPhone(member.telefono).valido) validos += 1
       else invalidos += 1
     }
-    return { seleccionados: seleccionados.length, validos, invalidos }
-  }, [seleccionados])
+    return { seleccionados: selectedIds.size, validos, invalidos }
+  }, [resolveSocioById, selectedIds])
 
   useEffect(() => {
     let active = true
-    if (!socioParaPreview) {
+    const socioId = previewSocioId ?? Array.from(selectedIds)[0] ?? null
+    const socio = socioId ? resolveSocioById(socioId) : null
+
+    if (!socio) {
       setMessagePreview(null)
       setPreviewError(null)
       return () => {
@@ -215,7 +248,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     collectionsMessagesService
       .previewMessage({
         campaign_key: campaniaSeleccionada.id,
-        socio_id: toSocioId(socioParaPreview.id),
+        socio_id: toSocioId(socio.id),
       })
       .then((result) => {
         if (active) setMessagePreview(result)
@@ -236,7 +269,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     return () => {
       active = false
     }
-  }, [campaniaSeleccionada.id, realSendEnabled, socioParaPreview])
+  }, [campaniaSeleccionada.id, previewSocioId, realSendEnabled, resolveSocioById, selectedIds])
 
   const previewText = useMemo(() => {
     if (messagePreview?.simulationMessage) return messagePreview.simulationMessage
@@ -258,21 +291,33 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const toggleSeleccion = useCallback(
     (id: string) => {
       if (isSending) return
-      const member = members.find((m) => m.id === id)
+      const member = resolveSocioById(id) ?? members.find((m) => m.id === id)
       if (!member || !hasValidWhatsappPhone(member.telefono).valido) return
 
       setSelectedIds((prev) => {
         const next = new Set(prev)
-        if (next.has(id)) next.delete(id)
-        else {
+        if (next.has(id)) {
+          next.delete(id)
+          setSelectedMembersById((map) => {
+            const updated = new Map(map)
+            updated.delete(id)
+            return updated
+          })
+          setPreviewSocioId((current) => {
+            if (current !== id) return current
+            const remaining = Array.from(next)
+            return remaining[0] ?? null
+          })
+        } else {
           next.add(id)
-          setSelectedMembersById((m) => new Map(m).set(id, member))
+          setSelectedMembersById((map) => new Map(map).set(id, member))
+          setPreviewSocioId((current) => current ?? id)
         }
         syncMemberStates(next)
         return next
       })
     },
-    [isSending, members, syncMemberStates],
+    [isSending, members, resolveSocioById, syncMemberStates],
   )
 
   const seleccionarPagina = useCallback(
@@ -285,6 +330,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
           next.add(m.id)
           setSelectedMembersById((map) => new Map(map).set(m.id, m))
         }
+        setPreviewSocioId((current) => current ?? valid[0]?.id ?? null)
         syncMemberStates(next)
         return next
       })
@@ -299,6 +345,11 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
       setSelectedIds((prev) => {
         const next = new Set(prev)
         for (const id of pageIds) next.delete(id)
+        setPreviewSocioId((current) => {
+          if (!current || !pageIds.has(current)) return current
+          const remaining = Array.from(next)
+          return remaining[0] ?? null
+        })
         syncMemberStates(next)
         return next
       })
@@ -315,14 +366,18 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     (list: SocioCobranza[]) => {
       if (isSending) return
       const valid = list.filter((m) => hasValidWhatsappPhone(m.telefono).valido)
-      const ids = new Set(valid.map((m) => m.id))
-      setSelectedMembersById((prev) => {
-        const next = new Map(prev)
-        for (const m of valid) next.set(m.id, m)
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        for (const m of valid) next.add(m.id)
+        setSelectedMembersById((map) => {
+          const updated = new Map(map)
+          for (const m of valid) updated.set(m.id, m)
+          return updated
+        })
+        setPreviewSocioId((current) => current ?? valid[0]?.id ?? null)
+        syncMemberStates(next)
         return next
       })
-      setSelectedIds(ids)
-      syncMemberStates(ids)
     },
     [isSending, syncMemberStates],
   )
@@ -335,6 +390,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     if (isSending) return
     setSelectedIds(new Set())
     setSelectedMembersById(new Map())
+    setPreviewSocioId(null)
     syncMemberStates(new Set())
   }, [isSending, syncMemberStates])
 
@@ -461,6 +517,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
   const reiniciarEnvio = useCallback(() => {
     setSelectedIds(new Set())
     setSelectedMembersById(new Map())
+    setPreviewSocioId(null)
     setResumenFinal(null)
     setSendError(null)
     setSendTestResult(null)
@@ -495,6 +552,7 @@ export function useGestionCobranzasEnvio(admin: AdminInfo) {
     setCampaniaSeleccionada,
     realSendEnabled,
     socioParaPreview,
+    socioParaPreviewFueraDeFiltro,
     previewText,
     messagePreview,
     isPreviewLoading,

@@ -22,6 +22,9 @@ export type CollectionDebtor = {
   importe: number
   importeFormateado: string
   vencimiento: string
+  cuotasPendientes?: number
+  totalAdeudado?: number
+  conceptos?: string
 }
 
 export type CollectionMessagePreviewPayload = {

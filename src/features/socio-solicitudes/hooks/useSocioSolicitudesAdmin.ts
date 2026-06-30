@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../../lib/apiClient'
+import { getInitialFeeConfig } from '../../../services/adminConfigService'
 import { socioSolicitudesService } from '../../../services/socioSolicitudesService'
 import type {
+  InitialFeePreview,
   SocioSolicitud,
   SocioSolicitudDetail,
   SocioSolicitudEstado,
   SocioSolicitudSummary,
   SocioSolicitudesFilters,
 } from '../../../types/socioSolicitudes'
+import { buildApproveSuccessMessage } from '../utils/approveMessages'
 
 const DEFAULT_SUMMARY: SocioSolicitudSummary = {
   total: 0,
@@ -55,6 +58,27 @@ export function useSocioSolicitudesAdmin() {
   const [detail, setDetail] = useState<SocioSolicitudDetail | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [initialFeePreview, setInitialFeePreview] = useState<InitialFeePreview | null>(null)
+
+  const resolvedInitialFeePreview = useMemo<InitialFeePreview>(() => {
+    if (initialFeePreview) return initialFeePreview
+
+    const fromSummary: InitialFeePreview = {
+      initialFeeAmount: summary.initialFeeAmount ?? null,
+      initialFeesCount: summary.initialFeesCount ?? 8,
+      initialFeesTotal: summary.initialFeesTotal ?? null,
+    }
+
+    if (
+      fromSummary.initialFeeAmount !== null ||
+      fromSummary.initialFeesTotal !== null ||
+      summary.initialFeesCount !== null
+    ) {
+      return fromSummary
+    }
+
+    return { initialFeeAmount: null, initialFeesCount: 8, initialFeesTotal: null }
+  }, [initialFeePreview, summary])
 
   const buildApiFilters = useCallback(
     (targetPage: number): SocioSolicitudesFilters => ({
@@ -87,6 +111,18 @@ export function useSocioSolicitudesAdmin() {
           lastPage: listData.pagination?.lastPage ?? 1,
           total: listData.pagination?.total ?? listData.items.length,
         })
+
+        if (
+          summaryData.initialFeeAmount != null ||
+          summaryData.initialFeesCount != null ||
+          summaryData.initialFeesTotal != null
+        ) {
+          setInitialFeePreview({
+            initialFeeAmount: summaryData.initialFeeAmount ?? null,
+            initialFeesCount: summaryData.initialFeesCount ?? 8,
+            initialFeesTotal: summaryData.initialFeesTotal ?? null,
+          })
+        }
       } catch {
         setLoadError('No se pudieron cargar las solicitudes de socios.')
       } finally {
@@ -114,6 +150,16 @@ export function useSocioSolicitudesAdmin() {
   useEffect(() => {
     void loadList(page)
   }, [loadList, page])
+
+  useEffect(() => {
+    let active = true
+    void getInitialFeeConfig().then((config) => {
+      if (active && config) setInitialFeePreview(config)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const refreshAll = useCallback(async () => {
     await loadList(page, { silent: true })
@@ -174,13 +220,40 @@ export function useSocioSolicitudesAdmin() {
   )
 
   const approve = useCallback(
-    (id: number, adminNotes?: string) =>
-      runAction(id, () =>
-        socioSolicitudesService.approveSocioSolicitud(id, {
+    async (id: number, adminNotes?: string) => {
+      setActionLoadingId(id)
+      setActionError(null)
+      try {
+        const result = await socioSolicitudesService.approveSocioSolicitud(id, {
           admin_notes: adminNotes?.trim() || undefined,
-        }),
-      ),
-    [runAction],
+        })
+        setSuccessMessage(buildApproveSuccessMessage(result))
+        setDetail(result.detail)
+        if (
+          result.initialFeeAmount != null ||
+          result.initialFeesTotal != null ||
+          result.initialFeesGenerated != null
+        ) {
+          setInitialFeePreview({
+            initialFeeAmount: result.initialFeeAmount,
+            initialFeesCount: result.initialFeesTotalExpected ?? result.initialFeesGenerated ?? 8,
+            initialFeesTotal: result.initialFeesTotal,
+          })
+        }
+        await refreshAll()
+        return true
+      } catch (error: unknown) {
+        if (error instanceof ApiError) {
+          setActionError(error.message)
+        } else {
+          setActionError('No se pudo aprobar la solicitud.')
+        }
+        return false
+      } finally {
+        setActionLoadingId(null)
+      }
+    },
+    [refreshAll],
   )
 
   const reject = useCallback(
@@ -229,5 +302,6 @@ export function useSocioSolicitudesAdmin() {
     approve,
     reject,
     observe,
+    initialFeePreview: resolvedInitialFeePreview,
   }
 }

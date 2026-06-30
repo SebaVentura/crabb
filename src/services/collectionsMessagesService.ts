@@ -144,6 +144,22 @@ function normalizeDebtor(row: unknown): CollectionDebtor | null {
       firstDefined(source.importe_formateado, source.importeFormateado),
     ),
     vencimiento: asString(firstDefined(source.vencimiento, source.fecha_vencimiento)),
+    cuotasPendientes: asNumber(
+      firstDefined(
+        source.cuotas_pendientes,
+        source.cuotasPendientes,
+        source.pending_fees_count,
+        source.cantidad_cuotas_pendientes,
+      ),
+      0,
+    ) || undefined,
+    totalAdeudado: asNumber(
+      firstDefined(source.total_adeudado, source.totalAdeudado, source.total_deuda, source.deuda_total),
+      0,
+    ) || undefined,
+    conceptos: asString(
+      firstDefined(source.conceptos, source.conceptos_incluidos, source.deuda_conceptos, source.concepto),
+    ) || undefined,
   }
 }
 

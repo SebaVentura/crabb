@@ -38,6 +38,8 @@ export type SocioCobranza = {
   estadoCuota: EstadoCuotaCobranza
   mesAdeudado: string
   importeAdeudado: number
+  cuotasPendientes?: number
+  conceptosDeuda?: string
   activo: boolean
   estadoEnvio: EstadoEnvioFila
   errorEnvio?: string | null
